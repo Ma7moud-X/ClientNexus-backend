@@ -1,8 +1,8 @@
-using Database.Models.Users;
+using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Database.Configurations.Users;
+namespace Database.Configurations;
 
 public class PhoneNumberConfig : IEntityTypeConfiguration<PhoneNumber>
 {
@@ -10,6 +10,7 @@ public class PhoneNumberConfig : IEntityTypeConfiguration<PhoneNumber>
     {
         builder.ToTable("PhoneNumbers");
 
+        // data types configuration
         builder.Property(n => n.Number).HasColumnType("varchar(20)").IsRequired();
     }
 }

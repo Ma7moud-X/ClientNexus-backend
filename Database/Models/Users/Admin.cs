@@ -1,0 +1,14 @@
+using System;
+
+namespace Database.Models.Users;
+
+public class Admin : BaseUser
+{
+    public int? ApprovedById { get; set; }
+    public Admin? ApprovingAdmin { get; set; }
+
+    public int AccessLevelId { get; set; }
+    public AccessLevel? AccessLevel { get; set; }
+
+    public List<Admin>? ApprovedAdmins { get; set; }
+}

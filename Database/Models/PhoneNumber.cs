@@ -1,4 +1,6 @@
-namespace Database.Models.Users;
+using Database.Models.Users;
+
+namespace Database.Models;
 
 public class PhoneNumber
 {

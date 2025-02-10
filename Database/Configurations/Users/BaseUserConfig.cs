@@ -11,7 +11,7 @@ public class BaseUserConfig : IEntityTypeConfiguration<BaseUser>
     {
         builder.ToTable("BaseUsers");
 
-        // data types
+        // data types configuration
         builder.Property(u => u.FirstName).HasColumnType("nvarchar(50)").IsRequired();
         builder.Property(u => u.LastName).HasColumnType("nvarchar(50)").IsRequired();
         builder.Property(u => u.PhoneNumber).HasColumnType("varchar(20)");

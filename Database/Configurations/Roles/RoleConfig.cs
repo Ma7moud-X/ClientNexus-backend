@@ -10,6 +10,7 @@ public class RoleConfig : IEntityTypeConfiguration<Role>
     {
         builder.ToTable("Roles");
 
+        // pre-populating
         List<Role> roles =
         [
             new Role
