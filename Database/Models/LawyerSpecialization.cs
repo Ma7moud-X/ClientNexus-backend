@@ -8,8 +8,7 @@ namespace Database.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        
+                
         // Foreign key
         public int LawyerId { get; set; }
         public Lawyer Lawyer { get; set; }

@@ -32,5 +32,7 @@ namespace Database.Models.Users
         public Subscription Subscription { get; set; }
         
         public bool IsAvailableForEmergency { get; set; }
+
+        public List<Problem>? Problems { get; set; }
     }
 }

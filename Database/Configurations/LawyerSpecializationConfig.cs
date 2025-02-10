@@ -10,17 +10,13 @@ namespace Database.Configurations
         {
             builder.ToTable("LawyerSpecializations");
 
-            builder.Property(s => s.Name)
+            builder.Property(ls => ls.Name)
                 .IsRequired(true)
                 .HasMaxLength(100);
 
-            builder.Property(s => s.Description)
-                .IsRequired(false)
-                .HasMaxLength(500);
-
-            builder.HasOne(s => s.Lawyer)
-                .WithMany(l => l.Specializations)
-                .HasForeignKey(s => s.LawyerId)
+            builder.HasOne(ls => ls.Lawyer)
+                .WithMany(ls => ls.Specializations)
+                .HasForeignKey(ls => ls.LawyerId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -18,10 +18,16 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
 
         builder
             .HasOne(a => a.AccessLevel)
-            .WithMany(l => l.Admins)
+            .WithMany(a => a.Admins)
             .HasForeignKey(a => a.AccessLevelId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(a => a.ApprovedById).IsRequired(false);
+
+        builder
+            .HasMany(a => a.Problems)
+            .WithOne(a => a.Admin)
+            .HasForeignKey(a => a.AdminId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

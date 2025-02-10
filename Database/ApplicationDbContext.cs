@@ -23,41 +23,43 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new RoleConfig().Configure(modelBuilder.Entity<Role>());
 
         new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
-        new PhoneNumberConfig().Configure(modelBuilder.Entity<PhoneNumber>());
 
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
+        new ClientConfiguration().Configure(modelBuilder.Entity<Client>());
+        new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
+        new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
+
+
+        new PhoneNumberConfig().Configure(modelBuilder.Entity<PhoneNumber>());
+
         new AccessLevelConfig().Configure(modelBuilder.Entity<AccessLevel>());
 
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
         new CategoryConfig().Configure(modelBuilder.Entity<Category>());
         
-        new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
-        
         new AddressConfig().Configure(modelBuilder.Entity<Address>());
+        
         new SubscriptionConfig().Configure(modelBuilder.Entity<Subscription>());
 
-        new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
         
         new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
-   
+        
+        new ProblemConfiguration().Configure(modelBuilder.Entity<Problem>());
     }
 
-    // BaseUser
     public DbSet<BaseUser> BaseUsers { get; set; }
-    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
-    
-    // Admin
+    public DbSet<Client> Clients { get; set; }
     public DbSet<Admin> Admins { get; set; }
-    public DbSet<AccessLevel> AccessLevels { get; set; }
-
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
-    public DbSet<Address> Addresses { get; set; }
-    public DbSet<Subscription> Subscriptions { get; set; }
-    
-    // Lawyer-related entities
     public DbSet<Lawyer> Lawyers { get; set; }
+
+    public DbSet<AccessLevel> AccessLevels { get; set; }
+    public DbSet<Address> Addresses { get; set; }
+    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
+    public DbSet<Problem> Problems { get; set; }
+
     public DbSet<LawyerLicence> LawyerLicences { get; set; }
     public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
-
 }

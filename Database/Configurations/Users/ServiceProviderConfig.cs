@@ -31,6 +31,13 @@ namespace Database.Configurations.Users
                 .HasForeignKey<ServiceProvider>(sp => sp.SubscriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Problems relationship
+            builder
+                .HasMany(sp => sp.Problems)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Properties configuration
             builder.Property(sp => sp.Description)
                 .IsRequired()

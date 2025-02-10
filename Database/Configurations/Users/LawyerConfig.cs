@@ -21,8 +21,8 @@ namespace Database.Configurations.Users
 
             // Configure Specializations relationship
             builder.HasMany(l => l.Specializations)
-                .WithOne(s => s.Lawyer)
-                .HasForeignKey(s => s.LawyerId)
+                .WithOne(l => l.Lawyer)
+                .HasForeignKey(l => l.LawyerId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

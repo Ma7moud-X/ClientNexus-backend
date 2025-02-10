@@ -12,4 +12,7 @@ public class Admin : BaseUser
 
     public List<Admin>? ApprovedAdmins { get; set; }
     public List<Document>? Documents { get; set; }
+
+    public List<Problem>? Problems { get; set; }
+
 }
