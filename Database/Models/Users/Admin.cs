@@ -1,4 +1,5 @@
 using System;
+using Database.Models.Content;
 
 namespace Database.Models.Users;
 
@@ -11,4 +12,5 @@ public class Admin : BaseUser
     public AccessLevel? AccessLevel { get; set; }
 
     public List<Admin>? ApprovedAdmins { get; set; }
+    public List<Document>? Documents { get; set; }
 }

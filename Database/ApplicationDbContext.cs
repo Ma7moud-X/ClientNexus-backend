@@ -1,7 +1,9 @@
 using Database.Configurations;
+using Database.Configurations.Content;
 using Database.Configurations.Roles;
 using Database.Configurations.Users;
 using Database.Models;
+using Database.Models.Content;
 using Database.Models.Roles;
 using Database.Models.Users;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -25,6 +27,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
         new AccessLevelConfig().Configure(modelBuilder.Entity<AccessLevel>());
+
+        new DocumentConfig().Configure(modelBuilder.Entity<Document>());
+        new CategoryConfig().Configure(modelBuilder.Entity<Category>());
     }
 
     // BaseUser
