@@ -30,15 +30,23 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
         new CategoryConfig().Configure(modelBuilder.Entity<Category>());
+        
+        new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
+        
+        new AddressConfig().Configure(modelBuilder.Entity<Address>());
+        new SubscriptionConfig().Configure(modelBuilder.Entity<Subscription>());
     }
 
     // BaseUser
-    DbSet<BaseUser> BaseUsers { get; set; }
-    DbSet<PhoneNumber> PhoneNumbers { get; set; }
+    public DbSet<BaseUser> BaseUsers { get; set; }
+    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     
     // Admin
-    DbSet<Admin> Admins { get; set; }
-    DbSet<AccessLevel> AccessLevels { get; set; }
+    public DbSet<Admin> Admins { get; set; }
+    public DbSet<AccessLevel> AccessLevels { get; set; }
 
+    public DbSet<ServiceProvider> ServiceProviders { get; set; }
+    public DbSet<Address> Addresses { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
     
 }
