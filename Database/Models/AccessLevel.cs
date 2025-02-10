@@ -1,4 +1,3 @@
-using System;
 using Database.Models.Users;
 
 namespace Database.Models;

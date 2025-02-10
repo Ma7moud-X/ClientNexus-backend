@@ -1,4 +1,3 @@
-using System;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

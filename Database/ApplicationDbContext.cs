@@ -35,6 +35,12 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         
         new AddressConfig().Configure(modelBuilder.Entity<Address>());
         new SubscriptionConfig().Configure(modelBuilder.Entity<Subscription>());
+
+        new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
+        
+        new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
+        new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
+   
     }
 
     // BaseUser
@@ -49,4 +55,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Subscription> Subscriptions { get; set; }
     
+    // Lawyer-related entities
+    public DbSet<Lawyer> Lawyers { get; set; }
+    public DbSet<LawyerLicence> LawyerLicences { get; set; }
+    public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
+
 }

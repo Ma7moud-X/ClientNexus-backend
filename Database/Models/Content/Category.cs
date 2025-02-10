@@ -1,5 +1,3 @@
-using System;
-
 namespace Database.Models.Content;
 
 public class Category
