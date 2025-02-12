@@ -26,6 +26,12 @@ namespace Database.Configurations.Services
                 .WithMany(a => a.Appointments)
                 .HasForeignKey(a => a.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
+                
+            builder.HasOne(a => a.Slot)
+                .WithOne(s => s.Appointment)
+                .HasForeignKey<Appointment>(a => a.SlotId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
