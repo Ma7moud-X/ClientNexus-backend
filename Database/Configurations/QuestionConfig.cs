@@ -21,7 +21,7 @@ namespace Database.Configurations
 
             // Configure relationships
             builder.HasOne(q => q.ServiceProvider)
-                .WithMany(sp => sp.questions)
+                .WithMany(sp => sp.Questions)
                 .HasForeignKey(q => q.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }

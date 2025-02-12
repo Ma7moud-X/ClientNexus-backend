@@ -8,5 +8,6 @@ namespace Database.Models.Users
         public List<Problem>? Problems { get; set; }
         public List<Payment>? Payments { get; set; }
         public List<Service>? Services { get; set; }
+
     }
 }

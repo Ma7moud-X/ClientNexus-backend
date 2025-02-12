@@ -1,12 +1,11 @@
+using System.Collections.Generic;
 using Database.Models.Users;
 
 namespace Database.Models.Services
 {
-    public class EmergencyCase : Service
+    public class ConsultationCase : Service
     {
-        public string Location { get; set; }
-        public string Category { get; set; }
-        public decimal Price { get; set; }
+        public ICollection<CaseFile> CaseFiles { get; set; }
 
         // Foreign key
         public int ServiceProviderId { get; set; }

@@ -4,7 +4,8 @@ namespace Database.Models.Services
     {
         public int Id { get; set; }
         public string FileUrl { get; set; }
+        
         public int ConsultCaseId { get; set; }
-        public ConsultCase ConsultCase { get; set; }
+        public ConsultationCase ConsultCase { get; set; }
     }
 }

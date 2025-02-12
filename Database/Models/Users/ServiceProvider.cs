@@ -39,9 +39,11 @@ namespace Database.Models.Users
         public List<Payment>? Payments { get; set; }
 
         public List<EmergencyCase>? EmergencyCases { get; set; }
+        public List<Question>? Questions { get; set; }
+        public List<ConsultationCase>? ConsultationCases { get; set; }
+        public List<Appointment>? Appointments { get; set; }
 
-        public List<Question>? questions { get; set; }
-
+        public List<SlotServiceProvider> SlotServiceProviders { get; set; }
 
     }
 }

@@ -1,0 +1,31 @@
+using Database.Models.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Database.Configurations.Services
+{
+    public class AppointmentConfig : IEntityTypeConfiguration<Appointment>
+    {
+        public void Configure(EntityTypeBuilder<Appointment> builder)
+        {
+            builder.ToTable("Appointments");
+
+            builder.HasBaseType<Service>();
+
+            builder.Property(a => a.Status)
+                .IsRequired();
+
+            builder.Property(a => a.Type)
+                .IsRequired();
+
+            builder.Property(a => a.Date)
+                .IsRequired();
+    
+            // Configure relationships
+            builder.HasOne(a => a.ServiceProvider)
+                .WithMany(a => a.Appointments)
+                .HasForeignKey(a => a.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}

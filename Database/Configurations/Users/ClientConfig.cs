@@ -8,6 +8,9 @@ namespace Database.Configurations.Users
     {
         public void Configure(EntityTypeBuilder<Client> builder)
         {
+
+            builder.ToTable("Clients");
+
             // Configure inherited properties from BaseUser
             builder.HasBaseType<BaseUser>();
 

@@ -1,6 +1,7 @@
 using Database.Configurations;
 using Database.Configurations.Content;
 using Database.Configurations.Roles;
+using Database.Configurations.Services;
 using Database.Configurations.Users;
 using Database.Models;
 using Database.Models.Content;
@@ -34,7 +35,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
         new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
         new QuestionConfig().Configure(modelBuilder.Entity<Question>());
-
+        new ConsultationCaseConfiguration().Configure(modelBuilder.Entity<ConsultationCase>());
+        new CaseFileConfiguration().Configure(modelBuilder.Entity<CaseFile>());
+        new AppointmentConfig().Configure(modelBuilder.Entity<Appointment>());
 
 
         new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
@@ -55,6 +58,10 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
         
         new ProblemConfig().Configure(modelBuilder.Entity<Problem>());
+        
+        new SlotConfig().Configure(modelBuilder.Entity<Slot>());
+        new SlotTypeConfig().Configure(modelBuilder.Entity<SlotType>());
+        new SlotServiceProviderConfig().Configure(modelBuilder.Entity<SlotServiceProvider>());
    
     }
 
@@ -70,9 +77,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
     public DbSet<EmergencyCase> EmergencyCases { get; set; }
     public DbSet<Question> questions { get; set; }
-
-
-
+    public DbSet<ConsultationCase> consultationCases { get; set; }
+    public DbSet<CaseFile> caseFiles { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
 
 
 
@@ -86,5 +93,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<LawyerLicence> LawyerLicences { get; set; }
     public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
+ 
+    public DbSet<Slot> Slots { get; set; }
+    public DbSet<SlotType> SlotTypes { get; set; }
+    public DbSet<SlotServiceProvider> SlotServiceProviders { get; set; }
 
 }

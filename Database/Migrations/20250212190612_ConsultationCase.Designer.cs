@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250212190612_ConsultationCase")]
+    partial class ConsultationCase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -414,58 +417,6 @@ namespace Database.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("Database.Models.Services.Slot", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Slots", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotServiceProvider", b =>
-                {
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SlotId", "ServiceProviderId");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("SlotServiceProviders", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SlotId");
-
-                    b.ToTable("SlotTypes", (string)null);
-                });
-
             modelBuilder.Entity("Database.Models.Subscription", b =>
                 {
                     b.Property<int>("Id")
@@ -680,31 +631,6 @@ namespace Database.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Services.Appointment", b =>
-                {
-                    b.HasBaseType("Database.Models.Services.Service");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.HasIndex("SlotId")
-                        .IsUnique()
-                        .HasFilter("[SlotId] IS NOT NULL");
-
-                    b.ToTable("Appointments", (string)null);
-                });
-
             modelBuilder.Entity("Database.Models.Services.ConsultationCase", b =>
                 {
                     b.HasBaseType("Database.Models.Services.Service");
@@ -785,7 +711,7 @@ namespace Database.Migrations
                         .HasColumnType("real")
                         .HasDefaultValue(0f);
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients");
                 });
 
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
@@ -978,36 +904,6 @@ namespace Database.Migrations
                     b.Navigation("Client");
                 });
 
-            modelBuilder.Entity("Database.Models.Services.SlotServiceProvider", b =>
-                {
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("SlotServiceProviders")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithMany("SlotServiceProviders")
-                        .HasForeignKey("SlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-
-                    b.Navigation("Slot");
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotType", b =>
-                {
-                    b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithMany("SlotTypes")
-                        .HasForeignKey("SlotId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Slot");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Database.Models.Roles.Role", null)
@@ -1057,31 +953,6 @@ namespace Database.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Database.Models.Services.Appointment", b =>
-                {
-                    b.HasOne("Database.Models.Services.Service", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Services.Appointment", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Appointments")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithOne("Appointment")
-                        .HasForeignKey("Database.Models.Services.Appointment", "SlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-
-                    b.Navigation("Slot");
                 });
 
             modelBuilder.Entity("Database.Models.Services.ConsultationCase", b =>
@@ -1220,15 +1091,6 @@ namespace Database.Migrations
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("Database.Models.Services.Slot", b =>
-                {
-                    b.Navigation("Appointment");
-
-                    b.Navigation("SlotServiceProviders");
-
-                    b.Navigation("SlotTypes");
-                });
-
             modelBuilder.Entity("Database.Models.Users.BaseUser", b =>
                 {
                     b.Navigation("PhoneNumbers");
@@ -1259,8 +1121,6 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
                 {
-                    b.Navigation("Appointments");
-
                     b.Navigation("ConsultationCases");
 
                     b.Navigation("EmergencyCases");
@@ -1270,8 +1130,6 @@ namespace Database.Migrations
                     b.Navigation("Problems");
 
                     b.Navigation("Questions");
-
-                    b.Navigation("SlotServiceProviders");
                 });
 
             modelBuilder.Entity("Database.Models.Users.Lawyer", b =>

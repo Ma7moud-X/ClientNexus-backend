@@ -39,20 +39,36 @@ namespace Database.Configurations.Users
                 .OnDelete(DeleteBehavior.Restrict);
             
             builder.HasMany(sp => sp.Payments)
-               .WithOne(p => p.ServiceProvider)
-               .HasForeignKey(p => p.ServiceProviderId)
+               .WithOne(sp => sp.ServiceProvider)
+               .HasForeignKey(sp => sp.ServiceProviderId)
                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(sp => sp.EmergencyCases)
-                .WithOne(ec => ec.ServiceProvider)
-                .HasForeignKey(ec => ec.ServiceProviderId)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.questions)
-                .WithOne(ec => ec.ServiceProvider)
-                .HasForeignKey(ec => ec.ServiceProviderId)
+            builder.HasMany(sp => sp.Questions)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(sp => sp.ConsultationCases)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(sp => sp.Appointments)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Add many-to-many relationship with Slot
+            builder.HasMany(sp => sp.SlotServiceProviders)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
             // Properties configuration
             builder.Property(sp => sp.Description)
                 .IsRequired()
