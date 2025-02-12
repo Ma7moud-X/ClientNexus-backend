@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250212152116_Service")]
+    partial class Service
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,7 +301,7 @@ namespace Database.Migrations
 
                     b.HasIndex("ServiceProviderId");
 
-                    b.ToTable("Problems", (string)null);
+                    b.ToTable("Problems");
                 });
 
             modelBuilder.Entity("Database.Models.Roles.Role", b =>
@@ -386,9 +389,7 @@ namespace Database.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Services", (string)null);
-
-                    b.UseTptMappingStrategy();
+                    b.ToTable("services");
                 });
 
             modelBuilder.Entity("Database.Models.Subscription", b =>
@@ -603,48 +604,6 @@ namespace Database.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.EmergencyCase", b =>
-                {
-                    b.HasBaseType("Database.Models.Services.Service");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("EmergencyCases", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.Question", b =>
-                {
-                    b.HasBaseType("Database.Models.Services.Service");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Visibility")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("Questions", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Users.Admin", b =>
@@ -906,40 +865,6 @@ namespace Database.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Database.Models.Services.EmergencyCase", b =>
-                {
-                    b.HasOne("Database.Models.Services.Service", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Services.EmergencyCase", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("EmergencyCases")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-                });
-
-            modelBuilder.Entity("Database.Models.Services.Question", b =>
-                {
-                    b.HasOne("Database.Models.Services.Service", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Services.Question", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("questions")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-                });
-
             modelBuilder.Entity("Database.Models.Users.Admin", b =>
                 {
                     b.HasOne("Database.Models.AccessLevel", "AccessLevel")
@@ -1050,13 +975,9 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
                 {
-                    b.Navigation("EmergencyCases");
-
                     b.Navigation("Payments");
 
                     b.Navigation("Problems");
-
-                    b.Navigation("questions");
                 });
 
             modelBuilder.Entity("Database.Models.Users.Lawyer", b =>

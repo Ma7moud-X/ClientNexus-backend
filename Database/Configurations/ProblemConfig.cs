@@ -4,10 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Configurations
 {
-    public class ProblemConfiguration : IEntityTypeConfiguration<Problem>
+    public class ProblemConfig : IEntityTypeConfiguration<Problem>
     {
         public void Configure(EntityTypeBuilder<Problem> builder)
         {
+            
+            builder.ToTable("Problems");
+
             builder.HasKey(p => p.Id);
 
             builder.Property(p => p.Description)

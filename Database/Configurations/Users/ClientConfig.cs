@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Configurations.Users
 {
-    public class ClientConfiguration : IEntityTypeConfiguration<Client>
+    public class ClientConfig : IEntityTypeConfiguration<Client>
     {
         public void Configure(EntityTypeBuilder<Client> builder)
         {
@@ -26,6 +26,11 @@ namespace Database.Configurations.Users
                .WithOne(p => p.Client)
                .HasForeignKey(p => p.ClientId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(c => c.Services)
+                .WithOne(s => s.Client)
+                .HasForeignKey(s => s.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

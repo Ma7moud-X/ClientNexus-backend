@@ -36,13 +36,22 @@ namespace Database.Configurations.Users
                 .HasMany(sp => sp.Problems)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+                .OnDelete(DeleteBehavior.Restrict);
             
             builder.HasMany(sp => sp.Payments)
                .WithOne(p => p.ServiceProvider)
                .HasForeignKey(p => p.ServiceProviderId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(sp => sp.EmergencyCases)
+                .WithOne(ec => ec.ServiceProvider)
+                .HasForeignKey(ec => ec.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(sp => sp.questions)
+                .WithOne(ec => ec.ServiceProvider)
+                .HasForeignKey(ec => ec.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Properties configuration
             builder.Property(sp => sp.Description)

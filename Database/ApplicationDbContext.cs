@@ -5,6 +5,7 @@ using Database.Configurations.Users;
 using Database.Models;
 using Database.Models.Content;
 using Database.Models.Roles;
+using Database.Models.Services;
 using Database.Models.Users;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -25,10 +26,18 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
 
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
-        new ClientConfiguration().Configure(modelBuilder.Entity<Client>());
+        new ClientConfig().Configure(modelBuilder.Entity<Client>());
         new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
         new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
 
+        new ServiceConfig().Configure(modelBuilder.Entity<Service>());
+
+        new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
+        new QuestionConfig().Configure(modelBuilder.Entity<Question>());
+
+
+
+        new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
 
         new PhoneNumberConfig().Configure(modelBuilder.Entity<PhoneNumber>());
 
@@ -45,9 +54,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
         
-        new ProblemConfiguration().Configure(modelBuilder.Entity<Problem>());
-        
-        new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
+        new ProblemConfig().Configure(modelBuilder.Entity<Problem>());
+   
     }
 
     public DbSet<BaseUser> BaseUsers { get; set; }
@@ -56,7 +64,20 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
     public DbSet<Lawyer> Lawyers { get; set; }
     public DbSet<Problem> Problems { get; set; }
-    
+
+
+    public DbSet<Service> services { get; set; }
+
+    public DbSet<EmergencyCase> EmergencyCases { get; set; }
+    public DbSet<Question> questions { get; set; }
+
+
+
+
+
+
+
+    public DbSet<Payment> Payments { get; set; }
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<AccessLevel> AccessLevels { get; set; }
     public DbSet<Document> Documents { get; set; }
@@ -65,6 +86,5 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<LawyerLicence> LawyerLicences { get; set; }
     public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
-    public DbSet<Payment> Payments { get; set; }
 
 }

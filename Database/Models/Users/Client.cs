@@ -1,3 +1,5 @@
+using Database.Models.Services;
+
 namespace Database.Models.Users
 {
     public class Client : BaseUser
@@ -5,6 +7,6 @@ namespace Database.Models.Users
         public float Rate { get; set; }
         public List<Problem>? Problems { get; set; }
         public List<Payment>? Payments { get; set; }
-
+        public List<Service>? Services { get; set; }
     }
 }

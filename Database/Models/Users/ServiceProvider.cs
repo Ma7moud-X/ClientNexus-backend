@@ -1,3 +1,5 @@
+using Database.Models.Services;
+
 namespace Database.Models.Users
 {
     public enum ServiceProviderType
@@ -35,6 +37,11 @@ namespace Database.Models.Users
 
         public List<Problem>? Problems { get; set; }
         public List<Payment>? Payments { get; set; }
+
+        public List<EmergencyCase>? EmergencyCases { get; set; }
+
+        public List<Question>? questions { get; set; }
+
 
     }
 }
