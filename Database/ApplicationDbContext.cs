@@ -46,6 +46,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
         
         new ProblemConfiguration().Configure(modelBuilder.Entity<Problem>());
+        
+        new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
     }
 
     public DbSet<BaseUser> BaseUsers { get; set; }
@@ -53,13 +55,16 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Admin> Admins { get; set; }
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
     public DbSet<Lawyer> Lawyers { get; set; }
-
-    public DbSet<AccessLevel> AccessLevels { get; set; }
-    public DbSet<Address> Addresses { get; set; }
-    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
-    public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<Problem> Problems { get; set; }
-
+    
+    public DbSet<PhoneNumber> PhoneNumbers { get; set; }
+    public DbSet<AccessLevel> AccessLevels { get; set; }
+    public DbSet<Document> Documents { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Address> Addresses { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<LawyerLicence> LawyerLicences { get; set; }
     public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+
 }

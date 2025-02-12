@@ -21,6 +21,12 @@ namespace Database.Configurations.Users
                 .WithOne(c => c.Client)
                 .HasForeignKey(c => c.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            builder.HasMany(c => c.Payments)
+               .WithOne(p => p.Client)
+               .HasForeignKey(p => p.ClientId)
+               .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

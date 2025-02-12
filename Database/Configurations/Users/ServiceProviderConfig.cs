@@ -38,6 +38,12 @@ namespace Database.Configurations.Users
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            
+            builder.HasMany(sp => sp.Payments)
+               .WithOne(p => p.ServiceProvider)
+               .HasForeignKey(p => p.ServiceProviderId)
+               .OnDelete(DeleteBehavior.Restrict);
+
             // Properties configuration
             builder.Property(sp => sp.Description)
                 .IsRequired()

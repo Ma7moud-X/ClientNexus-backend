@@ -4,5 +4,7 @@ namespace Database.Models.Users
     {
         public float Rate { get; set; }
         public List<Problem>? Problems { get; set; }
+        public List<Payment>? Payments { get; set; }
+
     }
 }

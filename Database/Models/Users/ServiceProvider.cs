@@ -34,5 +34,7 @@ namespace Database.Models.Users
         public bool IsAvailableForEmergency { get; set; }
 
         public List<Problem>? Problems { get; set; }
+        public List<Payment>? Payments { get; set; }
+
     }
 }
