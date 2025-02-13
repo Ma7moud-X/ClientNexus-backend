@@ -824,10 +824,6 @@ namespace Database.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.PrimitiveCollection<string>("Images")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsApproved")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

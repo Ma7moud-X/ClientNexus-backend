@@ -346,7 +346,6 @@ namespace Database.Migrations
                     IsApproved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsAvailableForEmergency = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    Images = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApprovedById = table.Column<int>(type: "int", nullable: false),
                     AddressId = table.Column<int>(type: "int", nullable: false),
                     SubscriptionId = table.Column<int>(type: "int", nullable: false),

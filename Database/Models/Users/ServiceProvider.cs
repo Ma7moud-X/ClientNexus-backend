@@ -17,7 +17,8 @@ namespace Database.Models.Users
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
         public ServiceProviderType Type { get; set; }
-        public ICollection<string> Images { get; set; }
+        
+        // public ICollection<string> Images { get; set; }
         
 
 
