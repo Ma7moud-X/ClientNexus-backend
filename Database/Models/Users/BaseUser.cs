@@ -14,5 +14,5 @@ public class BaseUser : IdentityUser<int>
     public int? BlockedById { get; set; }
     public Admin? BlockedBy { get; set; }
 
-    public List<PhoneNumber>? PhoneNumbers { get; set; }
+    public ICollection<PhoneNumber>? PhoneNumbers { get; set; }
 }

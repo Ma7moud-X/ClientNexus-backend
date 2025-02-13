@@ -17,7 +17,7 @@ public class Document
     public string? Url { get; set; }
     public DocumentType Type { get; set; }
 
-    public List<Category>? Categories { get; set; }
+    public ICollection<Category>? Categories { get; set; }
 
     public int UploadedById { get; set; }
     public Admin UploadedBy { get; set; }

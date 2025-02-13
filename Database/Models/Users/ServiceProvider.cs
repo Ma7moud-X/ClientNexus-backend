@@ -17,7 +17,7 @@ namespace Database.Models.Users
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
         public ServiceProviderType Type { get; set; }
-        public List<string> Images { get; set; }
+        public ICollection<string> Images { get; set; }
         
 
 
@@ -31,15 +31,15 @@ namespace Database.Models.Users
         public Subscription Subscription { get; set; }
         
 
-        public List<Problem>? Problems { get; set; }
-        public List<Payment>? Payments { get; set; }
-        public List<EmergencyCase>? EmergencyCases { get; set; }
-        public List<Question>? Questions { get; set; }
-        public List<ConsultationCase>? ConsultationCases { get; set; }
-        public List<Appointment>? Appointments { get; set; }
+        public ICollection<Problem>? Problems { get; set; }
+        public ICollection<Payment>? Payments { get; set; }
+        public ICollection<EmergencyCase>? EmergencyCases { get; set; }
+        public ICollection<Question>? Questions { get; set; }
+        public ICollection<ConsultationCase>? ConsultationCases { get; set; }
+        public ICollection<Appointment>? Appointments { get; set; }
 
 
-        public List<SlotServiceProvider> SlotServiceProviders { get; set; }
-        public List<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
+        public ICollection<SlotServiceProvider> SlotServiceProviders { get; set; }
+        public ICollection<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
     }
 }

@@ -11,9 +11,9 @@ public class Admin : BaseUser
     public AccessLevel? AccessLevel { get; set; }
 
 
-    public List<Admin>? ApprovedAdmins { get; set; }
-    public List<ServiceProvider>? ApprovedServiceProviders { get; set; }
-    public List<Document>? Documents { get; set; }
-    public List<Problem>? Problems { get; set; }
-    public List<BaseUser>? BlockedUsers { get; set; }
+    public ICollection<Admin>? ApprovedAdmins { get; set; }
+    public ICollection<ServiceProvider>? ApprovedServiceProviders { get; set; }
+    public ICollection<Document>? Documents { get; set; }
+    public ICollection<Problem>? Problems { get; set; }
+    public ICollection<BaseUser>? BlockedUsers { get; set; }
 }

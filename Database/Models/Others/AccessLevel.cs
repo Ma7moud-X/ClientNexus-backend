@@ -7,5 +7,5 @@ public class AccessLevel
     public int Id { get; set; }
     public string Name { get; set; }
 
-    public List<Admin>? Admins { get; set; }
+    public ICollection<Admin>? Admins { get; set; }
 }
