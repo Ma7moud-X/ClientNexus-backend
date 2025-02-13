@@ -10,7 +10,9 @@ public class AccessLevelConfig : IEntityTypeConfiguration<AccessLevel>
     {
         builder.ToTable("AccessLevels");
 
-        builder.Property(l => l.Name).HasColumnType("varchar(50)").IsRequired();
+        builder.Property(l => l.Name)
+            .HasColumnType("varchar(50)")
+            .IsRequired();
 
         // pre-populate
         List<AccessLevel> accessLevels =

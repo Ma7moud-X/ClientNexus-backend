@@ -17,24 +17,28 @@ namespace Database.Configurations.Users
                 .IsRequired()
                 .HasDefaultValue(0.0f);
 
-            builder.HasMany(c => c.Problems)
-                .WithOne(c => c.Client)
-                .HasForeignKey(c => c.ClientId)
+            builder
+                .HasMany(cc => cc.Problems)
+                .WithOne(cc => cc.Client)
+                .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            builder.HasMany(c => c.Payments)
-               .WithOne(p => p.Client)
-               .HasForeignKey(p => p.ClientId)
+            builder
+                .HasMany(cc => cc.Payments)
+               .WithOne(cc => cc.Client)
+               .HasForeignKey(cc => cc.ClientId)
                .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(c => c.Services)
-                .WithOne(s => s.Client)
-                .HasForeignKey(s => s.ClientId)
+            builder
+                .HasMany(cc => cc.Services)
+                .WithOne(cc => cc.Client)
+                .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.ClientServiceProviderFeedbacks)
-                .WithOne(sp => sp.Client)
-                .HasForeignKey(sp => sp.ClientId)
+            builder
+                .HasMany(cc => cc.ClientServiceProviderFeedbacks)
+                .WithOne(cc => cc.Client)
+                .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

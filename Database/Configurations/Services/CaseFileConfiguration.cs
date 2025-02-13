@@ -10,14 +10,15 @@ namespace Database.Configurations
         {
             builder.ToTable("CaseFiles");
 
-            builder.HasKey( d => new {d.Id, d.ConsultCaseId});
+            builder.HasKey( c => new {c.Id, c.ConsultCaseId});
 
             builder.Property(cf => cf.FileUrl)
                 .IsRequired()
                 .HasMaxLength(500);
 
-            builder.HasOne(cf => cf.ConsultCase)
-                .WithMany(cc => cc.CaseFiles)
+            builder
+                .HasOne(cf => cf.ConsultCase)
+                .WithMany(cf => cf.CaseFiles)
                 .HasForeignKey(cf => cf.ConsultCaseId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

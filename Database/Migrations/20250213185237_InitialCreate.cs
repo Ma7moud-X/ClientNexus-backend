@@ -348,8 +348,7 @@ namespace Database.Migrations
                     Type = table.Column<int>(type: "int", nullable: false),
                     ApprovedById = table.Column<int>(type: "int", nullable: false),
                     AddressId = table.Column<int>(type: "int", nullable: false),
-                    SubscriptionId = table.Column<int>(type: "int", nullable: false),
-                    AdminId = table.Column<int>(type: "int", nullable: true)
+                    SubscriptionId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -360,11 +359,6 @@ namespace Database.Migrations
                         principalTable: "Addresses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ServiceProviders_Admins_AdminId",
-                        column: x => x.AdminId,
-                        principalTable: "Admins",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ServiceProviders_Admins_ApprovedById",
                         column: x => x.ApprovedById,
@@ -894,11 +888,6 @@ namespace Database.Migrations
                 column: "AddressId",
                 unique: true,
                 filter: "[AddressId] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ServiceProviders_AdminId",
-                table: "ServiceProviders",
-                column: "AdminId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ServiceProviders_ApprovedById",

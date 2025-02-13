@@ -10,16 +10,16 @@ namespace Database.Configurations.Services
         {
             builder.ToTable("ClientServiceProviderFeedbacks");
 
-            builder.HasKey(ssp => new { ssp.ClientId, ssp.ServiceProviderId});
+            builder.HasKey(c => new { c.ClientId, c.ServiceProviderId});
 
-            builder.HasOne(ssp => ssp.Client)
-                .WithMany(s => s.ClientServiceProviderFeedbacks)
-                .HasForeignKey(ssp => ssp.ClientId)
+            builder.HasOne(c => c.Client)
+                .WithMany(c => c.ClientServiceProviderFeedbacks)
+                .HasForeignKey(c => c.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(ssp => ssp.ServiceProvider)
-                .WithMany(sp => sp.ClientServiceProviderFeedbacks)
-                .HasForeignKey(ssp => ssp.ServiceProviderId)
+            builder.HasOne(c => c.ServiceProvider)
+                .WithMany(c => c.ClientServiceProviderFeedbacks)
+                .HasForeignKey(c => c.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

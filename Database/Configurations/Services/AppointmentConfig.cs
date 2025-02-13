@@ -18,17 +18,19 @@ namespace Database.Configurations.Services
             builder.Property(a => a.Date)
                 .IsRequired();
                 
-            builder.Property(e => e.Price)
+            builder.Property(a => a.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
     
-            builder.HasOne(a => a.ServiceProvider)
+            builder
+                .HasOne(a => a.ServiceProvider)
                 .WithMany(a => a.Appointments)
                 .HasForeignKey(a => a.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
-            builder.HasOne(a => a.Slot)
-                .WithOne(s => s.Appointment)
+            builder
+                .HasOne(a => a.Slot)
+                .WithOne(a => a.Appointment)
                 .HasForeignKey<Appointment>(a => a.SlotId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);

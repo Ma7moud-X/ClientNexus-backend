@@ -26,7 +26,8 @@ namespace Database.Configurations
             builder.Property(l => l.ExpiryDate)
                 .IsRequired(true);
 
-            builder.HasOne(l => l.Lawyer)
+            builder
+                .HasOne(l => l.Lawyer)
                 .WithMany(l => l.Licences)
                 .HasForeignKey(l => l.LawyerId)
                 .OnDelete(DeleteBehavior.Cascade);

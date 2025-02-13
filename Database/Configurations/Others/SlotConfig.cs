@@ -15,17 +15,20 @@ namespace Database.Configurations.Services
             builder.Property(s => s.Date)
                 .IsRequired();
 
-            builder.HasOne(s => s.Appointment)
+            builder
+                .HasOne(s => s.Appointment)
                 .WithOne(s => s.Slot)
                 .HasForeignKey<Appointment>(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(s => s.SlotTypes)
+            builder
+                .HasMany(s => s.SlotTypes)
                 .WithOne(s => s.Slot)
                 .HasForeignKey(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(s => s.SlotServiceProviders)
+            builder
+                .HasMany(s => s.SlotServiceProviders)
                 .WithOne(s => s.Slot)
                 .HasForeignKey(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);

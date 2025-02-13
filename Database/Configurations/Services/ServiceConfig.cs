@@ -29,8 +29,9 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasDefaultValueSql("GETDATE()");
 
-            builder.HasOne(s => s.Client)
-                .WithMany(c => c.Services)
+            builder
+                .HasOne(s => s.Client)
+                .WithMany(s => s.Services)
                 .HasForeignKey(s => s.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
         }

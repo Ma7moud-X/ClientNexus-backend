@@ -11,16 +11,19 @@ namespace Database.Configurations
             
             builder.ToTable("Problems");
 
-            builder.HasKey( d => new {d.ClientId, d.ServiceProviderId, d.AdminId});
+            builder.HasKey( p => new {p.ClientId, p.ServiceProviderId, p.AdminId});
 
-            builder.Property(p => p.Description)
+            builder
+                .Property(p => p.Description)
                 .IsRequired();
 
-            builder.Property(p => p.Status)
+            builder
+                .Property(p => p.Status)
                 .IsRequired()
                 .HasConversion<string>();
 
-            builder.Property(p => p.ReportedBy)
+            builder
+                .Property(p => p.ReportedBy)
                 .IsRequired()
                 .HasConversion<string>();
 

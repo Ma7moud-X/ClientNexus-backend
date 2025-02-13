@@ -13,16 +13,18 @@ namespace Database.Configurations
 
             builder.HasBaseType<Service>();
 
-            builder.Property(e => e.Price)
+            builder.Property(p => p.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
 
-            builder.HasOne(cc => cc.ServiceProvider)
-                .WithMany(sp => sp.ConsultationCases)
-                .HasForeignKey(cc => cc.ServiceProviderId)
+            builder
+                .HasOne(cf => cf.ServiceProvider)
+                .WithMany(cf => cf.ConsultationCases)
+                .HasForeignKey(cf => cf.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(cc => cc.CaseFiles)
+            builder
+                .HasMany(cf => cf.CaseFiles)
                 .WithOne(cf => cf.ConsultCase)
                 .HasForeignKey(cf => cf.ConsultCaseId)
                 .OnDelete(DeleteBehavior.Cascade);

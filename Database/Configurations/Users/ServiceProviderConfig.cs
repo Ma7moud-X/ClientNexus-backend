@@ -37,57 +37,68 @@ namespace Database.Configurations.Users
                 .IsRequired(false)
                 .HasColumnType("nvarchar(500)");
 
-            builder.HasOne(sp => sp.ApprovingAdmin)
-                .WithMany()
+            builder
+                .HasOne(sp => sp.ApprovingAdmin)
+                .WithMany(sp => sp.ApprovedServiceProviders)
                 .HasForeignKey(sp => sp.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(sp => sp.Address)
+            builder
+                .HasOne(sp => sp.Address)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey<ServiceProvider>(sp => sp.AddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(sp => sp.Subscription)
+            builder
+                .HasOne(sp => sp.Subscription)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey<ServiceProvider>(sp => sp.SubscriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.Problems)
+            builder
+                .HasMany(sp => sp.Problems)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            builder.HasMany(sp => sp.Payments)
+            builder
+                .HasMany(sp => sp.Payments)
                .WithOne(sp => sp.ServiceProvider)
                .HasForeignKey(sp => sp.ServiceProviderId)
                .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.EmergencyCases)
+            builder
+                .HasMany(sp => sp.EmergencyCases)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.Questions)
+            builder
+                .HasMany(sp => sp.Questions)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.ConsultationCases)
+            builder
+                .HasMany(sp => sp.ConsultationCases)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.Appointments)
+            builder
+                .HasMany(sp => sp.Appointments)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.SlotServiceProviders)
+            builder
+                .HasMany(sp => sp.SlotServiceProviders)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(sp => sp.ClientServiceProviderFeedbacks)
+            builder
+                .HasMany(sp => sp.ClientServiceProviderFeedbacks)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);

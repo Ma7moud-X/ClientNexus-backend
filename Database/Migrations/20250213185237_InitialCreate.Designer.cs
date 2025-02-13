@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250213123251_InitialCreate")]
+    [Migration("20250213185237_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -816,9 +816,6 @@ namespace Database.Migrations
                     b.Property<int>("AddressId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ApprovedById")
                         .HasColumnType("int");
 
@@ -864,8 +861,6 @@ namespace Database.Migrations
                     b.HasIndex("AddressId")
                         .IsUnique()
                         .HasFilter("[AddressId] IS NOT NULL");
-
-                    b.HasIndex("AdminId");
 
                     b.HasIndex("ApprovedById");
 
@@ -1236,12 +1231,8 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Database.Models.Users.Admin", null)
-                        .WithMany("ApprovedServiceProviders")
-                        .HasForeignKey("AdminId");
-
                     b.HasOne("Database.Models.Users.Admin", "ApprovingAdmin")
-                        .WithMany()
+                        .WithMany("ApprovedServiceProviders")
                         .HasForeignKey("ApprovedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

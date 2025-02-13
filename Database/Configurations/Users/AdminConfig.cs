@@ -33,13 +33,14 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
         
         builder
             .HasMany(a => a.Documents)
-            .WithOne(d => d.UploadedBy)
-            .HasForeignKey(d => d.UploadedById)
+            .WithOne(a => a.UploadedBy)
+            .HasForeignKey(a => a.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(a => a.BlockedUsers)
-            .WithOne(u => u.BlockedBy)
-            .HasForeignKey(u => u.BlockedById)
+        builder
+            .HasMany(a => a.BlockedUsers)
+            .WithOne(a => a.BlockedBy)
+            .HasForeignKey(a => a.BlockedById)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
     }

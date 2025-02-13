@@ -12,13 +12,15 @@ namespace Database.Configurations.Services
 
             builder.HasKey(ssp => new { ssp.SlotId, ssp.ServiceProviderId });
 
-            builder.HasOne(ssp => ssp.Slot)
-                .WithMany(s => s.SlotServiceProviders)
+            builder
+                .HasOne(ssp => ssp.Slot)
+                .WithMany(ssp => ssp.SlotServiceProviders)
                 .HasForeignKey(ssp => ssp.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(ssp => ssp.ServiceProvider)
-                .WithMany(sp => sp.SlotServiceProviders)
+            builder
+                .HasOne(ssp => ssp.ServiceProvider)
+                .WithMany(ssp => ssp.SlotServiceProviders)
                 .HasForeignKey(ssp => ssp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }

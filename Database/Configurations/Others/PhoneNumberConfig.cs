@@ -10,12 +10,15 @@ public class PhoneNumberConfig : IEntityTypeConfiguration<PhoneNumber>
     {
         builder.ToTable("PhoneNumbers");
 
-        builder.HasKey( d => new {d.Id, d.BaseUserId});
+        builder.HasKey( p => new {p.Id, p.BaseUserId});
 
-        builder.Property(n => n.Number).HasColumnType("varchar(20)").IsRequired();
+        builder.Property(n => n.Number)
+            .HasColumnType("varchar(20)")
+            .IsRequired();
 
-        builder.HasOne(u => u.BaseUser)
-            .WithMany(a => a.PhoneNumbers)
+        builder
+            .HasOne(u => u.BaseUser)
+            .WithMany(p => p.PhoneNumbers)
             .HasForeignKey(u => u.BaseUserId)
             .OnDelete(DeleteBehavior.Cascade);
     }

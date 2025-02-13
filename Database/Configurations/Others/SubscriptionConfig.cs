@@ -21,7 +21,7 @@ namespace Database.Configurations
             builder.Property(s => s.ExpireDate)
                 .IsRequired(true);
             
-            builder.Property(e => e.Price)
+            builder.Property(s=> s.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
         }

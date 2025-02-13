@@ -24,7 +24,8 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
 
-            builder.HasOne(e => e.ServiceProvider)
+            builder
+                .HasOne(e => e.ServiceProvider)
                 .WithMany(e => e.EmergencyCases)
                 .HasForeignKey(e => e.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);

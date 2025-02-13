@@ -16,7 +16,8 @@ namespace Database.Configurations
                 .IsRequired(true)
                 .HasMaxLength(100);
 
-            builder.HasOne(ls => ls.Lawyer)
+            builder
+                .HasOne(ls => ls.Lawyer)
                 .WithMany(ls => ls.Specializations)
                 .HasForeignKey(ls => ls.LawyerId)
                 .OnDelete(DeleteBehavior.Cascade);

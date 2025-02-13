@@ -10,12 +10,13 @@ namespace Database.Configurations.Services
         {
             builder.ToTable("SlotTypes");
 
-            builder.HasKey( d => new {d.Id, d.SlotId});
+            builder.HasKey( s => new {s.Id, s.SlotId});
 
-            builder.Property(st => st.Type)
+            builder.Property(s => s.Type)
                 .IsRequired();
 
-            builder.HasOne(st => st.Slot)
+            builder
+                .HasOne(s => s.Slot)
                 .WithMany(s => s.SlotTypes)
                 .HasForeignKey(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Cascade);

@@ -10,19 +10,26 @@ public class BaseUserConfig : IEntityTypeConfiguration<BaseUser>
     {
         builder.ToTable("BaseUsers");
 
-        builder.Property(u => u.FirstName).HasColumnType("nvarchar(50)").IsRequired();
-        builder.Property(u => u.LastName).HasColumnType("nvarchar(50)").IsRequired();
-        builder.Property(u => u.PhoneNumber).HasColumnType("varchar(20)");
+        builder.Property(u => u.FirstName)
+            .HasColumnType("nvarchar(50)")
+            .IsRequired();
+        builder.Property(u => u.LastName)
+            .HasColumnType("nvarchar(50)")
+            .IsRequired();
+        builder.Property(u => u.PhoneNumber)
+            .HasColumnType("varchar(20)");
 
-        builder.HasOne(u => u.BlockedBy)
-            .WithMany(a => a.BlockedUsers)
-            .HasForeignKey(u => u.BlockedById)
+        builder
+            .HasOne(b => b.BlockedBy)
+            .WithMany(b => b.BlockedUsers)
+            .HasForeignKey(b => b.BlockedById)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(u => u.PhoneNumbers)
-            .WithOne(a => a.BaseUser)
-            .HasForeignKey(u => u.BaseUserId)
+        builder
+            .HasMany(b => b.PhoneNumbers)
+            .WithOne(b => b.BaseUser)
+            .HasForeignKey(b => b.BaseUserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

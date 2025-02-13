@@ -40,13 +40,15 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasConversion<string>();
 
-            builder.HasOne(p => p.Client)
-               .WithMany(c => c.Payments)
+            builder
+               .HasOne(p => p.Client)
+               .WithMany(p => p.Payments)
                .HasForeignKey(p => p.ClientId)
                .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(p => p.ServiceProvider)
-               .WithMany(sp => sp.Payments)
+            builder
+               .HasOne(p => p.ServiceProvider)
+               .WithMany(p => p.Payments)
                .HasForeignKey(p => p.ServiceProviderId)
                .OnDelete(DeleteBehavior.Restrict);
         }
