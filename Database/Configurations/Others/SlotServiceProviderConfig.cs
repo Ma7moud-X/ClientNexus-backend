@@ -8,12 +8,10 @@ namespace Database.Configurations.Services
     {
         public void Configure(EntityTypeBuilder<SlotServiceProvider> builder)
         {
-            builder.ToTable("SlotServiceProviders");
+            builder.ToTable("SlotsServiceProviders");
 
-            // Configure composite key
             builder.HasKey(ssp => new { ssp.SlotId, ssp.ServiceProviderId });
 
-            // Configure relationships
             builder.HasOne(ssp => ssp.Slot)
                 .WithMany(s => s.SlotServiceProviders)
                 .HasForeignKey(ssp => ssp.SlotId)

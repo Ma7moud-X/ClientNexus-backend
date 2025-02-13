@@ -11,16 +11,17 @@ namespace Database.Configurations
 
             builder.ToTable("ConsultationCases");
 
-            // Configure inheritance
             builder.HasBaseType<Service>();
 
-            // Configure relationships
+            builder.Property(e => e.Price)
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
+
             builder.HasOne(cc => cc.ServiceProvider)
                 .WithMany(sp => sp.ConsultationCases)
                 .HasForeignKey(cc => cc.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure CaseFiles relationship
             builder.HasMany(cc => cc.CaseFiles)
                 .WithOne(cf => cf.ConsultCase)
                 .HasForeignKey(cf => cf.ConsultCaseId)

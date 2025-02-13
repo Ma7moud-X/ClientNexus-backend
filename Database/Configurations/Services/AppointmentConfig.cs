@@ -12,16 +12,16 @@ namespace Database.Configurations.Services
 
             builder.HasBaseType<Service>();
 
-            builder.Property(a => a.Status)
-                .IsRequired();
-
             builder.Property(a => a.Type)
                 .IsRequired();
 
             builder.Property(a => a.Date)
                 .IsRequired();
+                
+            builder.Property(e => e.Price)
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
     
-            // Configure relationships
             builder.HasOne(a => a.ServiceProvider)
                 .WithMany(a => a.Appointments)
                 .HasForeignKey(a => a.ServiceProviderId)

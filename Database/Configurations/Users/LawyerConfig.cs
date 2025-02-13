@@ -13,17 +13,15 @@ namespace Database.Configurations.Users
             builder.Property(l => l.YearsOfExperience)
                 .IsRequired(false);
 
-            // Configure Licences relationship
             builder.HasMany(l => l.Licences)
                 .WithOne(l => l.Lawyer)
                 .HasForeignKey(l => l.LawyerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Specializations relationship
             builder.HasMany(l => l.Specializations)
                 .WithOne(l => l.Lawyer)
                 .HasForeignKey(l => l.LawyerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

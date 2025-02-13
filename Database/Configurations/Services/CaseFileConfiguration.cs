@@ -8,18 +8,14 @@ namespace Database.Configurations
     {
         public void Configure(EntityTypeBuilder<CaseFile> builder)
         {
-            // Configure table
             builder.ToTable("CaseFiles");
 
-            // Configure primary key
-            builder.HasKey(cf => cf.Id);
+            builder.HasKey( d => new {d.Id, d.ConsultCaseId});
 
-            // Configure properties
             builder.Property(cf => cf.FileUrl)
                 .IsRequired()
                 .HasMaxLength(500);
 
-            // Configure relationship with ConsultationCase
             builder.HasOne(cf => cf.ConsultCase)
                 .WithMany(cc => cc.CaseFiles)
                 .HasForeignKey(cf => cf.ConsultCaseId)

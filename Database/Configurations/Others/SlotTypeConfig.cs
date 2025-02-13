@@ -10,12 +10,11 @@ namespace Database.Configurations.Services
         {
             builder.ToTable("SlotTypes");
 
-            builder.HasKey(st => st.Id);
+            builder.HasKey( d => new {d.Id, d.SlotId});
 
             builder.Property(st => st.Type)
                 .IsRequired();
 
-            // Configure relationship with Slot
             builder.HasOne(st => st.Slot)
                 .WithMany(s => s.SlotTypes)
                 .HasForeignKey(s => s.SlotId)

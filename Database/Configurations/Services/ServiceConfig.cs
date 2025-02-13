@@ -22,14 +22,13 @@ namespace Database.Configurations
                 .HasMaxLength(500);
 
             builder.Property(s => s.Status)
-                .IsRequired()
-                .HasDefaultValue(true);
+                .HasDefaultValue(ServiceStatus.Pending)
+                .IsRequired();
 
             builder.Property(s => s.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETDATE()");
 
-            // Configure one-to-many relationship with Client
             builder.HasOne(s => s.Client)
                 .WithMany(c => c.Services)
                 .HasForeignKey(s => s.ClientId)

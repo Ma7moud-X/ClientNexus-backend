@@ -21,6 +21,7 @@ namespace Database.Configurations
             builder.Property(a => a.City)
                 .IsRequired(true)
                 .HasMaxLength(20);
+            
         }
     }
 }

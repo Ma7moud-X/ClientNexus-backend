@@ -1,4 +1,6 @@
 
+using Database.Models.Users;
+
 namespace Database.Models
 {
     public enum SubscriptionStatus
@@ -17,8 +19,11 @@ namespace Database.Models
     public class Subscription
     {
         public int Id { get; set; }
+        public decimal Price { get; set; }
         public SubscriptionType Type { get; set; }
         public SubscriptionStatus Status { get; set; }
         public DateTime ExpireDate { get; set; }
+
+        public ServiceProvider ServiceProvider { get; set; }
     }
 }

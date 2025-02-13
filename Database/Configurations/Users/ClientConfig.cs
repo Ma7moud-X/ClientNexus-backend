@@ -11,15 +11,12 @@ namespace Database.Configurations.Users
 
             builder.ToTable("Clients");
 
-            // Configure inherited properties from BaseUser
             builder.HasBaseType<BaseUser>();
 
-            // Configure Rate property
             builder.Property(c => c.Rate)
                 .IsRequired()
                 .HasDefaultValue(0.0f);
 
-            // Configure Problems relationship
             builder.HasMany(c => c.Problems)
                 .WithOne(c => c.Client)
                 .HasForeignKey(c => c.ClientId)
@@ -33,6 +30,11 @@ namespace Database.Configurations.Users
             builder.HasMany(c => c.Services)
                 .WithOne(s => s.Client)
                 .HasForeignKey(s => s.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(sp => sp.ClientServiceProviderFeedbacks)
+                .WithOne(sp => sp.Client)
+                .HasForeignKey(sp => sp.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

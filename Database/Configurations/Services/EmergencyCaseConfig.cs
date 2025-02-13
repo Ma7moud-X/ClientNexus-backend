@@ -10,10 +10,8 @@ namespace Database.Configurations
         {
             builder.ToTable("EmergencyCases");
 
-            // Configure inheritance
             builder.HasBaseType<Service>();
 
-            // Configure required fields
             builder.Property(e => e.Location)
                 .IsRequired()
                 .HasMaxLength(255);
@@ -26,7 +24,6 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
 
-            // Configure relationships
             builder.HasOne(e => e.ServiceProvider)
                 .WithMany(e => e.EmergencyCases)
                 .HasForeignKey(e => e.ServiceProviderId)

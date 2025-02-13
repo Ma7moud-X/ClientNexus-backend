@@ -8,9 +8,8 @@ namespace Database.Models.Services
         public string Category { get; set; }
         public decimal Price { get; set; }
 
-        // Foreign key
+
         public int ServiceProviderId { get; set; }
-        // Navigation property
         public ServiceProvider ServiceProvider { get; set; }
     }
 }

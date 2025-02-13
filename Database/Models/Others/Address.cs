@@ -1,4 +1,6 @@
 
+using Database.Models.Users;
+
 namespace Database.Models
 {
      public class Address
@@ -7,5 +9,8 @@ namespace Database.Models
         public string DetailedAddress { get; set; }
         public string Neighborhood { get; set; }
         public string City { get; set; }
+
+        public ServiceProvider ServiceProvider { get; set; }
+
     }
 }

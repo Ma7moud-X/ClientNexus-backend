@@ -5,7 +5,8 @@ namespace Database.Models
     public enum PaymentServiceType
     {
         Consultation,
-        LegalService,
+        Appointment,
+        EmergencyCase,
         Subscription,
         Other
     }
@@ -29,11 +30,10 @@ namespace Database.Models
         public DateTime CreatedAt { get; set; }
         public PaymentServiceType ServiceType { get; set; }
 
-        // Client relationship
+
         public int ClientId { get; set; }
         public Client Client { get; set; }
 
-        // Service Provider relationship
         public int ServiceProviderId { get; set; }
         public ServiceProvider ServiceProvider { get; set; }
     }

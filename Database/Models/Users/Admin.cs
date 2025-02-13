@@ -10,9 +10,10 @@ public class Admin : BaseUser
     public int AccessLevelId { get; set; }
     public AccessLevel? AccessLevel { get; set; }
 
+
     public List<Admin>? ApprovedAdmins { get; set; }
+    public List<ServiceProvider>? ApprovedServiceProviders { get; set; }
     public List<Document>? Documents { get; set; }
-
     public List<Problem>? Problems { get; set; }
-
+    public List<BaseUser>? BlockedUsers { get; set; }
 }

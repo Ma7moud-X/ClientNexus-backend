@@ -9,12 +9,9 @@ namespace Database.Models.Services
         public int Id { get; set; }
         public DateTime Date { get; set; }
         
-        public List<SlotType> SlotTypes { get; set; }
-
         public Appointment? Appointment { get; set; }
-
+        public List<SlotType> SlotTypes { get; set; }
         public List<SlotServiceProvider> SlotServiceProviders { get; set; }
-
 
     }
 }

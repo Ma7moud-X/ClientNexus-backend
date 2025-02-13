@@ -62,6 +62,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new SlotConfig().Configure(modelBuilder.Entity<Slot>());
         new SlotTypeConfig().Configure(modelBuilder.Entity<SlotType>());
         new SlotServiceProviderConfig().Configure(modelBuilder.Entity<SlotServiceProvider>());
+        new ClientServiceProviderFeedbackConfig().Configure(modelBuilder.Entity<ClientServiceProviderFeedback>());
    
     }
 
@@ -97,5 +98,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Slot> Slots { get; set; }
     public DbSet<SlotType> SlotTypes { get; set; }
     public DbSet<SlotServiceProvider> SlotServiceProviders { get; set; }
+    public DbSet<ClientServiceProviderFeedback> clientServiceProviderFeedbacks { get; set; }
 
 }

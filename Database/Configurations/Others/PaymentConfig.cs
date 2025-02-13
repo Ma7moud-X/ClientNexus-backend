@@ -10,10 +10,8 @@ namespace Database.Configurations
         {
             builder.ToTable("Payments");
 
-            // Primary Key
             builder.HasKey(p => p.Id);
 
-            // Properties
             builder.Property(p => p.Signature)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -42,7 +40,6 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasConversion<string>();
 
-            // Relationships
             builder.HasOne(p => p.Client)
                .WithMany(c => c.Payments)
                .HasForeignKey(p => p.ClientId)

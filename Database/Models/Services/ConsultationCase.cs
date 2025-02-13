@@ -6,10 +6,10 @@ namespace Database.Models.Services
     public class ConsultationCase : Service
     {
         public ICollection<CaseFile> CaseFiles { get; set; }
+        public decimal Price { get; set; }
 
-        // Foreign key
+
         public int ServiceProviderId { get; set; }
-        // Navigation property
         public ServiceProvider ServiceProvider { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace Database.Models
         public DateOnly IssueDate { get; set; }
         public DateOnly ExpiryDate { get; set; }
         
-        // Foreign key
+        
         public int LawyerId { get; set; }
         public Lawyer Lawyer { get; set; }
     }

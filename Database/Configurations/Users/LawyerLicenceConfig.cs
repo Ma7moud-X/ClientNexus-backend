@@ -10,6 +10,8 @@ namespace Database.Configurations
         {
             builder.ToTable("LawyerLicences");
 
+            builder.HasKey( d => new {d.Id, d.LawyerId});
+
             builder.Property(l => l.LicenceNumber)
                 .IsRequired(true)
                 .HasMaxLength(50);
@@ -27,7 +29,7 @@ namespace Database.Configurations
             builder.HasOne(l => l.Lawyer)
                 .WithMany(l => l.Licences)
                 .HasForeignKey(l => l.LawyerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -10,30 +10,49 @@ namespace Database.Configurations.Users
         {
             builder.ToTable("ServiceProviders");
 
-            // Admin approval relationship
-            builder
-                .HasOne(sp => sp.ApprovingAdmin)
+            builder.Property(sp => sp.Description)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            builder.Property(sp => sp.MainImage)
+                .IsRequired();
+
+            builder.Property(sp => sp.Rate)
+                .HasDefaultValue(0.0f);
+
+            builder.Property(sp => sp.ApprovedById)
+                .IsRequired(true);
+
+            builder.Property(sp => sp.IsFeatured)
+                .HasDefaultValue(false);
+
+            builder.Property(sp => sp.IsApproved)
+                .HasDefaultValue(false);
+
+            builder.Property(sp => sp.IsAvailableForEmergency)
+                .HasDefaultValue(false);
+
+            builder.Property(sp => sp.MapLocation)
+                .HasMaxLength(500)
+                .IsRequired(false)
+                .HasColumnType("nvarchar(500)");
+
+            builder.HasOne(sp => sp.ApprovingAdmin)
                 .WithMany()
                 .HasForeignKey(sp => sp.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Address relationship
-            builder
-                .HasOne(sp => sp.Address)
-                .WithOne()
+            builder.HasOne(sp => sp.Address)
+                .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey<ServiceProvider>(sp => sp.AddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Subscription relationship
-            builder
-                .HasOne(sp => sp.Subscription)
-                .WithOne()
+            builder.HasOne(sp => sp.Subscription)
+                .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey<ServiceProvider>(sp => sp.SubscriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Problems relationship
-            builder
-                .HasMany(sp => sp.Problems)
+            builder.HasMany(sp => sp.Problems)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -63,34 +82,15 @@ namespace Database.Configurations.Users
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Add many-to-many relationship with Slot
             builder.HasMany(sp => sp.SlotServiceProviders)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
-            // Properties configuration
-            builder.Property(sp => sp.Description)
-                .IsRequired()
-                .HasMaxLength(1000);
 
-            builder.Property(sp => sp.MainImage)
-                .IsRequired();
-
-            builder.Property(sp => sp.Rate)
-                .HasDefaultValue(0.0f);
-
-            builder.Property(sp => sp.ApprovedById)
-                .IsRequired(true);
-
-            builder.Property(sp => sp.IsFeatured)
-                .HasDefaultValue(false);
-
-            builder.Property(sp => sp.IsApproved)
-                .HasDefaultValue(false);
-
-            builder.Property(sp => sp.IsAvailableForEmergency)
-                .HasDefaultValue(false);
+            builder.HasMany(sp => sp.ClientServiceProviderFeedbacks)
+                .WithOne(sp => sp.ServiceProvider)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

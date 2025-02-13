@@ -10,6 +10,9 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
     {
         builder.ToTable("Admins");
 
+        builder.Property(a => a.ApprovedById).IsRequired(false);
+        
+        
         builder
             .HasOne(a => a.ApprovingAdmin)
             .WithMany(a => a.ApprovedAdmins)
@@ -22,12 +25,22 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
             .HasForeignKey(a => a.AccessLevelId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(a => a.ApprovedById).IsRequired(false);
-
         builder
             .HasMany(a => a.Problems)
             .WithOne(a => a.Admin)
             .HasForeignKey(a => a.AdminId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder
+            .HasMany(a => a.Documents)
+            .WithOne(d => d.UploadedBy)
+            .HasForeignKey(d => d.UploadedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(a => a.BlockedUsers)
+            .WithOne(u => u.BlockedBy)
+            .HasForeignKey(u => u.BlockedById)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

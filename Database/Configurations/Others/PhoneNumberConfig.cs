@@ -10,7 +10,13 @@ public class PhoneNumberConfig : IEntityTypeConfiguration<PhoneNumber>
     {
         builder.ToTable("PhoneNumbers");
 
-        // data types configuration
+        builder.HasKey( d => new {d.Id, d.BaseUserId});
+
         builder.Property(n => n.Number).HasColumnType("varchar(20)").IsRequired();
+
+        builder.HasOne(u => u.BaseUser)
+            .WithMany(a => a.PhoneNumbers)
+            .HasForeignKey(u => u.BaseUserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

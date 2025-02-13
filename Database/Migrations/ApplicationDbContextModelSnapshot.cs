@@ -82,16 +82,18 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Content.Category", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "DocumentId");
+
+                    b.HasIndex("DocumentId");
 
                     b.ToTable("Categories", (string)null);
                 });
@@ -104,12 +106,17 @@ namespace Database.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UploadedById")
                         .HasColumnType("int");
@@ -120,8 +127,6 @@ namespace Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("UploadedById");
 
                     b.ToTable("Documents", (string)null);
@@ -130,10 +135,10 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.LawyerLicence", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("LawyerId")
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("ExpiryDate")
                         .HasColumnType("date");
@@ -146,15 +151,12 @@ namespace Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("LawyerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("LicenceNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "LawyerId");
 
                     b.HasIndex("LawyerId");
 
@@ -164,10 +166,7 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.LawyerSpecialization", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("LawyerId")
                         .HasColumnType("int");
@@ -177,7 +176,7 @@ namespace Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "LawyerId");
 
                     b.HasIndex("LawyerId");
 
@@ -242,10 +241,7 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BaseUserId")
                         .HasColumnType("int");
@@ -254,7 +250,7 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "BaseUserId");
 
                     b.HasIndex("BaseUserId");
 
@@ -263,16 +259,13 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Problem", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AdminId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -283,18 +276,13 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ClientId", "ServiceProviderId", "AdminId");
 
                     b.HasIndex("AdminId");
-
-                    b.HasIndex("ClientId");
 
                     b.HasIndex("ServiceProviderId");
 
@@ -354,10 +342,7 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Services.CaseFile", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ConsultCaseId")
                         .HasColumnType("int");
@@ -367,11 +352,33 @@ namespace Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "ConsultCaseId");
 
                     b.HasIndex("ConsultCaseId");
 
                     b.ToTable("CaseFiles", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Services.ClientServiceProviderFeedback", b =>
+                {
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Feedback")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Rate")
+                        .HasColumnType("real");
+
+                    b.HasKey("ClientId", "ServiceProviderId");
+
+                    b.HasIndex("ServiceProviderId");
+
+                    b.ToTable("ClientServiceProviderFeedbacks", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Services.Service", b =>
@@ -400,10 +407,10 @@ namespace Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool>("Status")
+                    b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -442,16 +449,13 @@ namespace Database.Migrations
 
                     b.HasIndex("ServiceProviderId");
 
-                    b.ToTable("SlotServiceProviders", (string)null);
+                    b.ToTable("SlotsServiceProviders", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Services.SlotType", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("SlotId")
                         .HasColumnType("int");
@@ -459,7 +463,7 @@ namespace Database.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "SlotId");
 
                     b.HasIndex("SlotId");
 
@@ -476,6 +480,9 @@ namespace Database.Migrations
 
                     b.Property<DateTime>("ExpireDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -503,6 +510,9 @@ namespace Database.Migrations
 
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date");
+
+                    b.Property<int?>("BlockedById")
+                        .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -563,6 +573,8 @@ namespace Database.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BlockedById");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -687,6 +699,9 @@ namespace Database.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
@@ -708,6 +723,9 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Services.ConsultationCase", b =>
                 {
                     b.HasBaseType("Database.Models.Services.Service");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
@@ -795,6 +813,9 @@ namespace Database.Migrations
                     b.Property<int>("AddressId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ApprovedById")
                         .HasColumnType("int");
 
@@ -826,6 +847,10 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("MapLocation")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<float>("Rate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("real")
@@ -840,6 +865,8 @@ namespace Database.Migrations
                     b.HasIndex("AddressId")
                         .IsUnique()
                         .HasFilter("[AddressId] IS NOT NULL");
+
+                    b.HasIndex("AdminId");
 
                     b.HasIndex("ApprovedById");
 
@@ -860,20 +887,24 @@ namespace Database.Migrations
                     b.ToTable("Lawyers", (string)null);
                 });
 
+            modelBuilder.Entity("Database.Models.Content.Category", b =>
+                {
+                    b.HasOne("Database.Models.Content.Document", "Document")
+                        .WithMany("Categories")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
             modelBuilder.Entity("Database.Models.Content.Document", b =>
                 {
-                    b.HasOne("Database.Models.Content.Category", "Category")
-                        .WithMany("Documents")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Database.Models.Users.Admin", "UploadedBy")
                         .WithMany("Documents")
                         .HasForeignKey("UploadedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Category");
 
                     b.Navigation("UploadedBy");
                 });
@@ -883,7 +914,7 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Lawyer", "Lawyer")
                         .WithMany("Licences")
                         .HasForeignKey("LawyerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Lawyer");
@@ -894,7 +925,7 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Lawyer", "Lawyer")
                         .WithMany("Specializations")
                         .HasForeignKey("LawyerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Lawyer");
@@ -935,7 +966,8 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Admin", "Admin")
                         .WithMany("Problems")
                         .HasForeignKey("AdminId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Database.Models.Users.Client", "Client")
                         .WithMany("Problems")
@@ -965,6 +997,25 @@ namespace Database.Migrations
                         .IsRequired();
 
                     b.Navigation("ConsultCase");
+                });
+
+            modelBuilder.Entity("Database.Models.Services.ClientServiceProviderFeedback", b =>
+                {
+                    b.HasOne("Database.Models.Users.Client", "Client")
+                        .WithMany("ClientServiceProviderFeedbacks")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("ClientServiceProviderFeedbacks")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("ServiceProvider");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Service", b =>
@@ -1006,6 +1057,16 @@ namespace Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.BaseUser", b =>
+                {
+                    b.HasOne("Database.Models.Users.Admin", "BlockedBy")
+                        .WithMany("BlockedUsers")
+                        .HasForeignKey("BlockedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BlockedBy");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -1171,10 +1232,14 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
                 {
                     b.HasOne("Database.Models.Address", "Address")
-                        .WithOne()
+                        .WithOne("ServiceProvider")
                         .HasForeignKey("Database.Models.Users.ServiceProvider", "AddressId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Database.Models.Users.Admin", null)
+                        .WithMany("ApprovedServiceProviders")
+                        .HasForeignKey("AdminId");
 
                     b.HasOne("Database.Models.Users.Admin", "ApprovingAdmin")
                         .WithMany()
@@ -1189,7 +1254,7 @@ namespace Database.Migrations
                         .IsRequired();
 
                     b.HasOne("Database.Models.Subscription", "Subscription")
-                        .WithOne()
+                        .WithOne("ServiceProvider")
                         .HasForeignKey("Database.Models.Users.ServiceProvider", "SubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1215,9 +1280,15 @@ namespace Database.Migrations
                     b.Navigation("Admins");
                 });
 
-            modelBuilder.Entity("Database.Models.Content.Category", b =>
+            modelBuilder.Entity("Database.Models.Address", b =>
                 {
-                    b.Navigation("Documents");
+                    b.Navigation("ServiceProvider")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Database.Models.Content.Document", b =>
+                {
+                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Slot", b =>
@@ -1227,6 +1298,12 @@ namespace Database.Migrations
                     b.Navigation("SlotServiceProviders");
 
                     b.Navigation("SlotTypes");
+                });
+
+            modelBuilder.Entity("Database.Models.Subscription", b =>
+                {
+                    b.Navigation("ServiceProvider")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Database.Models.Users.BaseUser", b =>
@@ -1243,6 +1320,10 @@ namespace Database.Migrations
                 {
                     b.Navigation("ApprovedAdmins");
 
+                    b.Navigation("ApprovedServiceProviders");
+
+                    b.Navigation("BlockedUsers");
+
                     b.Navigation("Documents");
 
                     b.Navigation("Problems");
@@ -1250,6 +1331,8 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Users.Client", b =>
                 {
+                    b.Navigation("ClientServiceProviderFeedbacks");
+
                     b.Navigation("Payments");
 
                     b.Navigation("Problems");
@@ -1260,6 +1343,8 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("ClientServiceProviderFeedbacks");
 
                     b.Navigation("ConsultationCases");
 
