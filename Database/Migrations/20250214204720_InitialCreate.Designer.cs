@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250213185237_InitialCreate")]
+    [Migration("20250214204720_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -85,18 +85,16 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Content.Category", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("DocumentId")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id", "DocumentId");
-
-                    b.HasIndex("DocumentId");
+                    b.HasKey("Id");
 
                     b.ToTable("Categories", (string)null);
                 });
@@ -133,6 +131,21 @@ namespace Database.Migrations
                     b.HasIndex("UploadedById");
 
                     b.ToTable("Documents", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Content.DocumentCategory", b =>
+                {
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DocumentId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("DocumentsCategories", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.LawyerLicence", b =>
@@ -881,17 +894,6 @@ namespace Database.Migrations
                     b.ToTable("Lawyers", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Content.Category", b =>
-                {
-                    b.HasOne("Database.Models.Content.Document", "Document")
-                        .WithMany("Categories")
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Document");
-                });
-
             modelBuilder.Entity("Database.Models.Content.Document", b =>
                 {
                     b.HasOne("Database.Models.Users.Admin", "UploadedBy")
@@ -901,6 +903,25 @@ namespace Database.Migrations
                         .IsRequired();
 
                     b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("Database.Models.Content.DocumentCategory", b =>
+                {
+                    b.HasOne("Database.Models.Content.Category", "Category")
+                        .WithMany("DocumentsCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Content.Document", "Document")
+                        .WithMany("DocumentsCategories")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("Database.Models.LawyerLicence", b =>
@@ -1276,9 +1297,14 @@ namespace Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Database.Models.Content.Category", b =>
+                {
+                    b.Navigation("DocumentsCategories");
+                });
+
             modelBuilder.Entity("Database.Models.Content.Document", b =>
                 {
-                    b.Navigation("Categories");
+                    b.Navigation("DocumentsCategories");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Slot", b =>

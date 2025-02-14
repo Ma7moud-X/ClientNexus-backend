@@ -53,6 +53,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
         new CategoryConfig().Configure(modelBuilder.Entity<Category>());
+        new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
 
         new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
@@ -98,7 +99,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     // Content entities
     public DbSet<Document> Documents { get; set; }
     public DbSet<Category> Categories { get; set; }
-    
+    public DbSet<DocumentCategory> DocumentsCategories { get; set; }
+
 
     // Lawyer-specific entities
     public DbSet<LawyerLicence> LawyerLicences { get; set; }

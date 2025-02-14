@@ -42,6 +42,19 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -380,18 +393,23 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categories",
+                name: "DocumentsCategories",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
                     DocumentId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categories", x => new { x.Id, x.DocumentId });
+                    table.PrimaryKey("PK_DocumentsCategories", x => new { x.DocumentId, x.CategoryId });
                     table.ForeignKey(
-                        name: "FK_Categories_Documents_DocumentId",
+                        name: "FK_DocumentsCategories_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DocumentsCategories_Documents_DocumentId",
                         column: x => x.DocumentId,
                         principalTable: "Documents",
                         principalColumn: "Id",
@@ -811,11 +829,6 @@ namespace Database.Migrations
                 column: "ConsultCaseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_DocumentId",
-                table: "Categories",
-                column: "DocumentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ClientServiceProviderFeedbacks_ServiceProviderId",
                 table: "ClientServiceProviderFeedbacks",
                 column: "ServiceProviderId");
@@ -829,6 +842,11 @@ namespace Database.Migrations
                 name: "IX_Documents_UploadedById",
                 table: "Documents",
                 column: "UploadedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentsCategories_CategoryId",
+                table: "DocumentsCategories",
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmergencyCases_ServiceProviderId",
@@ -958,10 +976,10 @@ namespace Database.Migrations
                 name: "CaseFiles");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "ClientServiceProviderFeedbacks");
 
             migrationBuilder.DropTable(
-                name: "ClientServiceProviderFeedbacks");
+                name: "DocumentsCategories");
 
             migrationBuilder.DropTable(
                 name: "EmergencyCases");
@@ -995,6 +1013,9 @@ namespace Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "ConsultationCases");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Documents");

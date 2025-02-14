@@ -10,16 +10,16 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
     {
         builder.ToTable("Categories");
         
-        builder.HasKey( c => new {c.Id, c.DocumentId});
+        builder.HasKey( c => c.Id);
 
         builder.Property(c => c.Name)
             .HasColumnType("nvarchar(100)")
             .IsRequired(true);
 
         builder
-            .HasOne(c => c.Document)
-            .WithMany(c => c.Categories)
-            .HasForeignKey(c => c.DocumentId)
+            .HasMany(c => c.DocumentsCategories)
+            .WithOne(c => c.Category)
+            .HasForeignKey(c => c.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

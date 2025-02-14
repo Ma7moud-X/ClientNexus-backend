@@ -30,7 +30,7 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
 
 
         builder
-            .HasMany(d => d.Categories)
+            .HasMany(d => d.DocumentsCategories)
             .WithOne(d => d.Document)
             .HasForeignKey(d => d.DocumentId)
             .OnDelete(DeleteBehavior.Cascade);
