@@ -44,10 +44,10 @@ namespace Database.Configurations.Users
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasOne(sp => sp.Address)
+                .HasMany(sp => sp.Addresses)
                 .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey<ServiceProvider>(sp => sp.AddressId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder
                 .HasOne(sp => sp.Subscription)

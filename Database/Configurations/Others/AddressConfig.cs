@@ -22,6 +22,16 @@ namespace Database.Configurations
                 .IsRequired(true)
                 .HasMaxLength(20);
             
+            builder.Property(a => a.MapUrl)
+                .IsRequired(false)
+                .HasColumnType("nvarchar(500)");
+
+            builder
+                .HasOne(sp => sp.ServiceProvider)
+                .WithMany(a => a.Addresses)
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
         }
     }
 }

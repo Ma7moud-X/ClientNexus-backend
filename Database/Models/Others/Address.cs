@@ -9,7 +9,9 @@ namespace Database.Models
         public string DetailedAddress { get; set; }
         public string Neighborhood { get; set; }
         public string City { get; set; }
+        public string MapUrl { get; set; }
 
+        public int ServiceProviderId {get; set;}
         public ServiceProvider ServiceProvider { get; set; }
 
     }
