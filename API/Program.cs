@@ -1,7 +1,6 @@
 using API.Extensions.API;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
-using Database.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,9 +11,9 @@ var app = builder.Build();
 
 app.MapGet(
     "/",
-    () =>
+    async (IUnitOfWork unitOfWork) =>
     {
-        return "Hello World";
+        return "Hello World!";
     }
 );
 

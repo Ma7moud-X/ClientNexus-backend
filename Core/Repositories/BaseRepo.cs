@@ -12,6 +12,11 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
     public BaseRepo(ApplicationDbContext context)
     {
+        if (context is null)
+        {
+            throw new Exception("Can't initialize BaseRepo. Context can't be null");
+        }
+
         _context = context;
     }
 
@@ -46,6 +51,7 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     //     return await _context.Set<EType>().FromSqlRaw(query, parameters).FirstOrDefaultAsync();
     // }
 
+
     public async Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
@@ -61,19 +67,24 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     }
 
     public async Task<IEnumerable<EType>> GetByConditionAsync(
-        Expression<Func<EType, bool>> exp,
+        Expression<Func<EType, bool>> condExp,
+        bool getAll = false,
         int offset = 0,
         int limit = 20,
         string[]? includes = null
     )
     {
-        var query = _context
-            .Set<EType>()
-            .AsNoTracking()
-            .Where(exp)
-            .Skip(offset)
-            .Take(limit)
-            .AsQueryable();
+        if (condExp is null)
+        {
+            throw new Exception("Expression can't be null");
+        }
+
+        var query = _context.Set<EType>().AsNoTracking().Where(condExp).AsQueryable();
+
+        if (!getAll)
+        {
+            query = query.Skip(offset).Take(limit);
+        }
 
         if (includes is not null)
         {
@@ -81,6 +92,34 @@ public class BaseRepo<EType> : IBaseRepo<EType>
             {
                 query = query.Include(inc);
             }
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<object>> GetByConditionAsync(
+        Expression<Func<EType, bool>>? condExp,
+        Expression<Func<EType, object>> selectExp,
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20
+    )
+    {
+        var q = _context.Set<EType>().AsNoTracking();
+        if (condExp is not null)
+        {
+            q = q.Where(condExp);
+        }
+
+        if (selectExp is null)
+        {
+            throw new Exception("Select expression can't be null");
+        }
+
+        IQueryable<object> query = q.Select(selectExp);
+        if (!getAll)
+        {
+            query = query.Skip(offset).Take(limit);
         }
 
         return await query.ToListAsync();
