@@ -12,12 +12,9 @@ var app = builder.Build();
 
 app.MapGet(
     "/",
-    async (IUnitOfWork unitOfWork) =>
+    () =>
     {
-        AccessLevel? accessLevel = await unitOfWork.AccessLevels.GetByIdAsync(1);
-        unitOfWork.AccessLevels.Delete(accessLevel!);
-        await unitOfWork.SaveChangesAsync();
-        return "success";
+        return "Hello World";
     }
 );
 
