@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Database.Models.Users;
-
 namespace Database.Models.Services
 {
     public class Slot
