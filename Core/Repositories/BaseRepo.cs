@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Database;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,16 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         _context.Set<EType>().Remove(entity);
     }
 
+    // public async Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters)
+    // {
+    //     return await _context.Set<EType>().FromSqlRaw(query, parameters).ToListAsync();
+    // }
+
+    // public async Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters)
+    // {
+    //     return await _context.Set<EType>().FromSqlRaw(query, parameters).FirstOrDefaultAsync();
+    // }
+
     public async Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
@@ -50,13 +61,13 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     }
 
     public async Task<IEnumerable<EType>> GetByConditionAsync(
-        Func<EType, bool> exp,
+        Expression<Func<EType, bool>> exp,
         int offset = 0,
         int limit = 20,
         string[]? includes = null
     )
     {
-        IQueryable<EType> query = _context
+        var query = _context
             .Set<EType>()
             .AsNoTracking()
             .Where(exp)

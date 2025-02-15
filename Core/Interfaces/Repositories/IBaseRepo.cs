@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace Core.Interfaces.Repositories;
 
 public interface IBaseRepo<EType>
@@ -8,7 +10,7 @@ public interface IBaseRepo<EType>
 
     // Task<IEnumerable<EType>> GetByConditionAsync(IWhereCondition<EType> condition, IPaginate paginate);
     Task<IEnumerable<EType>> GetByConditionAsync(
-        Func<EType, bool> exp,
+        Expression<Func<EType, bool>> exp,
         int offset = 0,
         int limit = 20,
         string[]? includes = null
@@ -16,4 +18,6 @@ public interface IBaseRepo<EType>
     Task<EType> AddAsync(EType entity);
     EType Update(EType oldEntity, EType updatedEntity);
     void Delete(EType entity);
+    // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
+    // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }
