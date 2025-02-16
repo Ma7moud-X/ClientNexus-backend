@@ -1,3 +1,4 @@
+using Database.Models.Others;
 using Database.Models.Services;
 
 namespace Database.Models.Users
@@ -5,8 +6,9 @@ namespace Database.Models.Users
     public enum ServiceProviderType
     {
         Lawyer,
-        Other
+        Other,
     }
+
     public class ServiceProvider : BaseUser
     {
         public string Description { get; set; } = default!;
@@ -17,27 +19,24 @@ namespace Database.Models.Users
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
         public ServiceProviderType Type { get; set; }
-        
+
         // public ICollection<string> Images { get; set; }
-        
+
 
 
         public int? ApprovedById { get; set; }
         public Admin? ApprovingAdmin { get; set; }
 
-
         public int SubscriptionId { get; set; }
         public Subscription? Subscription { get; set; }
-        
 
         public ICollection<Address>? Addresses { get; set; }
         public ICollection<Problem>? Problems { get; set; }
-        public ICollection<Payment>? Payments { get; set; }
         public ICollection<EmergencyCase>? EmergencyCases { get; set; }
         public ICollection<Question>? Questions { get; set; }
         public ICollection<ConsultationCase>? ConsultationCases { get; set; }
         public ICollection<Appointment>? Appointments { get; set; }
-
+        public ICollection<SubscriptionPayment>? SubscriptionPayments { get; set; }
 
         public ICollection<SlotServiceProvider>? SlotServiceProviders { get; set; }
 

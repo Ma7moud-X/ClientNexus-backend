@@ -1,4 +1,5 @@
 using System;
+using Database.Models.Others;
 using Database.Models.Users;
 
 namespace Database.Models.Services
@@ -8,18 +9,20 @@ namespace Database.Models.Services
         Pending,
         InProgress,
         Completed,
-        Cancelled
+        Cancelled,
     }
 
     public class Service
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; } = default!;
+        public string Description { get; set; } = default!;
         public ServiceStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public int ClientId { get; set; }
-        public Client Client { get; set; }
+        public Client? Client { get; set; }
+
+        public ServicePayment? ServicePayment { get; set; }
     }
 }

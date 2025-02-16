@@ -4,8 +4,8 @@ namespace Database.Models.Users;
 
 public class BaseUser : IdentityUser<int>
 {
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
+    public string FirstName { get; set; } = default!;
+    public string LastName { get; set; } = default!;
     public bool IsBlocked { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
     public DateOnly BirthDate { get; set; }

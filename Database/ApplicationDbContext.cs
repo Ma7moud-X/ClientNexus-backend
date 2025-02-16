@@ -1,10 +1,12 @@
 using Database.Configurations;
 using Database.Configurations.Content;
+using Database.Configurations.Others;
 using Database.Configurations.Roles;
 using Database.Configurations.Services;
 using Database.Configurations.Users;
 using Database.Models;
 using Database.Models.Content;
+using Database.Models.Others;
 using Database.Models.Roles;
 using Database.Models.Services;
 using Database.Models.Users;
@@ -37,6 +39,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new AppointmentConfig().Configure(modelBuilder.Entity<Appointment>());
 
         new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
+        new ServicePaymentConfig().Configure(modelBuilder.Entity<ServicePayment>());
+        new SubscriptionPaymentConfig().Configure(modelBuilder.Entity<SubscriptionPayment>());
         new ProblemConfig().Configure(modelBuilder.Entity<Problem>());
         new CaseFileConfiguration().Configure(modelBuilder.Entity<CaseFile>());
 

@@ -10,11 +10,9 @@ public class PhoneNumberConfig : IEntityTypeConfiguration<PhoneNumber>
     {
         builder.ToTable("PhoneNumbers");
 
-        builder.HasKey( p => new {p.Id, p.BaseUserId});
+        builder.HasKey(p => new { p.Id, p.BaseUserId });
 
-        builder.Property(n => n.Number)
-            .HasColumnType("varchar(20)")
-            .IsRequired();
+        builder.Property(n => n.Number).HasColumnType("varchar(20)").IsRequired();
 
         builder
             .HasOne(u => u.BaseUser)

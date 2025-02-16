@@ -7,7 +7,6 @@ namespace Database.Models.Users
         public float Rate { get; set; }
 
         public ICollection<Problem>? Problems { get; set; }
-        public ICollection<Payment>? Payments { get; set; }
         public ICollection<Service>? Services { get; set; }
 
         public ICollection<ClientServiceProviderFeedback>? ClientServiceProviderFeedbacks { get; set; }

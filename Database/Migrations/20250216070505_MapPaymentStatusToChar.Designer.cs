@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250216070505_MapPaymentStatusToChar")]
+    partial class MapPaymentStatusToChar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,6 +254,9 @@ namespace Database.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -261,14 +267,13 @@ namespace Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("PaymentType")
-                        .IsRequired()
-                        .HasColumnType("varchar(1)");
-
                     b.Property<string>("ReferenceNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Signature")
                         .IsRequired()
@@ -281,9 +286,11 @@ namespace Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Payments", (string)null);
+                    b.HasIndex("ClientId");
 
-                    b.UseTptMappingStrategy();
+                    b.HasIndex("ServiceProviderId");
+
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
@@ -740,32 +747,6 @@ namespace Database.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Others.ServicePayment", b =>
-                {
-                    b.HasBaseType("Database.Models.Payment");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceId")
-                        .IsUnique()
-                        .HasFilter("[ServiceId] IS NOT NULL");
-
-                    b.ToTable("ServicePayments", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Others.SubscriptionPayment", b =>
-                {
-                    b.HasBaseType("Database.Models.Payment");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("SubscriptionPayments", (string)null);
-                });
-
             modelBuilder.Entity("Database.Models.Services.Appointment", b =>
                 {
                     b.HasBaseType("Database.Models.Services.Service");
@@ -1016,6 +997,25 @@ namespace Database.Migrations
                     b.Navigation("Lawyer");
                 });
 
+            modelBuilder.Entity("Database.Models.Payment", b =>
+                {
+                    b.HasOne("Database.Models.Users.Client", "Client")
+                        .WithMany("Payments")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("Payments")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("ServiceProvider");
+                });
+
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
                     b.HasOne("Database.Models.Users.BaseUser", "BaseUser")
@@ -1186,40 +1186,6 @@ namespace Database.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Database.Models.Others.ServicePayment", b =>
-                {
-                    b.HasOne("Database.Models.Payment", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Others.ServicePayment", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Services.Service", "Service")
-                        .WithOne("ServicePayment")
-                        .HasForeignKey("Database.Models.Others.ServicePayment", "ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("Database.Models.Others.SubscriptionPayment", b =>
-                {
-                    b.HasOne("Database.Models.Payment", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Others.SubscriptionPayment", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("SubscriptionPayments")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-                });
-
             modelBuilder.Entity("Database.Models.Services.Appointment", b =>
                 {
                     b.HasOne("Database.Models.Services.Service", null)
@@ -1383,11 +1349,6 @@ namespace Database.Migrations
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("Database.Models.Services.Service", b =>
-                {
-                    b.Navigation("ServicePayment");
-                });
-
             modelBuilder.Entity("Database.Models.Services.Slot", b =>
                 {
                     b.Navigation("Appointment");
@@ -1430,6 +1391,8 @@ namespace Database.Migrations
                 {
                     b.Navigation("ClientServiceProviderFeedbacks");
 
+                    b.Navigation("Payments");
+
                     b.Navigation("Problems");
 
                     b.Navigation("Services");
@@ -1447,13 +1410,13 @@ namespace Database.Migrations
 
                     b.Navigation("EmergencyCases");
 
+                    b.Navigation("Payments");
+
                     b.Navigation("Problems");
 
                     b.Navigation("Questions");
 
                     b.Navigation("SlotServiceProviders");
-
-                    b.Navigation("SubscriptionPayments");
                 });
 
             modelBuilder.Entity("Database.Models.Users.Lawyer", b =>

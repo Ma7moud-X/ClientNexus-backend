@@ -56,12 +56,6 @@ namespace Database.Configurations.Users
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasMany(sp => sp.Payments)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
                 .HasMany(sp => sp.EmergencyCases)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
@@ -90,12 +84,6 @@ namespace Database.Configurations.Users
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // builder
-            //     .HasMany(sp => sp.ClientServiceProviderFeedbacks)
-            //     .WithOne(sp => sp.ServiceProvider)
-            //     .HasForeignKey(sp => sp.ServiceProviderId)
-            //     .OnDelete(DeleteBehavior.Restrict);
 
             builder
                 .HasMany(sp => sp.ClientsWithFeedbacks)

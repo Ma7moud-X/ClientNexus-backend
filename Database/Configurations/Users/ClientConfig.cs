@@ -22,24 +22,12 @@ namespace Database.Configurations.Users
                 .WithOne(cc => cc.Client)
                 .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
-            builder
-                .HasMany(cc => cc.Payments)
-               .WithOne(cc => cc.Client)
-               .HasForeignKey(cc => cc.ClientId)
-               .OnDelete(DeleteBehavior.Restrict);
 
             builder
                 .HasMany(cc => cc.Services)
                 .WithOne(cc => cc.Client)
                 .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // builder
-            //     .HasMany(cc => cc.ClientServiceProviderFeedbacks)
-            //     .WithOne(cc => cc.Client)
-            //     .HasForeignKey(cc => cc.ClientId)
-            //     .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
