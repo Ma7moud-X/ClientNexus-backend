@@ -13,5 +13,13 @@ public class DocumentTypeConfig : IEntityTypeConfiguration<DocumentType>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).HasColumnType("nvarchar(50)").IsRequired();
 
+        List<DocumentType> documentTypes = new()
+        {
+            new DocumentType { Id = -1, Name = "Article" },
+            new DocumentType { Id = -2, Name = "Template" },
+            new DocumentType { Id = -3, Name = "Other" },
+        };
+
+        builder.HasData(documentTypes);
     }
 }
