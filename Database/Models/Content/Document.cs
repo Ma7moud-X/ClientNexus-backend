@@ -18,6 +18,7 @@ public class Document
     public DocumentType Type { get; set; }
 
     public ICollection<DocumentCategory>? DocumentsCategories { get; set; }
+    public ICollection<Category>? Categories { get; set; }
 
     public int UploadedById { get; set; }
     public Admin UploadedBy { get; set; }

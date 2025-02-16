@@ -6,5 +6,5 @@ public class Category
     public string? Name { get; set; }
 
     public ICollection<DocumentCategory>? DocumentsCategories { get; set; }
-
+    public ICollection<Document>? Documents { get; set; }
 }
