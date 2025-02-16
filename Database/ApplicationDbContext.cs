@@ -22,7 +22,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     {
         base.OnModelCreating(modelBuilder);
 
-
         new RoleConfig().Configure(modelBuilder.Entity<Role>());
 
         new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
@@ -30,7 +29,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
         new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
         new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
-
 
         new ServiceConfig().Configure(modelBuilder.Entity<Service>());
         new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
@@ -54,11 +52,14 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
         new CategoryConfig().Configure(modelBuilder.Entity<Category>());
         new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
+        new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
         new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
         new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
 
-        new ClientServiceProviderFeedbackConfig().Configure(modelBuilder.Entity<ClientServiceProviderFeedback>());
+        new ClientServiceProviderFeedbackConfig().Configure(
+            modelBuilder.Entity<ClientServiceProviderFeedback>()
+        );
     }
 
     // User-related entities
@@ -68,7 +69,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
     public DbSet<Lawyer> Lawyers { get; set; }
 
-
     // Service-related entities
     public DbSet<Service> Services { get; set; }
     public DbSet<EmergencyCase> EmergencyCases { get; set; }
@@ -76,12 +76,10 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<ConsultationCase> ConsultationCases { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
 
-
     // Support entities
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Problem> Problems { get; set; }
     public DbSet<CaseFile> CaseFiles { get; set; }
-
 
     // Configuration entities
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
@@ -89,25 +87,20 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Subscription> Subscriptions { get; set; }
 
-
     // Scheduling entities
     public DbSet<Slot> Slots { get; set; }
     public DbSet<SlotType> SlotTypes { get; set; }
     public DbSet<SlotServiceProvider> SlotServiceProviders { get; set; }
-
 
     // Content entities
     public DbSet<Document> Documents { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<DocumentCategory> DocumentsCategories { get; set; }
 
-
     // Lawyer-specific entities
     public DbSet<LawyerLicence> LawyerLicences { get; set; }
     public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
- 
 
-     // Feedback entities
+    // Feedback entities
     public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
-
 }

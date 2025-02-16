@@ -12,19 +12,13 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
 
         builder.HasKey(d => d.Id);
 
-        builder.Property(d => d.Content).HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(d => d.Content).HasColumnType("nvarchar(2000)").IsRequired();
 
-        builder.Property(d => d.Type).IsRequired().HasConversion<string>();
+        // builder.Property(d => d.Type).IsRequired().HasConversion<string>();
 
         builder.Property(d => d.Title).HasColumnType("nvarchar(100)").IsRequired();
 
         builder.Property(d => d.Url).HasColumnType("varchar(500)").IsRequired();
-
-        // builder
-        //     .HasMany(d => d.DocumentsCategories)
-        //     .WithOne(d => d.Document)
-        //     .HasForeignKey(d => d.DocumentId)
-        //     .OnDelete(DeleteBehavior.Cascade);
 
         builder
             .HasMany(d => d.Categories)
@@ -41,6 +35,12 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
                         .HasForeignKey(dc => dc.DocumentId)
                         .OnDelete(DeleteBehavior.Cascade)
             );
+
+        builder
+            .HasOne(d => d.DocumentType)
+            .WithMany(dt => dt.Documents)
+            .HasForeignKey(d => d.DocumentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
             .HasOne(d => d.UploadedBy)
