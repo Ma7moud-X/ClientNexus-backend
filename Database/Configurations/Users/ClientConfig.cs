@@ -35,11 +35,11 @@ namespace Database.Configurations.Users
                 .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder
-                .HasMany(cc => cc.ClientServiceProviderFeedbacks)
-                .WithOne(cc => cc.Client)
-                .HasForeignKey(cc => cc.ClientId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // builder
+            //     .HasMany(cc => cc.ClientServiceProviderFeedbacks)
+            //     .WithOne(cc => cc.Client)
+            //     .HasForeignKey(cc => cc.ClientId)
+            //     .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
