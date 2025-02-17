@@ -2,6 +2,7 @@ using Core.Interfaces.Repositories;
 using Database;
 using Database.Models;
 using Database.Models.Content;
+using Database.Models.Others;
 using Database.Models.Roles;
 using Database.Models.Services;
 using Database.Models.Users;
@@ -63,6 +64,18 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<SlotServiceProvider> SlotServiceProviders { get; private set; }
 
+    public IBaseRepo<DocumentType> DocumentTypes { get; private set; }
+
+    public IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; private set; }
+
+    public IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations { get; private set; }
+
+    public IBaseRepo<Specialization> Specializations { get; private set; }
+
+    public IBaseRepo<ServicePayment> ServicePayments { get; private set; }
+
+    public IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; private set; }
+
     public readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -103,6 +116,15 @@ public class UnitOfWork : IUnitOfWork
         Slots = new BaseRepo<Slot>(context);
         SlotTypes = new BaseRepo<SlotType>(context);
         SlotServiceProviders = new BaseRepo<SlotServiceProvider>(context);
+
+
+        DocumentTypes = new BaseRepo<DocumentType>(context);
+        ServiceProviderTypes = new BaseRepo<ServiceProviderType>(context);
+        ServiceProviderSpecializations = new BaseRepo<ServiceProviderSpecialization>(context);
+        Specializations = new BaseRepo<Specialization>(context);
+
+        ServicePayments = new BaseRepo<ServicePayment>(context);
+        SubscriptionPayments = new BaseRepo<SubscriptionPayment>(context);
     }
 
     public void Dispose()

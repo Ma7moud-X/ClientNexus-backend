@@ -1,5 +1,6 @@
 using Database.Models;
 using Database.Models.Content;
+using Database.Models.Others;
 using Database.Models.Roles;
 using Database.Models.Services;
 using Database.Models.Users;
@@ -13,12 +14,16 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Category> Categories { get; }
     IBaseRepo<Document> Documents { get; }
     IBaseRepo<DocumentCategory> DocumentCategories { get; }
+    IBaseRepo<DocumentType> DocumentTypes { get; }
 
     // User Models
     IBaseRepo<BaseUser> BaseUsers { get; }
     IBaseRepo<Role> Roles { get; }
     IBaseRepo<Client> Clients { get; }
     IBaseRepo<ServiceProvider> ServiceProviders { get; }
+    IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; }
+    IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations { get; }
+    IBaseRepo<Specialization> Specializations { get; }
 
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
@@ -38,6 +43,8 @@ public interface IUnitOfWork : IDisposable
 
     // Others
     IBaseRepo<Payment> Payments { get; }
+    IBaseRepo<ServicePayment> ServicePayments { get; }
+    IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; }
     IBaseRepo<Problem> Problems { get; }
     IBaseRepo<Subscription> Subscriptions { get; }
     IBaseRepo<Slot> Slots { get; }
