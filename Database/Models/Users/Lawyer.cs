@@ -5,7 +5,7 @@ namespace Database.Models.Users
     {
          public int? YearsOfExperience { get; set; }
         
-        public ICollection<LawyerLicence> Licences { get; set; }
-        public ICollection<LawyerSpecialization> Specializations { get; set; }
+        public ICollection<LawyerLicence>? Licences { get; set; }
+        public ICollection<LawyerSpecialization>? Specializations { get; set; }
     }
 }
