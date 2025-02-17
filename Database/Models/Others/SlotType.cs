@@ -6,6 +6,6 @@ namespace Database.Models.Services
         public AppointmentType Type { get; set; }
         
         public int SlotId { get; set; }
-        public Slot Slot { get; set; }
+        public Slot? Slot { get; set; }
     }
 }
