@@ -43,11 +43,7 @@ namespace Database.Configurations.Users
                 .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder
-                .HasOne(sp => sp.Subscription)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey<ServiceProvider>(sp => sp.SubscriptionId)
-                .OnDelete(DeleteBehavior.Restrict);
+            
 
             builder
                 .HasMany(sp => sp.Problems)

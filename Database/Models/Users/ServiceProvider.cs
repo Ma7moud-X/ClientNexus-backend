@@ -27,7 +27,6 @@ namespace Database.Models.Users
         public int? ApprovedById { get; set; }
         public Admin? ApprovingAdmin { get; set; }
 
-        public int SubscriptionId { get; set; }
         public Subscription? Subscription { get; set; }
 
         public ICollection<Address>? Addresses { get; set; }
