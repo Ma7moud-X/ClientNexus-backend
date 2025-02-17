@@ -11,7 +11,7 @@ var app = builder.Build();
 
 app.MapGet(
     "/",
-    async (IUnitOfWork unitOfWork) =>
+    (IUnitOfWork unitOfWork) =>
     {
         return "Hello World!";
     }
