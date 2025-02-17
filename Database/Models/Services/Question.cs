@@ -1,5 +1,3 @@
-using Database.Models.Users;
-
 namespace Database.Models.Services
 {
     public class Question : Service

@@ -1,22 +1,19 @@
-using System;
-using Database.Models.Users;
-
 namespace Database.Models.Services
 {
-     public enum AppointmentType
+    public enum AppointmentType
     {
-        Online,
-        InPerson,
-        PhoneCall
+        Online = 'O',
+        InPerson = 'I',
+        PhoneCall = 'P',
     }
+
     public class Appointment : Service
     {
         public decimal Price { get; set; }
-        public AppointmentType Type { get; set; }
+        public char AppointmentType { get; set; }
         public DateTime Date { get; set; }
 
-
         public int SlotId { get; set; }
-        public Slot Slot { get; set; }
+        public Slot? Slot { get; set; }
     }
 }

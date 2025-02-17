@@ -21,9 +21,9 @@ namespace Database.Configurations.Services
                 .IsRequired();
 
             builder
-                .HasOne(s => s.Appointment)
+                .HasMany(s => s.Appointments)
                 .WithOne(s => s.Slot)
-                .HasForeignKey<Appointment>(s => s.SlotId)
+                .HasForeignKey(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
