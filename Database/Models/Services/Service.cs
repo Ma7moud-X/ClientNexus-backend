@@ -11,6 +11,14 @@ namespace Database.Models.Services
         Cancelled = 'C',
     }
 
+    public enum ServiceType
+    {
+        Emergency = 'E',
+        Appointment = 'A',
+        Question = 'Q',
+        Consultation = 'C',
+    }
+
     public class Service
     {
         public int Id { get; set; }
@@ -18,6 +26,7 @@ namespace Database.Models.Services
         public string? Description { get; set; }
         public char Status { get; set; } = (char)ServiceStatus.Pending;
         public DateTime CreatedAt { get; set; }
+        public char ServiceType { get; set; }
 
         public int ClientId { get; set; }
         public Client? Client { get; set; }

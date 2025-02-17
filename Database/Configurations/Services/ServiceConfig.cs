@@ -16,6 +16,8 @@ namespace Database.Configurations
 
             builder.Property(s => s.Description).IsRequired(false).HasMaxLength(500);
 
+            builder.Property(s => s.ServiceType).HasColumnType("varchar(1)").IsRequired();
+
             builder
                 .Property(s => s.Status)
                 .HasDefaultValue((char)ServiceStatus.Pending)
