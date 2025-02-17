@@ -21,10 +21,14 @@ namespace Database.Configurations
 
             builder.Property(p => p.PaymentGateway).IsRequired().HasMaxLength(50);
 
-            builder.Property(p => p.Status).HasColumnType("varchar(1)").IsRequired();
+            builder
+                .Property(p => p.Status)
+                .HasColumnType("varchar(1)")
+                .HasDefaultValue((char)PaymentStatus.Pending)
+                .IsRequired();
 
             builder.Property(p => p.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");
-            
+
             builder.Property(p => p.PaymentType).IsRequired().HasColumnType("varchar(1)");
         }
     }

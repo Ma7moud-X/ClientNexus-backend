@@ -5,7 +5,7 @@ namespace Database.Models
 {
     public enum ProblemStatus
     {
-        Pending = 'P',
+        New = 'N',
         InProgress = 'I',
         Done = 'D',
         Cancelled = 'C',
@@ -22,7 +22,7 @@ namespace Database.Models
         public int Id { get; set; }
 
         public string Description { get; set; } = default!;
-        public char Status { get; set; }
+        public char Status { get; set; } = (char)ProblemStatus.New;
 
         // Identify who reported the problem
         public char ReportedBy { get; set; }

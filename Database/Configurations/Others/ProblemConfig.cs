@@ -12,7 +12,11 @@ namespace Database.Configurations
 
             builder.Property(p => p.Description).HasColumnType("nvarchar(1000)").IsRequired();
 
-            builder.Property(p => p.Status).IsRequired().HasColumnType("varchar(1)");
+            builder
+                .Property(p => p.Status)
+                .IsRequired()
+                .HasColumnType("varchar(1)")
+                .HasDefaultValue((char)ProblemStatus.New);
 
             builder.Property(p => p.ReportedBy).HasColumnType("varchar(1)").IsRequired();
 
