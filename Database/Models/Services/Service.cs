@@ -24,5 +24,7 @@ namespace Database.Models.Services
         public Client? Client { get; set; }
 
         public ServicePayment? ServicePayment { get; set; }
+
+        public Problem? Problem { get; set; }
     }
 }
