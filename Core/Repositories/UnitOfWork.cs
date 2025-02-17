@@ -30,11 +30,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<AccessLevel> AccessLevels { get; private set; }
 
-    public IBaseRepo<Lawyer> Lawyers { get; private set; }
-
-    public IBaseRepo<LawyerLicence> LawyerLicences { get; private set; }
-
-    public IBaseRepo<LawyerSpecialization> LawyerSpecializations { get; private set; }
+    public IBaseRepo<License> Licenses { get; private set; }
 
     public IBaseRepo<Address> Addresses { get; private set; }
 
@@ -87,9 +83,7 @@ public class UnitOfWork : IUnitOfWork
         Admins = new BaseRepo<Admin>(context);
         AccessLevels = new BaseRepo<AccessLevel>(context);
 
-        Lawyers = new BaseRepo<Lawyer>(context);
-        LawyerLicences = new BaseRepo<LawyerLicence>(context);
-        LawyerSpecializations = new BaseRepo<LawyerSpecialization>(context);
+        Licenses = new BaseRepo<License>(context);
         Addresses = new BaseRepo<Address>(context);
         Feedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
         PhoneNumbers = new BaseRepo<PhoneNumber>(context);

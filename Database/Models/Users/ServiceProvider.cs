@@ -12,10 +12,13 @@ namespace Database.Models.Users
         public bool IsFeatured { get; set; }
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
+        public int? YearsOfExperience { get; set; }
 
         public int TypeId { get; set; }
         public ServiceProviderType? Type { get; set; }
 
+        public ICollection<ServiceProviderSpecialization>? ServiceProviderSpecializations { get; set; }
+        public ICollection<Specialization>? Specializations { get; set; }
 
         // public ICollection<string> Images { get; set; }
 
@@ -25,6 +28,7 @@ namespace Database.Models.Users
         public Admin? ApprovingAdmin { get; set; }
 
         public Subscription? Subscription { get; set; }
+        public ICollection<License>? Licenses { get; set; }
 
         public ICollection<Address>? Addresses { get; set; }
         public ICollection<Problem>? Problems { get; set; }

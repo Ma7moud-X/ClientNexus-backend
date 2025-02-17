@@ -23,9 +23,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
 
-    IBaseRepo<Lawyer> Lawyers { get; }
-    IBaseRepo<LawyerLicence> LawyerLicences { get; }
-    IBaseRepo<LawyerSpecialization> LawyerSpecializations { get; }
+    IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
     IBaseRepo<ClientServiceProviderFeedback> Feedbacks { get; }
     IBaseRepo<PhoneNumber> PhoneNumbers { get; }

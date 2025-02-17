@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250217083604_ModifyingSpecializationModel")]
+    partial class ModifyingSpecializationModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,20 +191,16 @@ namespace Database.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Database.Models.License", b =>
+            modelBuilder.Entity("Database.Models.LawyerLicence", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("LawyerId")
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("ExpiryDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly>("IssueDate")
                         .HasColumnType("date");
@@ -216,14 +215,11 @@ namespace Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
+                    b.HasKey("Id", "LawyerId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("LawyerId");
 
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("Licenses", (string)null);
+                    b.ToTable("LawyerLicences", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Payment", b =>
@@ -988,14 +984,21 @@ namespace Database.Migrations
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("YearsOfExperience")
-                        .HasColumnType("int");
-
                     b.HasIndex("ApprovedById");
 
                     b.HasIndex("TypeId");
 
                     b.ToTable("ServiceProviders", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
+                {
+                    b.HasBaseType("Database.Models.Users.ServiceProvider");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("int");
+
+                    b.ToTable("Lawyers", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Address", b =>
@@ -1047,15 +1050,15 @@ namespace Database.Migrations
                     b.Navigation("Document");
                 });
 
-            modelBuilder.Entity("Database.Models.License", b =>
+            modelBuilder.Entity("Database.Models.LawyerLicence", b =>
                 {
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Licenses")
-                        .HasForeignKey("ServiceProviderId")
+                    b.HasOne("Database.Models.Users.Lawyer", "Lawyer")
+                        .WithMany("Licences")
+                        .HasForeignKey("LawyerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ServiceProvider");
+                    b.Navigation("Lawyer");
                 });
 
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
@@ -1420,6 +1423,15 @@ namespace Database.Migrations
                     b.Navigation("Type");
                 });
 
+            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProvider", null)
+                        .WithOne()
+                        .HasForeignKey("Database.Models.Users.Lawyer", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Database.Models.AccessLevel", b =>
                 {
                     b.Navigation("Admins");
@@ -1506,8 +1518,6 @@ namespace Database.Migrations
 
                     b.Navigation("ClientServiceProviderFeedbacks");
 
-                    b.Navigation("Licenses");
-
                     b.Navigation("Problems");
 
                     b.Navigation("ServiceProviderSpecializations");
@@ -1519,6 +1529,11 @@ namespace Database.Migrations
                     b.Navigation("Subscription");
 
                     b.Navigation("SubscriptionPayments");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
+                {
+                    b.Navigation("Licences");
                 });
 #pragma warning restore 612, 618
         }

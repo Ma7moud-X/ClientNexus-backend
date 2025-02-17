@@ -6,4 +6,5 @@ public class ServiceProviderType
     public string Name { get; set; } = default!;
 
     public ICollection<ServiceProvider>? ServiceProviders { get; set; }
+    public ICollection<Specialization>? Specializations { get; set; }
 }

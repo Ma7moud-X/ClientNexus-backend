@@ -31,7 +31,10 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
         new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
         new ServiceProviderTypeConfig().Configure(modelBuilder.Entity<ServiceProviderType>());
-        new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
+        new SpecializationConfig().Configure(modelBuilder.Entity<Specialization>());
+        new ServiceProviderSpecializationConfig().Configure(
+            modelBuilder.Entity<ServiceProviderSpecialization>()
+        );
 
         new ServiceConfig().Configure(modelBuilder.Entity<Service>());
         new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
@@ -59,8 +62,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
         new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
-        new LawyerLicenceConfig().Configure(modelBuilder.Entity<LawyerLicence>());
-        new LawyerSpecializationConfig().Configure(modelBuilder.Entity<LawyerSpecialization>());
+        new LicenseConfig().Configure(modelBuilder.Entity<License>());
 
         new ClientServiceProviderFeedbackConfig().Configure(
             modelBuilder.Entity<ClientServiceProviderFeedback>()
@@ -72,7 +74,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Client> Clients { get; set; }
     public DbSet<Admin> Admins { get; set; }
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
-    public DbSet<Lawyer> Lawyers { get; set; }
 
     // Service-related entities
     public DbSet<Service> Services { get; set; }
@@ -103,8 +104,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<DocumentCategory> DocumentsCategories { get; set; }
 
     // Lawyer-specific entities
-    public DbSet<LawyerLicence> LawyerLicences { get; set; }
-    public DbSet<LawyerSpecialization> LawyerSpecializations { get; set; }
+    public DbSet<License> LawyerLicences { get; set; }
 
     // Feedback entities
     public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
