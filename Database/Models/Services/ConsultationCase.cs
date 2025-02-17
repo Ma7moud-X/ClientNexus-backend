@@ -7,9 +7,5 @@ namespace Database.Models.Services
     {
         public ICollection<CaseFile> CaseFiles { get; set; }
         public decimal Price { get; set; }
-
-
-        public int ServiceProviderId { get; set; }
-        public ServiceProvider ServiceProvider { get; set; }
     }
 }

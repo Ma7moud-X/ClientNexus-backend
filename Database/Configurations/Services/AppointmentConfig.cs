@@ -21,12 +21,6 @@ namespace Database.Configurations.Services
             builder.Property(a => a.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
-    
-            builder
-                .HasOne(a => a.ServiceProvider)
-                .WithMany(a => a.Appointments)
-                .HasForeignKey(a => a.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
                 
             builder
                 .HasOne(a => a.Slot)

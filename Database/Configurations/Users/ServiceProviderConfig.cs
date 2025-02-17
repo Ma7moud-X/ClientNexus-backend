@@ -38,44 +38,6 @@ namespace Database.Configurations.Users
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasMany(sp => sp.Addresses)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            
-
-            builder
-                .HasMany(sp => sp.Problems)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasMany(sp => sp.EmergencyCases)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasMany(sp => sp.Questions)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasMany(sp => sp.ConsultationCases)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasMany(sp => sp.Appointments)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
                 .HasMany(sp => sp.SlotServiceProviders)
                 .WithOne(sp => sp.ServiceProvider)
                 .HasForeignKey(sp => sp.ServiceProviderId)

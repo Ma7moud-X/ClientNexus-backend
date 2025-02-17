@@ -16,12 +16,6 @@ namespace Database.Configurations
             builder.Property(q => q.Visibility)
                 .IsRequired()
                 .HasDefaultValue(false);
-
-            builder
-                .HasOne(q => q.ServiceProvider)
-                .WithMany(q => q.Questions)
-                .HasForeignKey(q => q.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

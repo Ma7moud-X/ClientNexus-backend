@@ -18,8 +18,5 @@ namespace Database.Models.Services
 
         public int SlotId { get; set; }
         public Slot Slot { get; set; }
-
-        public int ServiceProviderId { get; set; }
-        public ServiceProvider ServiceProvider { get; set; }
     }
 }
