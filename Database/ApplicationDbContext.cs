@@ -30,6 +30,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new ClientConfig().Configure(modelBuilder.Entity<Client>());
         new AdminConfig().Configure(modelBuilder.Entity<Admin>());
         new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
+        new ServiceProviderTypeConfig().Configure(modelBuilder.Entity<ServiceProviderType>());
         new LawyerConfig().Configure(modelBuilder.Entity<Lawyer>());
 
         new ServiceConfig().Configure(modelBuilder.Entity<Service>());

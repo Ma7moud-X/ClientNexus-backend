@@ -3,12 +3,6 @@ using Database.Models.Services;
 
 namespace Database.Models.Users
 {
-    public enum ServiceProviderType
-    {
-        Lawyer,
-        Other,
-    }
-
     public class ServiceProvider : BaseUser
     {
         public string Description { get; set; } = default!;
@@ -18,7 +12,10 @@ namespace Database.Models.Users
         public bool IsFeatured { get; set; }
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
-        public ServiceProviderType Type { get; set; }
+
+        public int TypeId { get; set; }
+        public ServiceProviderType? Type { get; set; }
+
 
         // public ICollection<string> Images { get; set; }
 
