@@ -15,10 +15,6 @@ namespace Database.Configurations
             builder.Property(e => e.Location)
                 .IsRequired()
                 .HasMaxLength(255);
-
-            builder.Property(e => e.Price)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)");
         }
     }
 }

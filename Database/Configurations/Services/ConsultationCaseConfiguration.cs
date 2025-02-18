@@ -13,10 +13,6 @@ namespace Database.Configurations
 
             builder.HasBaseType<Service>();
 
-            builder.Property(p => p.Price)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)");
-
             builder
                 .HasMany(cf => cf.CaseFiles)
                 .WithOne(cf => cf.ConsultCase)

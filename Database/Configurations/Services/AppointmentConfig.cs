@@ -15,8 +15,6 @@ namespace Database.Configurations.Services
             builder.Property(a => a.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at).IsRequired().HasColumnType("varchar(1)");
 
             builder.Property(a => a.Date).IsRequired();
-
-            builder.Property(a => a.Price).IsRequired().HasColumnType("decimal(18,2)");
         }
     }
 }
