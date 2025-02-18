@@ -36,7 +36,7 @@ namespace Database.Models
         public ServiceProvider? ServiceProvider { get; set; }
 
         // Admin relationship
-        public int AdminId { get; set; }
+        public int? AdminId { get; set; }
         public Admin? Admin { get; set; }
 
         // Service relationship
