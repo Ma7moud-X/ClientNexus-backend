@@ -5,7 +5,7 @@ namespace Database.Models.Content
         public int DocumentId { get; set; }
         public Document? Document { get; set; }
 
-        public int CategoryId { get; set; }
-        public Category? Category { get; set; }
+        public int DCategoryId { get; set; }
+        public DCategory? Category { get; set; }
     }
 }

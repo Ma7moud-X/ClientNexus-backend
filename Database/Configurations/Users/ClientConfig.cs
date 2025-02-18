@@ -23,12 +23,6 @@ namespace Database.Configurations.Users
                 .HasForeignKey(cc => cc.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder
-                .HasMany(cc => cc.Services)
-                .WithOne(cc => cc.Client)
-                .HasForeignKey(cc => cc.ClientId)
-                .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Core.Interfaces.Repositories;
 public interface IUnitOfWork : IDisposable
 {
     // Document Models
-    IBaseRepo<Category> Categories { get; }
+    IBaseRepo<DCategory> DCategories { get; }
     IBaseRepo<Document> Documents { get; }
     IBaseRepo<DocumentCategory> DocumentCategories { get; }
     IBaseRepo<DocumentType> DocumentTypes { get; }

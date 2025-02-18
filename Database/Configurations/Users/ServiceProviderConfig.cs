@@ -26,8 +26,7 @@ namespace Database.Configurations.Users
             builder.Property(sp => sp.IsAvailableForEmergency).HasDefaultValue(false);
 
             builder
-                .Property(sp => sp.MapLocation)
-                .HasMaxLength(500)
+                .Property(sp => sp.CurrentLocation)
                 .IsRequired(false)
                 .HasColumnType("nvarchar(500)");
 

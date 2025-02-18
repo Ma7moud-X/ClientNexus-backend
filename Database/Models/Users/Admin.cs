@@ -13,7 +13,7 @@ public class Admin : BaseUser
 
     public ICollection<Admin>? ApprovedAdmins { get; set; }
     public ICollection<ServiceProvider>? ApprovedServiceProviders { get; set; }
-    public ICollection<Document>? Documents { get; set; }
-    public ICollection<Problem>? Problems { get; set; }
+    public ICollection<Document>? UploadedDocuments { get; set; }
+    public ICollection<Problem>? AssignedProblems { get; set; }
     public ICollection<BaseUser>? BlockedUsers { get; set; }
 }

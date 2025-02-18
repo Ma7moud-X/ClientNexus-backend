@@ -26,12 +26,12 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
             .UsingEntity<DocumentCategory>(
                 j =>
                     j.HasOne(dc => dc.Category)
-                        .WithMany(c => c.DocumentsCategories)
-                        .HasForeignKey(dc => dc.CategoryId)
+                        .WithMany(c => c.DocumentCategories)
+                        .HasForeignKey(dc => dc.DCategoryId)
                         .OnDelete(DeleteBehavior.Cascade),
                 j =>
                     j.HasOne(dc => dc.Document)
-                        .WithMany(d => d.DocumentsCategories)
+                        .WithMany(d => d.DocumentCategories)
                         .HasForeignKey(dc => dc.DocumentId)
                         .OnDelete(DeleteBehavior.Cascade)
             );
@@ -44,7 +44,7 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
 
         builder
             .HasOne(d => d.UploadedBy)
-            .WithMany(d => d.Documents)
+            .WithMany(d => d.UploadedDocuments)
             .HasForeignKey(d => d.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
     }

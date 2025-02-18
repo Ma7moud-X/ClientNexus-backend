@@ -37,9 +37,9 @@ namespace Database.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasOne(p => p.Admin)
-                .WithMany(p => p.Problems)
-                .HasForeignKey(p => p.AdminId)
+                .HasOne(p => p.SolvingAdmin)
+                .WithMany(p => p.AssignedProblems)
+                .HasForeignKey(p => p.SolvingAdminId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder

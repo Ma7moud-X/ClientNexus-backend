@@ -13,7 +13,7 @@ namespace Core.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    public IBaseRepo<Category> Categories { get; private set; }
+    public IBaseRepo<DCategory> DCategories { get; private set; }
 
     public IBaseRepo<Document> Documents { get; private set; }
 
@@ -83,7 +83,7 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
 
         // Document Models
-        Categories = new BaseRepo<Category>(context);
+        DCategories = new BaseRepo<DCategory>(context);
         Documents = new BaseRepo<Document>(context);
         DocumentCategories = new BaseRepo<DocumentCategory>(context);
 

@@ -12,7 +12,7 @@ namespace Database.Configurations
 
             builder.HasBaseType<Service>();
 
-            builder.Property(e => e.Location)
+            builder.Property(e => e.CurrentLocation)
                 .IsRequired()
                 .HasMaxLength(255);
         }

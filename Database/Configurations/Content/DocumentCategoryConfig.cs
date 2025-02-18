@@ -8,9 +8,9 @@ namespace Database.Configurations.Content
     {
         public void Configure(EntityTypeBuilder<DocumentCategory> builder)
         {
-            builder.ToTable("DocumentsCategories");
+            builder.ToTable("DocumentCategories");
 
-            builder.HasKey(dc => new { dc.DocumentId, dc.CategoryId });
+            builder.HasKey(dc => new { dc.DocumentId, dc.DCategoryId });
 
             // builder.HasOne(dc => dc.Document)
             //     .WithMany(dc => dc.DocumentsCategories)

@@ -6,7 +6,7 @@ namespace Database.Models.Users
     public class ServiceProvider : BaseUser
     {
         public string Description { get; set; } = default!;
-        public string? MapLocation { get; set; }
+        public string? CurrentLocation { get; set; }
         public string MainImage { get; set; } = default!;
         public float Rate { get; set; }
         public bool IsFeatured { get; set; }

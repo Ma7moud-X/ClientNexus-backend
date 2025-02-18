@@ -31,7 +31,7 @@ namespace Database.Configurations
 
             builder
                 .HasOne(s => s.Client)
-                .WithMany(s => s.Services)
+                .WithMany(s => s.RequestedServices)
                 .HasForeignKey(s => s.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 

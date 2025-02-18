@@ -58,7 +58,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new SlotConfig().Configure(modelBuilder.Entity<Slot>());
 
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
-        new CategoryConfig().Configure(modelBuilder.Entity<Category>());
+        new CategoryConfig().Configure(modelBuilder.Entity<DCategory>());
         new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
         new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
@@ -105,8 +105,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
     // Content entities
     public DbSet<Document> Documents { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<DocumentCategory> DocumentsCategories { get; set; }
+    public DbSet<DCategory> DCategories { get; set; }
+    public DbSet<DocumentCategory> DocumentCategories { get; set; }
     public DbSet<DocumentType> DocumentTypes { get; set; }
     public DbSet<OfficeImageUrl> OfficeImageUrls { get; set; }
 
