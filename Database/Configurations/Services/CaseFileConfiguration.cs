@@ -10,7 +10,7 @@ namespace Database.Configurations
         {
             builder.ToTable("CaseFiles");
 
-            builder.HasKey( c => new {c.Id, c.ConsultCaseId});
+            builder.HasKey(c => c.Id);
 
             builder.Property(cf => cf.FileUrl)
                 .IsRequired()

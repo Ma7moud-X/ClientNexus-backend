@@ -296,7 +296,10 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BaseUserId")
                         .HasColumnType("int");
@@ -305,7 +308,7 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.HasKey("Id", "BaseUserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BaseUserId");
 
@@ -411,7 +414,10 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Services.CaseFile", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ConsultCaseId")
                         .HasColumnType("int");
@@ -421,7 +427,7 @@ namespace Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("Id", "ConsultCaseId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ConsultCaseId");
 

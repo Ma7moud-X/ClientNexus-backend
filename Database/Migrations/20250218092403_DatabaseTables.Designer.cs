@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250218063302_FixServiceProvider")]
-    partial class FixServiceProvider
+    [Migration("20250218092403_DatabaseTables")]
+    partial class DatabaseTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -287,9 +287,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(1)")
-                        .HasDefaultValue("P");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -301,7 +299,10 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BaseUserId")
                         .HasColumnType("int");
@@ -310,7 +311,7 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.HasKey("Id", "BaseUserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BaseUserId");
 
@@ -347,9 +348,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(1)")
-                        .HasDefaultValue("N");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -418,7 +417,10 @@ namespace Database.Migrations
             modelBuilder.Entity("Database.Models.Services.CaseFile", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ConsultCaseId")
                         .HasColumnType("int");
@@ -428,7 +430,7 @@ namespace Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("Id", "ConsultCaseId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ConsultCaseId");
 
@@ -455,6 +457,29 @@ namespace Database.Migrations
                     b.HasIndex("ServiceProviderId");
 
                     b.ToTable("ClientServiceProviderFeedbacks", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ServiceProviderTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderTypeId");
+
+                    b.ToTable("EmergencyCategories", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Services.Service", b =>
@@ -490,9 +515,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(1)")
-                        .HasDefaultValue("P");
+                        .HasColumnType("nvarchar(1)");
 
                     b.HasKey("Id");
 
@@ -525,9 +548,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(1)")
-                        .HasDefaultValue("A");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -891,10 +912,8 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Services.Service");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("EmergencyCategoryId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -903,6 +922,8 @@ namespace Database.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.HasIndex("EmergencyCategoryId");
 
                     b.ToTable("EmergencyCases", (string)null);
                 });
@@ -1148,6 +1169,17 @@ namespace Database.Migrations
                     b.Navigation("ServiceProvider");
                 });
 
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProviderType", "ServiceProviderType")
+                        .WithMany("EmergencyCategories")
+                        .HasForeignKey("ServiceProviderTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProviderType");
+                });
+
             modelBuilder.Entity("Database.Models.Services.Service", b =>
                 {
                     b.HasOne("Database.Models.Users.Client", "Client")
@@ -1341,11 +1373,19 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Services.EmergencyCase", b =>
                 {
+                    b.HasOne("Database.Models.Services.EmergencyCategory", "EmergencyCategory")
+                        .WithMany("EmergencyCases")
+                        .HasForeignKey("EmergencyCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Database.Models.Services.Service", null)
                         .WithOne()
                         .HasForeignKey("Database.Models.Services.EmergencyCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("EmergencyCategory");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Question", b =>
@@ -1434,6 +1474,11 @@ namespace Database.Migrations
                     b.Navigation("Documents");
                 });
 
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.Navigation("EmergencyCases");
+                });
+
             modelBuilder.Entity("Database.Models.Services.Service", b =>
                 {
                     b.Navigation("Problem");
@@ -1453,6 +1498,8 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Users.ServiceProviderType", b =>
                 {
+                    b.Navigation("EmergencyCategories");
+
                     b.Navigation("ServiceProviders");
 
                     b.Navigation("Specializations");
