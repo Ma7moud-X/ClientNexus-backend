@@ -74,6 +74,8 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; private set; }
 
+    public IBaseRepo<EmergencyCategory> EmergencyCategories { get; private set; }
+
     public readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -103,6 +105,7 @@ public class UnitOfWork : IUnitOfWork
         Services = new BaseRepo<Service>(context);
         Questions = new BaseRepo<Question>(context);
         EmergencyCases = new BaseRepo<EmergencyCase>(context);
+        EmergencyCategories = new BaseRepo<EmergencyCategory>(context);
         ConsultationCases = new BaseRepo<ConsultationCase>(context);
         Appointments = new BaseRepo<Appointment>(context);
         CaseFiles = new BaseRepo<CaseFile>(context);

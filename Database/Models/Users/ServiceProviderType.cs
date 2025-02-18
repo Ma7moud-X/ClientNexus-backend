@@ -1,3 +1,5 @@
+using Database.Models.Services;
+
 namespace Database.Models.Users;
 
 public class ServiceProviderType
@@ -7,4 +9,5 @@ public class ServiceProviderType
 
     public ICollection<ServiceProvider>? ServiceProviders { get; set; }
     public ICollection<Specialization>? Specializations { get; set; }
+    public ICollection<EmergencyCategory>? EmergencyCategories { get; set; }
 }

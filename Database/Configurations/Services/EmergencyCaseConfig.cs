@@ -16,10 +16,6 @@ namespace Database.Configurations
                 .IsRequired()
                 .HasMaxLength(255);
 
-            builder.Property(e => e.Category)
-                .IsRequired()
-                .HasMaxLength(100);
-
             builder.Property(e => e.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");

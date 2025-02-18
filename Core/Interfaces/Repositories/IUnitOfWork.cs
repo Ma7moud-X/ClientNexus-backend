@@ -37,6 +37,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Service> Services { get; }
     IBaseRepo<Question> Questions { get; }
     IBaseRepo<EmergencyCase> EmergencyCases { get; }
+    IBaseRepo<EmergencyCategory> EmergencyCategories { get; }
     IBaseRepo<ConsultationCase> ConsultationCases { get; }
     IBaseRepo<Appointment> Appointments { get; }
     IBaseRepo<CaseFile> CaseFiles { get; }

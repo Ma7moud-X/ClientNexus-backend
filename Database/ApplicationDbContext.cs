@@ -38,6 +38,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
         new ServiceConfig().Configure(modelBuilder.Entity<Service>());
         new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
+        new EmergencyCategoryConfig().Configure(modelBuilder.Entity<EmergencyCategory>());
         new QuestionConfig().Configure(modelBuilder.Entity<Question>());
         new ConsultationCaseConfiguration().Configure(modelBuilder.Entity<ConsultationCase>());
         new AppointmentConfig().Configure(modelBuilder.Entity<Appointment>());
@@ -81,6 +82,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     // Service-related entities
     public DbSet<Service> Services { get; set; }
     public DbSet<EmergencyCase> EmergencyCases { get; set; }
+    public DbSet<EmergencyCategory> EmergencyCategories { get; set; }
     public DbSet<Question> Questions { get; set; }
     public DbSet<ConsultationCase> ConsultationCases { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
