@@ -13,7 +13,7 @@ namespace Database.Configurations.Users
 
             builder.Property(sp => sp.Description).IsRequired().HasMaxLength(1000);
 
-            builder.Property(sp => sp.MainImage).IsRequired();
+            builder.Property(sp => sp.MainImage).IsRequired().HasMaxLength(1000);
 
             builder.Property(sp => sp.Rate).HasDefaultValue(0.0f);
 

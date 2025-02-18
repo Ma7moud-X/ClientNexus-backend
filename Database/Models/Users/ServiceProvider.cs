@@ -12,7 +12,7 @@ namespace Database.Models.Users
         public bool IsFeatured { get; set; }
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
-        public int? YearsOfExperience { get; set; }
+        public int YearsOfExperience { get; set; }
 
         public int TypeId { get; set; }
         public ServiceProviderType? Type { get; set; }
