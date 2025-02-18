@@ -42,6 +42,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new QuestionConfig().Configure(modelBuilder.Entity<Question>());
         new ConsultationCaseConfiguration().Configure(modelBuilder.Entity<ConsultationCase>());
         new AppointmentConfig().Configure(modelBuilder.Entity<Appointment>());
+        new AppointmentCostConfig().Configure(modelBuilder.Entity<AppointmentCost>());
 
         new PaymentConfig().Configure(modelBuilder.Entity<Payment>());
         new ServicePaymentConfig().Configure(modelBuilder.Entity<ServicePayment>());
@@ -86,6 +87,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Question> Questions { get; set; }
     public DbSet<ConsultationCase> ConsultationCases { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<AppointmentCost> AppointmentCosts { get; set; }
 
     // Support entities
     public DbSet<Payment> Payments { get; set; }

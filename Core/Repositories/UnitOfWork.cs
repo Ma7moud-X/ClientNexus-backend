@@ -76,6 +76,8 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<EmergencyCategory> EmergencyCategories { get; private set; }
 
+    public IBaseRepo<AppointmentCost> AppointmentCosts { get; private set; }
+
     public readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -108,6 +110,7 @@ public class UnitOfWork : IUnitOfWork
         EmergencyCategories = new BaseRepo<EmergencyCategory>(context);
         ConsultationCases = new BaseRepo<ConsultationCase>(context);
         Appointments = new BaseRepo<Appointment>(context);
+        AppointmentCosts = new BaseRepo<AppointmentCost>(context);
         CaseFiles = new BaseRepo<CaseFile>(context);
 
         // Others

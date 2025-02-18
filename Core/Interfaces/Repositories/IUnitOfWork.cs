@@ -40,6 +40,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<EmergencyCategory> EmergencyCategories { get; }
     IBaseRepo<ConsultationCase> ConsultationCases { get; }
     IBaseRepo<Appointment> Appointments { get; }
+    IBaseRepo<AppointmentCost> AppointmentCosts { get; }
     IBaseRepo<CaseFile> CaseFiles { get; }
 
     // Others
