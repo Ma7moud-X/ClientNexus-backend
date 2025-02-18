@@ -21,8 +21,8 @@ namespace Database.Models
         public decimal Amount { get; set; }
         public string ReferenceNumber { get; set; } = default!;
         public string PaymentGateway { get; set; } = default!;
-        public char Status { get; set; } = (char)PaymentStatus.Pending;
+        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
         public DateTime CreatedAt { get; set; }
-        public char PaymentType { get; set; }
+        public PaymentType PaymentType { get; set; }
     }
 }
