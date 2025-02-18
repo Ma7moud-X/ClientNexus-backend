@@ -27,16 +27,11 @@ namespace Database.Configurations.Services
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
-                .HasMany(s => s.SlotTypes)
-                .WithOne(s => s.Slot)
-                .HasForeignKey(s => s.SlotId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder
-                .HasMany(s => s.SlotServiceProviders)
-                .WithOne(s => s.Slot)
-                .HasForeignKey(s => s.SlotId)
+                .HasOne(s => s.ServiceProvider)
+                .WithMany(sp => sp.Slots)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(s => s.SlotType).HasColumnType("varchar(1)").IsRequired();
         }
     }
 }

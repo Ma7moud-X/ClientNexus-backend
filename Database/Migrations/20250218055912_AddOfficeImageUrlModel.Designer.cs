@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250218055912_AddOfficeImageUrlModel")]
+    partial class AddOfficeImageUrlModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -949,7 +952,7 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Users.BaseUser");
 
-                    b.Property<int?>("ApprovedById")
+                    b.Property<int>("ApprovedById")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -1392,7 +1395,8 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Admin", "ApprovingAdmin")
                         .WithMany("ApprovedServiceProviders")
                         .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Database.Models.Users.BaseUser", null)
                         .WithOne()

@@ -48,8 +48,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Problem> Problems { get; }
     IBaseRepo<Subscription> Subscriptions { get; }
     IBaseRepo<Slot> Slots { get; }
-    IBaseRepo<SlotType> SlotTypes { get; }
-    IBaseRepo<SlotServiceProvider> SlotServiceProviders { get; }
+    IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
 
     // Functions
     Task SaveChangesAsync();

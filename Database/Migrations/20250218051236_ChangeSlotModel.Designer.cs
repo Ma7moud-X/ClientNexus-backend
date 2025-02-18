@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250218051236_ChangeSlotModel")]
+    partial class ChangeSlotModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,26 +227,6 @@ namespace Database.Migrations
                     b.HasIndex("ServiceProviderId");
 
                     b.ToTable("Licenses", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Others.OfficeImageUrl", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("OfficeImageUrls", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Payment", b =>
@@ -949,7 +932,7 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Users.BaseUser");
 
-                    b.Property<int?>("ApprovedById")
+                    b.Property<int>("ApprovedById")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -1051,17 +1034,6 @@ namespace Database.Migrations
                 {
                     b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
                         .WithMany("Licenses")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
-                });
-
-            modelBuilder.Entity("Database.Models.Others.OfficeImageUrl", b =>
-                {
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("OfficeImageUrls")
                         .HasForeignKey("ServiceProviderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1392,7 +1364,8 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Admin", "ApprovingAdmin")
                         .WithMany("ApprovedServiceProviders")
                         .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Database.Models.Users.BaseUser", null)
                         .WithOne()
@@ -1494,8 +1467,6 @@ namespace Database.Migrations
                     b.Navigation("ClientServiceProviderFeedbacks");
 
                     b.Navigation("Licenses");
-
-                    b.Navigation("OfficeImageUrls");
 
                     b.Navigation("Problems");
 

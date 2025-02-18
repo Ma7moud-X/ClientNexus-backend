@@ -17,7 +17,7 @@ namespace Database.Configurations.Users
 
             builder.Property(sp => sp.Rate).HasDefaultValue(0.0f);
 
-            builder.Property(sp => sp.ApprovedById).IsRequired(true);
+            builder.Property(sp => sp.ApprovedById).IsRequired(false);
 
             builder.Property(sp => sp.IsFeatured).HasDefaultValue(false);
 
@@ -35,12 +35,6 @@ namespace Database.Configurations.Users
                 .HasOne(sp => sp.ApprovingAdmin)
                 .WithMany(sp => sp.ApprovedServiceProviders)
                 .HasForeignKey(sp => sp.ApprovedById)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder
-                .HasMany(sp => sp.SlotServiceProviders)
-                .WithOne(sp => sp.ServiceProvider)
-                .HasForeignKey(sp => sp.ServiceProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder

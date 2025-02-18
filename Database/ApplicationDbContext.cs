@@ -47,6 +47,7 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new SubscriptionPaymentConfig().Configure(modelBuilder.Entity<SubscriptionPayment>());
         new ProblemConfig().Configure(modelBuilder.Entity<Problem>());
         new CaseFileConfiguration().Configure(modelBuilder.Entity<CaseFile>());
+        new OfficeImageUrlConfig().Configure(modelBuilder.Entity<OfficeImageUrl>());
 
         new PhoneNumberConfig().Configure(modelBuilder.Entity<PhoneNumber>());
         new AccessLevelConfig().Configure(modelBuilder.Entity<AccessLevel>());
@@ -54,8 +55,6 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new SubscriptionConfig().Configure(modelBuilder.Entity<Subscription>());
 
         new SlotConfig().Configure(modelBuilder.Entity<Slot>());
-        new SlotTypeConfig().Configure(modelBuilder.Entity<SlotType>());
-        new SlotServiceProviderConfig().Configure(modelBuilder.Entity<SlotServiceProvider>());
 
         new DocumentConfig().Configure(modelBuilder.Entity<Document>());
         new CategoryConfig().Configure(modelBuilder.Entity<Category>());
@@ -74,6 +73,10 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<Client> Clients { get; set; }
     public DbSet<Admin> Admins { get; set; }
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
+    public DbSet<ServiceProviderSpecialization> ServiceProviderSpecializations { get; set; }
+    public DbSet<ServiceProviderType> ServiceProviderTypes { get; set; }
+    public DbSet<Specialization> Specializations { get; set; }
+
 
     // Service-related entities
     public DbSet<Service> Services { get; set; }
@@ -84,6 +87,8 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
     // Support entities
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<ServicePayment> ServicePayments { get; set; }
+    public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
     public DbSet<Problem> Problems { get; set; }
     public DbSet<CaseFile> CaseFiles { get; set; }
 
@@ -95,13 +100,13 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
 
     // Scheduling entities
     public DbSet<Slot> Slots { get; set; }
-    public DbSet<SlotType> SlotTypes { get; set; }
-    public DbSet<SlotServiceProvider> SlotServiceProviders { get; set; }
 
     // Content entities
     public DbSet<Document> Documents { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<DocumentCategory> DocumentsCategories { get; set; }
+    public DbSet<DocumentType> DocumentTypes { get; set; }
+    public DbSet<OfficeImageUrl> OfficeImageUrls { get; set; }
 
     // Lawyer-specific entities
     public DbSet<License> LawyerLicences { get; set; }

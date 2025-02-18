@@ -1,3 +1,5 @@
+using Database.Models.Users;
+
 namespace Database.Models.Services
 {
     public enum SlotStatus
@@ -8,14 +10,23 @@ namespace Database.Models.Services
         Deleted = 'D',
     }
 
+    public enum SlotType
+    {
+        Online = 'O',
+        InPerson = 'I',
+        PhoneCall = 'P',
+    }
+
     public class Slot
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
         public char Status { get; set; } = (char)SlotStatus.Available;
+        public char SlotType { get; set; }
 
-        public ICollection<Appointment>? Appointments { get; set; }
-        public ICollection<SlotType>? SlotTypes { get; set; }
-        public ICollection<SlotServiceProvider>? SlotServiceProviders { get; set; }
+        public int ServiceProviderId { get; set; }
+        public ServiceProvider? ServiceProvider { get; set; }
+
+        public ICollection<Appointment>? Appointments { get; set; }   
     }
 }

@@ -60,10 +60,6 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<Slot> Slots { get; private set; }
 
-    public IBaseRepo<SlotType> SlotTypes { get; private set; }
-
-    public IBaseRepo<SlotServiceProvider> SlotServiceProviders { get; private set; }
-
     public IBaseRepo<DocumentType> DocumentTypes { get; private set; }
 
     public IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; private set; }
@@ -75,6 +71,8 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<ServicePayment> ServicePayments { get; private set; }
 
     public IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; private set; }
+
+    public IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; private set; }
 
     public readonly ApplicationDbContext _context;
 
@@ -114,9 +112,7 @@ public class UnitOfWork : IUnitOfWork
         Problems = new BaseRepo<Problem>(context);
         Subscriptions = new BaseRepo<Subscription>(context);
         Slots = new BaseRepo<Slot>(context);
-        SlotTypes = new BaseRepo<SlotType>(context);
-        SlotServiceProviders = new BaseRepo<SlotServiceProvider>(context);
-
+        OfficeImageUrls = new BaseRepo<OfficeImageUrl>(context);
 
         DocumentTypes = new BaseRepo<DocumentType>(context);
         ServiceProviderTypes = new BaseRepo<ServiceProviderType>(context);

@@ -20,7 +20,7 @@ namespace Database.Models.Users
         public ICollection<ServiceProviderSpecialization>? ServiceProviderSpecializations { get; set; }
         public ICollection<Specialization>? Specializations { get; set; }
 
-        // public ICollection<string> Images { get; set; }
+        public ICollection<OfficeImageUrl>? OfficeImageUrls { get; set; }
 
 
 
@@ -35,7 +35,7 @@ namespace Database.Models.Users
         public ICollection<Service>? ServicesProvided { get; set; }
         public ICollection<SubscriptionPayment>? SubscriptionPayments { get; set; }
 
-        public ICollection<SlotServiceProvider>? SlotServiceProviders { get; set; }
+        public ICollection<Slot>? Slots { get; set; }
 
         public ICollection<ClientServiceProviderFeedback>? ClientServiceProviderFeedbacks { get; set; }
         public ICollection<Client>? ClientsWithFeedbacks { get; set; }

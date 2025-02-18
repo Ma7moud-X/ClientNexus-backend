@@ -1,6 +1,7 @@
 using API.Extensions.API;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
+using Database.Models.Others;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +12,17 @@ var app = builder.Build();
 
 app.MapGet(
     "/",
-    (IUnitOfWork unitOfWork) =>
+    async (IUnitOfWork unitOfWork) =>
     {
-        return "Hello World!";
+        var officeImageUrl = await unitOfWork.OfficeImageUrls.AddAsync(new OfficeImageUrl {
+                Id = Ulid.NewUlid(),
+                Url = "https://example.com/image.jpg",
+                ServiceProviderId = 1
+        });
+        await unitOfWork.SaveChangesAsync();
+        
+        
+        return officeImageUrl;
     }
 );
 
