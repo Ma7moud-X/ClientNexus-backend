@@ -1,4 +1,5 @@
 using Database.Models;
+using Database.TypeExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,9 +17,13 @@ namespace Database.Configurations
                 .Property(p => p.Status)
                 .IsRequired()
                 .HasColumnType("varchar(1)")
-                .HasDefaultValue((char)ProblemStatus.New);
+                .HasConversion(s => s.ToChar(), s => s.ToProblemStatus());
 
-            builder.Property(p => p.ReportedBy).HasColumnType("varchar(1)").IsRequired();
+            builder
+                .Property(p => p.ReportedBy)
+                .HasConversion(rt => rt.ToChar(), rt => rt.ToReporterType())
+                .HasColumnType("varchar(1)")
+                .IsRequired();
 
             builder
                 .HasOne(p => p.Client)

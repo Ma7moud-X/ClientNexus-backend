@@ -22,10 +22,10 @@ namespace Database.Models
         public int Id { get; set; }
 
         public string Description { get; set; } = default!;
-        public char Status { get; set; } = (char)ProblemStatus.New;
+        public ProblemStatus Status { get; set; } = ProblemStatus.New;
 
         // Identify who reported the problem
-        public char ReportedBy { get; set; }
+        public ReporterType ReportedBy { get; set; }
 
         // Client relationship
         public int ClientId { get; set; }
