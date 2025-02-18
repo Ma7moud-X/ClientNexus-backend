@@ -7,7 +7,7 @@ namespace Database.Models.Services
         public int ClientId { get; set; }
         public int ServiceProviderId { get; set; }
         public float Rate { get; set; }
-        public string Feedback {get; set;} = default!;
+        public string? Feedback {get; set;}
 
 
         public Client? Client { get; set; }

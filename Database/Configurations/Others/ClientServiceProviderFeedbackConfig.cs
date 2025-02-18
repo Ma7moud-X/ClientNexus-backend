@@ -12,7 +12,7 @@ namespace Database.Configurations.Services
             builder.ToTable("ClientServiceProviderFeedbacks");
 
             builder.HasKey(c => new { c.ClientId, c.ServiceProviderId });
-            builder.Property(cs => cs.Feedback).HasColumnType("nvarchar(1000)").IsRequired();
+            builder.Property(cs => cs.Feedback).HasColumnType("nvarchar(1000)").IsRequired(false);
 
             // builder
             //     .HasOne(c => c.Client)
