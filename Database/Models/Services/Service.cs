@@ -24,9 +24,9 @@ namespace Database.Models.Services
         public int Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public char Status { get; set; } = (char)ServiceStatus.Pending;
+        public ServiceStatus Status { get; set; } = ServiceStatus.Pending;
         public DateTime CreatedAt { get; set; }
-        public char ServiceType { get; set; }
+        public ServiceType ServiceType { get; set; }
 
         public int ClientId { get; set; }
         public Client? Client { get; set; }

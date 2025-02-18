@@ -1,5 +1,4 @@
 using Database.Models;
-using Database.TypeExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,11 +16,11 @@ namespace Database.Configurations
                 .Property(p => p.Status)
                 .IsRequired()
                 .HasColumnType("varchar(1)")
-                .HasConversion(s => s.ToChar(), s => s.ToProblemStatus());
+                .HasConversion(s => (char)s, s => (ProblemStatus)s);
 
             builder
                 .Property(p => p.ReportedBy)
-                .HasConversion(rt => rt.ToChar(), rt => rt.ToReporterType())
+                .HasConversion(rt => (char)rt, rt => (ReporterType)rt)
                 .HasColumnType("varchar(1)")
                 .IsRequired();
 

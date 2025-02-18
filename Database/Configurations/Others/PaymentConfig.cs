@@ -1,6 +1,5 @@
 using Database.Models;
 using Database.Models.Others;
-using Database.TypeExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,14 +24,14 @@ namespace Database.Configurations
             builder
                 .Property(p => p.Status)
                 .HasColumnType("varchar(1)")
-                .HasConversion(type => type.ToChar(), type => type.ToPaymentStatus())
+                .HasConversion(status => (char)status, status => (PaymentStatus)status)
                 .IsRequired();
 
             builder.Property(p => p.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");
 
             builder
                 .Property(p => p.PaymentType)
-                .HasConversion(type => type.ToChar(), type => type.ToPaymentType())
+                .HasConversion(type => (char)type, type => (PaymentType)type)
                 .IsRequired()
                 .HasColumnType("varchar(1)");
         }

@@ -16,11 +16,11 @@ namespace Database.Configurations
 
             builder.Property(s => s.Description).IsRequired(false).HasMaxLength(500);
 
-            builder.Property(s => s.ServiceType).HasColumnType("varchar(1)").IsRequired();
+            builder.Property(s => s.ServiceType).HasConversion(st => (char)st, st => (ServiceType)st).HasColumnType("varchar(1)").IsRequired();
 
             builder
                 .Property(s => s.Status)
-                .HasDefaultValue((char)ServiceStatus.Pending)
+                .HasConversion(st => (char)st, st => (ServiceStatus)st)
                 .IsRequired();
 
             builder.Property(s => s.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");

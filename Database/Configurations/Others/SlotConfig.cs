@@ -17,7 +17,10 @@ namespace Database.Configurations.Services
             builder
                 .Property(s => s.Status)
                 .HasColumnType("varchar(1)")
-                .HasDefaultValue((char)SlotStatus.Available)
+                .HasConversion(
+                    status => (char)status,
+                    status => (SlotStatus)status
+                )
                 .IsRequired();
 
             builder
@@ -31,7 +34,10 @@ namespace Database.Configurations.Services
                 .WithMany(sp => sp.Slots)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Property(s => s.SlotType).HasColumnType("varchar(1)").IsRequired();
+            builder.Property(s => s.SlotType).HasConversion(
+                type => (char)type,
+                type => (SlotType)type
+            ).HasColumnType("varchar(1)").IsRequired();
         }
     }
 }

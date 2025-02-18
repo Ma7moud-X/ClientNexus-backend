@@ -21,8 +21,8 @@ namespace Database.Models
     {
         public int Id { get; set; }
         public decimal Price { get; set; }
-        public char Type { get; set; }
-        public char Status { get; set; }
+        public SubscriptionType Type { get; set; }
+        public SubscriptionStatus Status { get; set; }
         public DateTime ExpireDate { get; set; }
 
         public int ServiceProviderId { get; set; }

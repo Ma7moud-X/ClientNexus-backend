@@ -10,7 +10,7 @@ namespace Database.Models.Services
     public class Appointment : Service
     {
         public decimal Price { get; set; }
-        public char AppointmentType { get; set; }
+        public AppointmentType AppointmentType { get; set; }
         public DateTime Date { get; set; }
 
         public int SlotId { get; set; }
