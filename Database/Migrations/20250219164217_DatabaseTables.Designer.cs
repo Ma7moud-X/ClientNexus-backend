@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250219080141_FixAppoinmentCost")]
-    partial class FixAppoinmentCost
+    [Migration("20250219164217_DatabaseTables")]
+    partial class DatabaseTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -56,14 +56,14 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Address", b =>
                 {
+                    b.Property<int>("BaseUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BaseUserId")
-                        .HasColumnType("int");
 
                     b.Property<int>("CityId")
                         .HasColumnType("int");
@@ -80,9 +80,7 @@ namespace Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("BaseUserId");
+                    b.HasKey("BaseUserId", "Id");
 
                     b.HasIndex("CityId");
 
@@ -192,6 +190,9 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.License", b =>
                 {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
@@ -218,12 +219,7 @@ namespace Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceProviderId");
+                    b.HasKey("ServiceProviderId", "Id");
 
                     b.ToTable("Licenses", (string)null);
                 });
@@ -284,20 +280,18 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Others.OfficeImageUrl", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceProviderId");
+                    b.HasKey("ServiceProviderId", "Id");
 
                     b.ToTable("OfficeImageUrls", (string)null);
                 });
@@ -378,22 +372,20 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
+                    b.Property<int>("BaseUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BaseUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("BaseUserId");
+                    b.HasKey("BaseUserId", "Id");
 
                     b.ToTable("PhoneNumbers", (string)null);
                 });
@@ -535,10 +527,10 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Services.ClientServiceProviderFeedback", b =>
                 {
-                    b.Property<int>("ClientId")
+                    b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ServiceProviderId")
+                    b.Property<int>("ClientId")
                         .HasColumnType("int");
 
                     b.Property<string>("Feedback")
@@ -547,9 +539,9 @@ namespace Database.Migrations
                     b.Property<float>("Rate")
                         .HasColumnType("real");
 
-                    b.HasKey("ClientId", "ServiceProviderId");
+                    b.HasKey("ServiceProviderId", "ClientId");
 
-                    b.HasIndex("ServiceProviderId");
+                    b.HasIndex("ClientId");
 
                     b.ToTable("ClientServiceProviderFeedbacks", (string)null);
                 });
@@ -628,6 +620,9 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Services.Slot", b =>
                 {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
@@ -637,9 +632,6 @@ namespace Database.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
                     b.Property<string>("SlotType")
                         .IsRequired()
                         .HasColumnType("varchar(1)");
@@ -648,9 +640,7 @@ namespace Database.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(1)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceProviderId");
+                    b.HasKey("ServiceProviderId", "Id");
 
                     b.ToTable("Slots", (string)null);
                 });
@@ -978,6 +968,9 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Services.Service");
 
+                    b.Property<int>("AppointmentProviderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("AppointmentType")
                         .IsRequired()
                         .HasColumnType("varchar(1)");
@@ -988,7 +981,7 @@ namespace Database.Migrations
                     b.Property<int>("SlotId")
                         .HasColumnType("int");
 
-                    b.HasIndex("SlotId");
+                    b.HasIndex("AppointmentProviderId", "SlotId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -1494,7 +1487,7 @@ namespace Database.Migrations
 
                     b.HasOne("Database.Models.Services.Slot", "Slot")
                         .WithMany("Appointments")
-                        .HasForeignKey("SlotId")
+                        .HasForeignKey("AppointmentProviderId", "SlotId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

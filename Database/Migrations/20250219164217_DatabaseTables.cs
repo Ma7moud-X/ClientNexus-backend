@@ -27,7 +27,21 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categories",
+                name: "Countries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Abbreviation = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Countries", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DCategories",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -36,7 +50,7 @@ namespace Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
+                    table.PrimaryKey("PK_DCategories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -97,6 +111,27 @@ namespace Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ServiceProviderTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "States",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Abbreviation = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    CountryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_States", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_States_Countries_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -161,20 +196,54 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Addresses",
+                name: "Cities",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DetailedAddress = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Neighborhood = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    City = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    MapUrl = table.Column<string>(type: "nvarchar(500)", nullable: true),
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Abbreviation = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    StateId = table.Column<int>(type: "int", nullable: true),
+                    CountryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Addresses", x => x.Id);
+                    table.PrimaryKey("PK_Cities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Cities_Countries_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Cities_States_StateId",
+                        column: x => x.StateId,
+                        principalTable: "States",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Addresses",
+                columns: table => new
+                {
+                    BaseUserId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DetailedAddress = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Neighborhood = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    MapUrl = table.Column<string>(type: "nvarchar(500)", nullable: true),
+                    CityId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Addresses", x => new { x.BaseUserId, x.Id });
+                    table.ForeignKey(
+                        name: "FK_Addresses_Cities_CityId",
+                        column: x => x.CityId,
+                        principalTable: "Cities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -377,14 +446,14 @@ namespace Database.Migrations
                 name: "PhoneNumbers",
                 columns: table => new
                 {
+                    BaseUserId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Number = table.Column<string>(type: "varchar(20)", nullable: false),
-                    BaseUserId = table.Column<int>(type: "int", nullable: false)
+                    Number = table.Column<string>(type: "varchar(20)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhoneNumbers", x => x.Id);
+                    table.PrimaryKey("PK_PhoneNumbers", x => new { x.BaseUserId, x.Id });
                     table.ForeignKey(
                         name: "FK_PhoneNumbers_BaseUsers_BaseUserId",
                         column: x => x.BaseUserId,
@@ -399,13 +468,13 @@ namespace Database.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    MapLocation = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    MainImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CurrentLocation = table.Column<string>(type: "nvarchar(500)", nullable: true),
+                    MainImage = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Rate = table.Column<float>(type: "real", nullable: false, defaultValue: 0f),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsAvailableForEmergency = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    YearsOfExperience = table.Column<int>(type: "int", nullable: true),
+                    YearsOfExperience = table.Column<int>(type: "int", nullable: false),
                     TypeId = table.Column<int>(type: "int", nullable: false),
                     ApprovedById = table.Column<int>(type: "int", nullable: true)
                 },
@@ -433,25 +502,44 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DocumentsCategories",
+                name: "DocumentCategories",
                 columns: table => new
                 {
                     DocumentId = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    DCategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DocumentsCategories", x => new { x.DocumentId, x.CategoryId });
+                    table.PrimaryKey("PK_DocumentCategories", x => new { x.DocumentId, x.DCategoryId });
                     table.ForeignKey(
-                        name: "FK_DocumentsCategories_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
+                        name: "FK_DocumentCategories_DCategories_DCategoryId",
+                        column: x => x.DCategoryId,
+                        principalTable: "DCategories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DocumentsCategories_Documents_DocumentId",
+                        name: "FK_DocumentCategories_Documents_DocumentId",
                         column: x => x.DocumentId,
                         principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppointmentCosts",
+                columns: table => new
+                {
+                    AppointmentType = table.Column<string>(type: "char(1)", nullable: false),
+                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
+                    Cost = table.Column<decimal>(type: "decimal(10,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppointmentCosts", x => new { x.ServiceProviderId, x.AppointmentType });
+                    table.ForeignKey(
+                        name: "FK_AppointmentCosts_ServiceProviders_ServiceProviderId",
+                        column: x => x.ServiceProviderId,
+                        principalTable: "ServiceProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -463,11 +551,11 @@ namespace Database.Migrations
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Rate = table.Column<float>(type: "real", nullable: false),
-                    Feedback = table.Column<string>(type: "nvarchar(1000)", nullable: false)
+                    Feedback = table.Column<string>(type: "nvarchar(1000)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ClientServiceProviderFeedbacks", x => new { x.ClientId, x.ServiceProviderId });
+                    table.PrimaryKey("PK_ClientServiceProviderFeedbacks", x => new { x.ServiceProviderId, x.ClientId });
                     table.ForeignKey(
                         name: "FK_ClientServiceProviderFeedbacks_Clients_ClientId",
                         column: x => x.ClientId,
@@ -486,18 +574,18 @@ namespace Database.Migrations
                 name: "Licenses",
                 columns: table => new
                 {
+                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     LicenceNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     IssuingAuthority = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IssueDate = table.Column<DateOnly>(type: "date", nullable: false),
                     ExpiryDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(500)", nullable: false),
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false)
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Licenses", x => x.Id);
+                    table.PrimaryKey("PK_Licenses", x => new { x.ServiceProviderId, x.Id });
                     table.ForeignKey(
                         name: "FK_Licenses_ServiceProviders_ServiceProviderId",
                         column: x => x.ServiceProviderId,
@@ -510,13 +598,13 @@ namespace Database.Migrations
                 name: "OfficeImageUrls",
                 columns: table => new
                 {
+                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false)
+                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OfficeImageUrls", x => x.Id);
+                    table.PrimaryKey("PK_OfficeImageUrls", x => new { x.ServiceProviderId, x.Id });
                     table.ForeignKey(
                         name: "FK_OfficeImageUrls_ServiceProviders_ServiceProviderId",
                         column: x => x.ServiceProviderId,
@@ -560,6 +648,7 @@ namespace Database.Migrations
                     Status = table.Column<string>(type: "nvarchar(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     ServiceType = table.Column<string>(type: "varchar(1)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -584,16 +673,16 @@ namespace Database.Migrations
                 name: "Slots",
                 columns: table => new
                 {
+                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "varchar(1)", nullable: false),
-                    SlotType = table.Column<string>(type: "varchar(1)", nullable: false),
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false)
+                    SlotType = table.Column<string>(type: "varchar(1)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Slots", x => x.Id);
+                    table.PrimaryKey("PK_Slots", x => new { x.ServiceProviderId, x.Id });
                     table.ForeignKey(
                         name: "FK_Slots_ServiceProviders_ServiceProviderId",
                         column: x => x.ServiceProviderId,
@@ -653,8 +742,7 @@ namespace Database.Migrations
                 name: "ConsultationCases",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -672,8 +760,8 @@ namespace Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    Location = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TimeForArrival = table.Column<int>(type: "int", nullable: false),
+                    CurrentLocation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     EmergencyCategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -704,15 +792,15 @@ namespace Database.Migrations
                     ReportedBy = table.Column<string>(type: "varchar(1)", nullable: false),
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: false),
-                    AdminId = table.Column<int>(type: "int", nullable: false),
+                    SolvingAdminId = table.Column<int>(type: "int", nullable: true),
                     ServiceId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Problems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Problems_Admins_AdminId",
-                        column: x => x.AdminId,
+                        name: "FK_Problems_Admins_SolvingAdminId",
+                        column: x => x.SolvingAdminId,
                         principalTable: "Admins",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -783,9 +871,9 @@ namespace Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     AppointmentType = table.Column<string>(type: "varchar(1)", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AppointmentProviderId = table.Column<int>(type: "int", nullable: false),
                     SlotId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -798,10 +886,10 @@ namespace Database.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Appointments_Slots_SlotId",
-                        column: x => x.SlotId,
+                        name: "FK_Appointments_Slots_AppointmentProviderId_SlotId",
+                        columns: x => new { x.AppointmentProviderId, x.SlotId },
                         principalTable: "Slots",
-                        principalColumn: "Id",
+                        principalColumns: new[] { "ServiceProviderId", "Id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -860,9 +948,9 @@ namespace Database.Migrations
                 values: new object[] { -1, "Lawyer" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Addresses_ServiceProviderId",
+                name: "IX_Addresses_CityId",
                 table: "Addresses",
-                column: "ServiceProviderId");
+                column: "CityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Admins_AccessLevelId",
@@ -875,9 +963,9 @@ namespace Database.Migrations
                 column: "ApprovedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_SlotId",
+                name: "IX_Appointments_AppointmentProviderId_SlotId",
                 table: "Appointments",
-                column: "SlotId");
+                columns: new[] { "AppointmentProviderId", "SlotId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -922,9 +1010,24 @@ namespace Database.Migrations
                 column: "ConsultCaseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ClientServiceProviderFeedbacks_ServiceProviderId",
+                name: "IX_Cities_CountryId",
+                table: "Cities",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_StateId",
+                table: "Cities",
+                column: "StateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientServiceProviderFeedbacks_ClientId",
                 table: "ClientServiceProviderFeedbacks",
-                column: "ServiceProviderId");
+                column: "ClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentCategories_DCategoryId",
+                table: "DocumentCategories",
+                column: "DCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Documents_DocumentTypeId",
@@ -937,11 +1040,6 @@ namespace Database.Migrations
                 column: "UploadedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DocumentsCategories_CategoryId",
-                table: "DocumentsCategories",
-                column: "CategoryId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_EmergencyCases_EmergencyCategoryId",
                 table: "EmergencyCases",
                 column: "EmergencyCategoryId");
@@ -950,26 +1048,6 @@ namespace Database.Migrations
                 name: "IX_EmergencyCategories_ServiceProviderTypeId",
                 table: "EmergencyCategories",
                 column: "ServiceProviderTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Licenses_ServiceProviderId",
-                table: "Licenses",
-                column: "ServiceProviderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OfficeImageUrls_ServiceProviderId",
-                table: "OfficeImageUrls",
-                column: "ServiceProviderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PhoneNumbers_BaseUserId",
-                table: "PhoneNumbers",
-                column: "BaseUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Problems_AdminId",
-                table: "Problems",
-                column: "AdminId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Problems_ClientId",
@@ -986,6 +1064,11 @@ namespace Database.Migrations
                 name: "IX_Problems_ServiceProviderId",
                 table: "Problems",
                 column: "ServiceProviderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Problems_SolvingAdminId",
+                table: "Problems",
+                column: "SolvingAdminId");
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
@@ -1027,14 +1110,14 @@ namespace Database.Migrations
                 column: "ServiceProviderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Slots_ServiceProviderId",
-                table: "Slots",
-                column: "ServiceProviderId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Specializations_ServiceProviderTypeId",
                 table: "Specializations",
                 column: "ServiceProviderTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_States_CountryId",
+                table: "States",
+                column: "CountryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionPayments_ServiceProviderId",
@@ -1048,10 +1131,10 @@ namespace Database.Migrations
                 unique: true);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Addresses_ServiceProviders_ServiceProviderId",
+                name: "FK_Addresses_BaseUsers_BaseUserId",
                 table: "Addresses",
-                column: "ServiceProviderId",
-                principalTable: "ServiceProviders",
+                column: "BaseUserId",
+                principalTable: "BaseUsers",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
@@ -1068,15 +1151,14 @@ namespace Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Admins_AccessLevels_AccessLevelId",
-                table: "Admins");
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_Admins_BaseUsers_Id",
                 table: "Admins");
 
             migrationBuilder.DropTable(
                 name: "Addresses");
+
+            migrationBuilder.DropTable(
+                name: "AppointmentCosts");
 
             migrationBuilder.DropTable(
                 name: "Appointments");
@@ -1103,7 +1185,7 @@ namespace Database.Migrations
                 name: "ClientServiceProviderFeedbacks");
 
             migrationBuilder.DropTable(
-                name: "DocumentsCategories");
+                name: "DocumentCategories");
 
             migrationBuilder.DropTable(
                 name: "EmergencyCases");
@@ -1136,6 +1218,9 @@ namespace Database.Migrations
                 name: "Subscriptions");
 
             migrationBuilder.DropTable(
+                name: "Cities");
+
+            migrationBuilder.DropTable(
                 name: "Slots");
 
             migrationBuilder.DropTable(
@@ -1145,7 +1230,7 @@ namespace Database.Migrations
                 name: "ConsultationCases");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "DCategories");
 
             migrationBuilder.DropTable(
                 name: "Documents");
@@ -1160,10 +1245,16 @@ namespace Database.Migrations
                 name: "Payments");
 
             migrationBuilder.DropTable(
+                name: "States");
+
+            migrationBuilder.DropTable(
                 name: "Services");
 
             migrationBuilder.DropTable(
                 name: "DocumentTypes");
+
+            migrationBuilder.DropTable(
+                name: "Countries");
 
             migrationBuilder.DropTable(
                 name: "Clients");
@@ -1175,13 +1266,13 @@ namespace Database.Migrations
                 name: "ServiceProviderTypes");
 
             migrationBuilder.DropTable(
-                name: "AccessLevels");
-
-            migrationBuilder.DropTable(
                 name: "BaseUsers");
 
             migrationBuilder.DropTable(
                 name: "Admins");
+
+            migrationBuilder.DropTable(
+                name: "AccessLevels");
         }
     }
 }
