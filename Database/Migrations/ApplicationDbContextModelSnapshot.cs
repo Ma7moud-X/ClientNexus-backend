@@ -53,16 +53,17 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Address", b =>
                 {
+                    b.Property<int>("BaseUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<int>("CityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("DetailedAddress")
                         .IsRequired()
@@ -73,21 +74,17 @@ namespace Database.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Neighborhood")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
+                    b.HasKey("BaseUserId", "Id");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceProviderId");
+                    b.HasIndex("CityId");
 
                     b.ToTable("Addresses", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Content.Category", b =>
+            modelBuilder.Entity("Database.Models.Content.DCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -101,7 +98,7 @@ namespace Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("DCategories", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Content.Document", b =>
@@ -114,15 +111,14 @@ namespace Database.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UploadedById")
                         .HasColumnType("int");
@@ -132,6 +128,8 @@ namespace Database.Migrations
                         .HasColumnType("varchar(500)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
 
                     b.HasIndex("UploadedById");
 
@@ -143,26 +141,67 @@ namespace Database.Migrations
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("DCategoryId")
                         .HasColumnType("int");
 
-                    b.HasKey("DocumentId", "CategoryId");
+                    b.HasKey("DocumentId", "DCategoryId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("DCategoryId");
 
-                    b.ToTable("DocumentsCategories", (string)null);
+                    b.ToTable("DocumentCategories", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.LawyerLicence", b =>
+            modelBuilder.Entity("Database.Models.Content.DocumentType", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("LawyerId")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentTypes", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = -1,
+                            Name = "Article"
+                        },
+                        new
+                        {
+                            Id = -2,
+                            Name = "Template"
+                        },
+                        new
+                        {
+                            Id = -3,
+                            Name = "Other"
+                        });
+                });
+
+            modelBuilder.Entity("Database.Models.License", b =>
+                {
+                    b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("ExpiryDate")
                         .HasColumnType("date");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly>("IssueDate")
                         .HasColumnType("date");
@@ -177,19 +216,24 @@ namespace Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id", "LawyerId");
+                    b.HasKey("ServiceProviderId", "Id");
 
-                    b.HasIndex("LawyerId");
-
-                    b.ToTable("LawyerLicences", (string)null);
+                    b.ToTable("Licenses", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.LawyerSpecialization", b =>
+            modelBuilder.Entity("Database.Models.Others.City", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("LawyerId")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Abbreviation")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("CountryId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -197,11 +241,83 @@ namespace Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id", "LawyerId");
+                    b.Property<int?>("StateId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("LawyerId");
+                    b.HasKey("Id");
 
-                    b.ToTable("LawyerSpecializations", (string)null);
+                    b.HasIndex("CountryId");
+
+                    b.HasIndex("StateId");
+
+                    b.ToTable("Cities", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Others.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Abbreviation")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Others.OfficeImageUrl", b =>
+                {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("ServiceProviderId", "Id");
+
+                    b.ToTable("OfficeImageUrls", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Others.State", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Abbreviation")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("States", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Payment", b =>
@@ -216,9 +332,6 @@ namespace Database.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -229,17 +342,14 @@ namespace Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
                     b.Property<string>("ReferenceNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ServiceType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Signature")
                         .IsRequired()
@@ -248,64 +358,77 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("ServiceProviderId");
-
                     b.ToTable("Payments", (string)null);
+
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
                     b.Property<int>("BaseUserId")
                         .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.HasKey("Id", "BaseUserId");
-
-                    b.HasIndex("BaseUserId");
+                    b.HasKey("BaseUserId", "Id");
 
                     b.ToTable("PhoneNumbers", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Problem", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ReportedBy")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("AdminId")
+                    b.Property<int?>("SolvingAdminId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReportedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(1)");
 
-                    b.HasKey("ClientId", "ServiceProviderId", "AdminId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("AdminId");
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ServiceId")
+                        .IsUnique();
 
                     b.HasIndex("ServiceProviderId");
+
+                    b.HasIndex("SolvingAdminId");
 
                     b.ToTable("Problems", (string)null);
                 });
@@ -360,10 +483,29 @@ namespace Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Database.Models.Services.AppointmentCost", b =>
+                {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AppointmentType")
+                        .HasColumnType("char(1)");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.HasKey("ServiceProviderId", "AppointmentType");
+
+                    b.ToTable("AppointmentCosts", (string)null);
+                });
+
             modelBuilder.Entity("Database.Models.Services.CaseFile", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ConsultCaseId")
                         .HasColumnType("int");
@@ -373,7 +515,7 @@ namespace Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("Id", "ConsultCaseId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ConsultCaseId");
 
@@ -382,24 +524,46 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Services.ClientServiceProviderFeedback", b =>
                 {
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Feedback")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<float>("Rate")
                         .HasColumnType("real");
 
-                    b.HasKey("ClientId", "ServiceProviderId");
+                    b.HasKey("ServiceProviderId", "ClientId");
 
-                    b.HasIndex("ServiceProviderId");
+                    b.HasIndex("ClientId");
 
                     b.ToTable("ClientServiceProviderFeedbacks", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ServiceProviderTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderTypeId");
+
+                    b.ToTable("EmergencyCategories", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Services.Service", b =>
@@ -419,23 +583,32 @@ namespace Database.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(1)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("ServiceProviderId");
 
                     b.ToTable("Services", (string)null);
 
@@ -444,6 +617,9 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Services.Slot", b =>
                 {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
@@ -453,42 +629,17 @@ namespace Database.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.Property<string>("SlotType")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.HasKey("ServiceProviderId", "Id");
 
                     b.ToTable("Slots", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotServiceProvider", b =>
-                {
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SlotId", "ServiceProviderId");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.ToTable("SlotsServiceProviders", (string)null);
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotType", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id", "SlotId");
-
-                    b.HasIndex("SlotId");
-
-                    b.ToTable("SlotTypes", (string)null);
                 });
 
             modelBuilder.Entity("Database.Models.Subscription", b =>
@@ -505,15 +656,21 @@ namespace Database.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderId")
+                        .IsUnique();
 
                     b.ToTable("Subscriptions", (string)null);
                 });
@@ -593,6 +750,10 @@ namespace Database.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BlockedById");
@@ -608,6 +769,67 @@ namespace Database.Migrations
                     b.ToTable("BaseUsers", (string)null);
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Database.Models.Users.ServiceProviderSpecialization", b =>
+                {
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SpecializationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ServiceProviderId", "SpecializationId");
+
+                    b.HasIndex("SpecializationId");
+
+                    b.ToTable("ServiceProviderSpecializations", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Users.ServiceProviderType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServiceProviderTypes", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = -1,
+                            Name = "Lawyer"
+                        });
+                });
+
+            modelBuilder.Entity("Database.Models.Users.Specialization", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ServiceProviderTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderTypeId");
+
+                    b.ToTable("Specializations", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -713,30 +935,50 @@ namespace Database.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Services.Appointment", b =>
+            modelBuilder.Entity("Database.Models.Others.ServicePayment", b =>
                 {
-                    b.HasBaseType("Database.Models.Services.Service");
+                    b.HasBaseType("Database.Models.Payment");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.HasIndex("ServiceId")
+                        .IsUnique()
+                        .HasFilter("[ServiceId] IS NOT NULL");
+
+                    b.ToTable("ServicePayments", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Others.SubscriptionPayment", b =>
+                {
+                    b.HasBaseType("Database.Models.Payment");
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
+                    b.HasIndex("ServiceProviderId");
+
+                    b.ToTable("SubscriptionPayments", (string)null);
+                });
+
+            modelBuilder.Entity("Database.Models.Services.Appointment", b =>
+                {
+                    b.HasBaseType("Database.Models.Services.Service");
+
+                    b.Property<int>("AppointmentProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AppointmentType")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("SlotId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceProviderId");
-
-                    b.HasIndex("SlotId")
-                        .IsUnique()
-                        .HasFilter("[SlotId] IS NOT NULL");
+                    b.HasIndex("AppointmentProviderId", "SlotId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -745,14 +987,6 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Services.Service");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("ServiceProviderId");
-
                     b.ToTable("ConsultationCases", (string)null);
                 });
 
@@ -760,23 +994,18 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Services.Service");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Location")
+                    b.Property<string>("CurrentLocation")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ServiceProviderId")
+                    b.Property<int>("EmergencyCategoryId")
                         .HasColumnType("int");
 
-                    b.HasIndex("ServiceProviderId");
+                    b.Property<int>("TimeForArrival")
+                        .HasColumnType("int");
+
+                    b.HasIndex("EmergencyCategoryId");
 
                     b.ToTable("EmergencyCases", (string)null);
                 });
@@ -785,15 +1014,10 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Services.Service");
 
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("Visibility")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.HasIndex("ServiceProviderId");
 
                     b.ToTable("Questions", (string)null);
                 });
@@ -831,8 +1055,11 @@ namespace Database.Migrations
                 {
                     b.HasBaseType("Database.Models.Users.BaseUser");
 
-                    b.Property<int>("ApprovedById")
+                    b.Property<int?>("ApprovedById")
                         .HasColumnType("int");
+
+                    b.Property<string>("CurrentLocation")
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -856,74 +1083,75 @@ namespace Database.Migrations
 
                     b.Property<string>("MainImage")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MapLocation")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<float>("Rate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("real")
                         .HasDefaultValue(0f);
 
-                    b.Property<int>("SubscriptionId")
+                    b.Property<int>("TypeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
                     b.HasIndex("ApprovedById");
 
-                    b.HasIndex("SubscriptionId")
-                        .IsUnique()
-                        .HasFilter("[SubscriptionId] IS NOT NULL");
+                    b.HasIndex("TypeId");
 
                     b.ToTable("ServiceProviders", (string)null);
                 });
 
-            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
-                {
-                    b.HasBaseType("Database.Models.Users.ServiceProvider");
-
-                    b.Property<int?>("YearsOfExperience")
-                        .HasColumnType("int");
-
-                    b.ToTable("Lawyers", (string)null);
-                });
-
             modelBuilder.Entity("Database.Models.Address", b =>
                 {
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                    b.HasOne("Database.Models.Users.BaseUser", "BaseUser")
                         .WithMany("Addresses")
-                        .HasForeignKey("ServiceProviderId")
+                        .HasForeignKey("BaseUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ServiceProvider");
+                    b.HasOne("Database.Models.Others.City", "City")
+                        .WithMany("Addresses")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BaseUser");
+
+                    b.Navigation("City");
                 });
 
             modelBuilder.Entity("Database.Models.Content.Document", b =>
                 {
-                    b.HasOne("Database.Models.Users.Admin", "UploadedBy")
+                    b.HasOne("Database.Models.Content.DocumentType", "DocumentType")
                         .WithMany("Documents")
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Users.Admin", "UploadedBy")
+                        .WithMany("UploadedDocuments")
                         .HasForeignKey("UploadedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("DocumentType");
 
                     b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("Database.Models.Content.DocumentCategory", b =>
                 {
-                    b.HasOne("Database.Models.Content.Category", "Category")
-                        .WithMany("DocumentsCategories")
-                        .HasForeignKey("CategoryId")
+                    b.HasOne("Database.Models.Content.DCategory", "Category")
+                        .WithMany("DocumentCategories")
+                        .HasForeignKey("DCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Database.Models.Content.Document", "Document")
-                        .WithMany("DocumentsCategories")
+                        .WithMany("DocumentCategories")
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -933,45 +1161,55 @@ namespace Database.Migrations
                     b.Navigation("Document");
                 });
 
-            modelBuilder.Entity("Database.Models.LawyerLicence", b =>
+            modelBuilder.Entity("Database.Models.License", b =>
                 {
-                    b.HasOne("Database.Models.Users.Lawyer", "Lawyer")
-                        .WithMany("Licences")
-                        .HasForeignKey("LawyerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lawyer");
-                });
-
-            modelBuilder.Entity("Database.Models.LawyerSpecialization", b =>
-                {
-                    b.HasOne("Database.Models.Users.Lawyer", "Lawyer")
-                        .WithMany("Specializations")
-                        .HasForeignKey("LawyerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lawyer");
-                });
-
-            modelBuilder.Entity("Database.Models.Payment", b =>
-                {
-                    b.HasOne("Database.Models.Users.Client", "Client")
-                        .WithMany("Payments")
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Payments")
+                        .WithMany("Licenses")
                         .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Client");
 
                     b.Navigation("ServiceProvider");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.City", b =>
+                {
+                    b.HasOne("Database.Models.Others.Country", "Country")
+                        .WithMany("Cities")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Others.State", "State")
+                        .WithMany("Cities")
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Country");
+
+                    b.Navigation("State");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.OfficeImageUrl", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("OfficeImageUrls")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProvider");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.State", b =>
+                {
+                    b.HasOne("Database.Models.Others.Country", "Country")
+                        .WithMany("States")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
                 });
 
             modelBuilder.Entity("Database.Models.PhoneNumber", b =>
@@ -987,15 +1225,15 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.Problem", b =>
                 {
-                    b.HasOne("Database.Models.Users.Admin", "Admin")
-                        .WithMany("Problems")
-                        .HasForeignKey("AdminId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Database.Models.Users.Client", "Client")
                         .WithMany("Problems")
                         .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Services.Service", "Service")
+                        .WithOne("Problem")
+                        .HasForeignKey("Database.Models.Problem", "ServiceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1005,9 +1243,27 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Admin");
+                    b.HasOne("Database.Models.Users.Admin", "SolvingAdmin")
+                        .WithMany("AssignedProblems")
+                        .HasForeignKey("SolvingAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Client");
+
+                    b.Navigation("Service");
+
+                    b.Navigation("ServiceProvider");
+
+                    b.Navigation("SolvingAdmin");
+                });
+
+            modelBuilder.Entity("Database.Models.Services.AppointmentCost", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("AppointmentCosts")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ServiceProvider");
                 });
@@ -1042,45 +1298,55 @@ namespace Database.Migrations
                     b.Navigation("ServiceProvider");
                 });
 
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProviderType", "ServiceProviderType")
+                        .WithMany("EmergencyCategories")
+                        .HasForeignKey("ServiceProviderTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProviderType");
+                });
+
             modelBuilder.Entity("Database.Models.Services.Service", b =>
                 {
                     b.HasOne("Database.Models.Users.Client", "Client")
-                        .WithMany("Services")
+                        .WithMany("RequestedServices")
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("ServicesProvided")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Client");
+
+                    b.Navigation("ServiceProvider");
                 });
 
-            modelBuilder.Entity("Database.Models.Services.SlotServiceProvider", b =>
+            modelBuilder.Entity("Database.Models.Services.Slot", b =>
                 {
                     b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("SlotServiceProviders")
+                        .WithMany("Slots")
                         .HasForeignKey("ServiceProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithMany("SlotServiceProviders")
-                        .HasForeignKey("SlotId")
+                    b.Navigation("ServiceProvider");
+                });
+
+            modelBuilder.Entity("Database.Models.Subscription", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithOne("Subscription")
+                        .HasForeignKey("Database.Models.Subscription", "ServiceProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ServiceProvider");
-
-                    b.Navigation("Slot");
-                });
-
-            modelBuilder.Entity("Database.Models.Services.SlotType", b =>
-                {
-                    b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithMany("SlotTypes")
-                        .HasForeignKey("SlotId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Slot");
                 });
 
             modelBuilder.Entity("Database.Models.Users.BaseUser", b =>
@@ -1091,6 +1357,36 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("BlockedBy");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.ServiceProviderSpecialization", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("ServiceProviderSpecializations")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Users.Specialization", "Specialization")
+                        .WithMany("ServiceProviderSpecializations")
+                        .HasForeignKey("SpecializationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProvider");
+
+                    b.Navigation("Specialization");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.Specialization", b =>
+                {
+                    b.HasOne("Database.Models.Users.ServiceProviderType", "ServiceProviderType")
+                        .WithMany("Specializations")
+                        .HasForeignKey("ServiceProviderTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProviderType");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -1144,6 +1440,40 @@ namespace Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Database.Models.Others.ServicePayment", b =>
+                {
+                    b.HasOne("Database.Models.Payment", null)
+                        .WithOne()
+                        .HasForeignKey("Database.Models.Others.ServicePayment", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Services.Service", "Service")
+                        .WithOne("ServicePayment")
+                        .HasForeignKey("Database.Models.Others.ServicePayment", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.SubscriptionPayment", b =>
+                {
+                    b.HasOne("Database.Models.Payment", null)
+                        .WithOne()
+                        .HasForeignKey("Database.Models.Others.SubscriptionPayment", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("SubscriptionPayments")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProvider");
+                });
+
             modelBuilder.Entity("Database.Models.Services.Appointment", b =>
                 {
                     b.HasOne("Database.Models.Services.Service", null)
@@ -1152,19 +1482,11 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Appointments")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Database.Models.Services.Slot", "Slot")
-                        .WithOne("Appointment")
-                        .HasForeignKey("Database.Models.Services.Appointment", "SlotId")
+                        .WithMany("Appointments")
+                        .HasForeignKey("AppointmentProviderId", "SlotId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("ServiceProvider");
 
                     b.Navigation("Slot");
                 });
@@ -1176,31 +1498,23 @@ namespace Database.Migrations
                         .HasForeignKey("Database.Models.Services.ConsultationCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("ConsultationCases")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
                 });
 
             modelBuilder.Entity("Database.Models.Services.EmergencyCase", b =>
                 {
+                    b.HasOne("Database.Models.Services.EmergencyCategory", "EmergencyCategory")
+                        .WithMany("EmergencyCases")
+                        .HasForeignKey("EmergencyCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Database.Models.Services.Service", null)
                         .WithOne()
                         .HasForeignKey("Database.Models.Services.EmergencyCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("EmergencyCases")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
+                    b.Navigation("EmergencyCategory");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Question", b =>
@@ -1210,14 +1524,6 @@ namespace Database.Migrations
                         .HasForeignKey("Database.Models.Services.Question", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Database.Models.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Questions")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
                 });
 
             modelBuilder.Entity("Database.Models.Users.Admin", b =>
@@ -1258,8 +1564,7 @@ namespace Database.Migrations
                     b.HasOne("Database.Models.Users.Admin", "ApprovingAdmin")
                         .WithMany("ApprovedServiceProviders")
                         .HasForeignKey("ApprovedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Database.Models.Users.BaseUser", null)
                         .WithOne()
@@ -1267,24 +1572,15 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Database.Models.Subscription", "Subscription")
-                        .WithOne("ServiceProvider")
-                        .HasForeignKey("Database.Models.Users.ServiceProvider", "SubscriptionId")
+                    b.HasOne("Database.Models.Users.ServiceProviderType", "Type")
+                        .WithMany("ServiceProviders")
+                        .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ApprovingAdmin");
 
-                    b.Navigation("Subscription");
-                });
-
-            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
-                {
-                    b.HasOne("Database.Models.Users.ServiceProvider", null)
-                        .WithOne()
-                        .HasForeignKey("Database.Models.Users.Lawyer", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("Database.Models.AccessLevel", b =>
@@ -1292,34 +1588,74 @@ namespace Database.Migrations
                     b.Navigation("Admins");
                 });
 
-            modelBuilder.Entity("Database.Models.Content.Category", b =>
+            modelBuilder.Entity("Database.Models.Content.DCategory", b =>
                 {
-                    b.Navigation("DocumentsCategories");
+                    b.Navigation("DocumentCategories");
                 });
 
             modelBuilder.Entity("Database.Models.Content.Document", b =>
                 {
-                    b.Navigation("DocumentsCategories");
+                    b.Navigation("DocumentCategories");
+                });
+
+            modelBuilder.Entity("Database.Models.Content.DocumentType", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.City", b =>
+                {
+                    b.Navigation("Addresses");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.Country", b =>
+                {
+                    b.Navigation("Cities");
+
+                    b.Navigation("States");
+                });
+
+            modelBuilder.Entity("Database.Models.Others.State", b =>
+                {
+                    b.Navigation("Cities");
+                });
+
+            modelBuilder.Entity("Database.Models.Services.EmergencyCategory", b =>
+                {
+                    b.Navigation("EmergencyCases");
+                });
+
+            modelBuilder.Entity("Database.Models.Services.Service", b =>
+                {
+                    b.Navigation("Problem");
+
+                    b.Navigation("ServicePayment");
                 });
 
             modelBuilder.Entity("Database.Models.Services.Slot", b =>
                 {
-                    b.Navigation("Appointment");
-
-                    b.Navigation("SlotServiceProviders");
-
-                    b.Navigation("SlotTypes");
-                });
-
-            modelBuilder.Entity("Database.Models.Subscription", b =>
-                {
-                    b.Navigation("ServiceProvider")
-                        .IsRequired();
+                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("Database.Models.Users.BaseUser", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("PhoneNumbers");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.ServiceProviderType", b =>
+                {
+                    b.Navigation("EmergencyCategories");
+
+                    b.Navigation("ServiceProviders");
+
+                    b.Navigation("Specializations");
+                });
+
+            modelBuilder.Entity("Database.Models.Users.Specialization", b =>
+                {
+                    b.Navigation("ServiceProviderSpecializations");
                 });
 
             modelBuilder.Entity("Database.Models.Services.ConsultationCase", b =>
@@ -1333,50 +1669,43 @@ namespace Database.Migrations
 
                     b.Navigation("ApprovedServiceProviders");
 
+                    b.Navigation("AssignedProblems");
+
                     b.Navigation("BlockedUsers");
 
-                    b.Navigation("Documents");
-
-                    b.Navigation("Problems");
+                    b.Navigation("UploadedDocuments");
                 });
 
             modelBuilder.Entity("Database.Models.Users.Client", b =>
                 {
                     b.Navigation("ClientServiceProviderFeedbacks");
 
-                    b.Navigation("Payments");
-
                     b.Navigation("Problems");
 
-                    b.Navigation("Services");
+                    b.Navigation("RequestedServices");
                 });
 
             modelBuilder.Entity("Database.Models.Users.ServiceProvider", b =>
                 {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("Appointments");
+                    b.Navigation("AppointmentCosts");
 
                     b.Navigation("ClientServiceProviderFeedbacks");
 
-                    b.Navigation("ConsultationCases");
+                    b.Navigation("Licenses");
 
-                    b.Navigation("EmergencyCases");
-
-                    b.Navigation("Payments");
+                    b.Navigation("OfficeImageUrls");
 
                     b.Navigation("Problems");
 
-                    b.Navigation("Questions");
+                    b.Navigation("ServiceProviderSpecializations");
 
-                    b.Navigation("SlotServiceProviders");
-                });
+                    b.Navigation("ServicesProvided");
 
-            modelBuilder.Entity("Database.Models.Users.Lawyer", b =>
-                {
-                    b.Navigation("Licences");
+                    b.Navigation("Slots");
 
-                    b.Navigation("Specializations");
+                    b.Navigation("Subscription");
+
+                    b.Navigation("SubscriptionPayments");
                 });
 #pragma warning restore 612, 618
         }

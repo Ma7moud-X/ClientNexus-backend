@@ -10,28 +10,28 @@ namespace Database.Configurations
         {
             builder.ToTable("Addresses");
 
+            builder.HasKey(a => new { a.BaseUserId, a.Id });
+
+            builder.Property(a => a.Id).UseIdentityColumn();
+
             builder.Property(a => a.DetailedAddress)
                 .IsRequired(true)
                 .HasMaxLength(200);
 
             builder.Property(a => a.Neighborhood)
-                .IsRequired(true)
+                .IsRequired(false)
                 .HasMaxLength(100);
 
-            builder.Property(a => a.City)
-                .IsRequired(true)
-                .HasMaxLength(20);
-            
             builder.Property(a => a.MapUrl)
                 .IsRequired(false)
                 .HasColumnType("nvarchar(500)");
 
             builder
-                .HasOne(sp => sp.ServiceProvider)
-                .WithMany(a => a.Addresses)
-                .HasForeignKey(sp => sp.ServiceProviderId)
+                .HasOne(a => a.BaseUser)
+                .WithMany(u => u.Addresses)
+                .HasForeignKey(a => a.BaseUserId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
         }
     }
 }

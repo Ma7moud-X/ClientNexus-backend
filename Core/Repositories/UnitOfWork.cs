@@ -2,6 +2,7 @@ using Core.Interfaces.Repositories;
 using Database;
 using Database.Models;
 using Database.Models.Content;
+using Database.Models.Others;
 using Database.Models.Roles;
 using Database.Models.Services;
 using Database.Models.Users;
@@ -12,7 +13,7 @@ namespace Core.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    public IBaseRepo<Category> Categories { get; private set; }
+    public IBaseRepo<DCategory> DCategories { get; private set; }
 
     public IBaseRepo<Document> Documents { get; private set; }
 
@@ -30,11 +31,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<AccessLevel> AccessLevels { get; private set; }
 
-    public IBaseRepo<Lawyer> Lawyers { get; private set; }
-
-    public IBaseRepo<LawyerLicence> LawyerLicences { get; private set; }
-
-    public IBaseRepo<LawyerSpecialization> LawyerSpecializations { get; private set; }
+    public IBaseRepo<License> Licenses { get; private set; }
 
     public IBaseRepo<Address> Addresses { get; private set; }
 
@@ -63,9 +60,29 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<Slot> Slots { get; private set; }
 
-    public IBaseRepo<SlotType> SlotTypes { get; private set; }
+    public IBaseRepo<DocumentType> DocumentTypes { get; private set; }
 
-    public IBaseRepo<SlotServiceProvider> SlotServiceProviders { get; private set; }
+    public IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; private set; }
+
+    public IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations { get; private set; }
+
+    public IBaseRepo<Specialization> Specializations { get; private set; }
+
+    public IBaseRepo<ServicePayment> ServicePayments { get; private set; }
+
+    public IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; private set; }
+
+    public IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; private set; }
+
+    public IBaseRepo<EmergencyCategory> EmergencyCategories { get; private set; }
+
+    public IBaseRepo<AppointmentCost> AppointmentCosts { get; private set; }
+
+    public IBaseRepo<City> Cities { get; private set; }
+
+    public IBaseRepo<State> States { get; private set; }
+
+    public IBaseRepo<Country> Countries { get; private set; }
 
     public readonly ApplicationDbContext _context;
 
@@ -74,7 +91,7 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
 
         // Document Models
-        Categories = new BaseRepo<Category>(context);
+        DCategories = new BaseRepo<DCategory>(context);
         Documents = new BaseRepo<Document>(context);
         DocumentCategories = new BaseRepo<DocumentCategory>(context);
 
@@ -87,10 +104,11 @@ public class UnitOfWork : IUnitOfWork
         Admins = new BaseRepo<Admin>(context);
         AccessLevels = new BaseRepo<AccessLevel>(context);
 
-        Lawyers = new BaseRepo<Lawyer>(context);
-        LawyerLicences = new BaseRepo<LawyerLicence>(context);
-        LawyerSpecializations = new BaseRepo<LawyerSpecialization>(context);
+        Licenses = new BaseRepo<License>(context);
         Addresses = new BaseRepo<Address>(context);
+        Cities = new BaseRepo<City>(context);
+        States = new BaseRepo<State>(context);
+        Countries = new BaseRepo<Country>(context);
         Feedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
         PhoneNumbers = new BaseRepo<PhoneNumber>(context);
 
@@ -98,8 +116,10 @@ public class UnitOfWork : IUnitOfWork
         Services = new BaseRepo<Service>(context);
         Questions = new BaseRepo<Question>(context);
         EmergencyCases = new BaseRepo<EmergencyCase>(context);
+        EmergencyCategories = new BaseRepo<EmergencyCategory>(context);
         ConsultationCases = new BaseRepo<ConsultationCase>(context);
         Appointments = new BaseRepo<Appointment>(context);
+        AppointmentCosts = new BaseRepo<AppointmentCost>(context);
         CaseFiles = new BaseRepo<CaseFile>(context);
 
         // Others
@@ -107,8 +127,15 @@ public class UnitOfWork : IUnitOfWork
         Problems = new BaseRepo<Problem>(context);
         Subscriptions = new BaseRepo<Subscription>(context);
         Slots = new BaseRepo<Slot>(context);
-        SlotTypes = new BaseRepo<SlotType>(context);
-        SlotServiceProviders = new BaseRepo<SlotServiceProvider>(context);
+        OfficeImageUrls = new BaseRepo<OfficeImageUrl>(context);
+
+        DocumentTypes = new BaseRepo<DocumentType>(context);
+        ServiceProviderTypes = new BaseRepo<ServiceProviderType>(context);
+        ServiceProviderSpecializations = new BaseRepo<ServiceProviderSpecialization>(context);
+        Specializations = new BaseRepo<Specialization>(context);
+
+        ServicePayments = new BaseRepo<ServicePayment>(context);
+        SubscriptionPayments = new BaseRepo<SubscriptionPayment>(context);
     }
 
     public void Dispose()

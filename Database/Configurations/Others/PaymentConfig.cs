@@ -1,4 +1,5 @@
 using Database.Models;
+using Database.Models.Others;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,45 +13,27 @@ namespace Database.Configurations
 
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.Signature)
-                .IsRequired()
-                .HasMaxLength(100);
+            builder.Property(p => p.Signature).IsRequired().HasMaxLength(100);
 
-            builder.Property(p => p.Amount)
-                .IsRequired()
-                .HasPrecision(18, 2);
+            builder.Property(p => p.Amount).IsRequired().HasPrecision(18, 2);
 
-            builder.Property(p => p.ReferenceNumber)
-                .IsRequired()
-                .HasMaxLength(50);
+            builder.Property(p => p.ReferenceNumber).IsRequired().HasMaxLength(50);
 
-            builder.Property(p => p.PaymentGateway)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            builder.Property(p => p.Status)
-                .IsRequired()
-                .HasConversion<string>();
-
-            builder.Property(p => p.CreatedAt)
-                .IsRequired()
-                .HasDefaultValueSql("GETDATE()");
-
-            builder.Property(p => p.ServiceType)
-                .IsRequired()
-                .HasConversion<string>();
+            builder.Property(p => p.PaymentGateway).IsRequired().HasMaxLength(50);
 
             builder
-               .HasOne(p => p.Client)
-               .WithMany(p => p.Payments)
-               .HasForeignKey(p => p.ClientId)
-               .OnDelete(DeleteBehavior.Restrict);
+                .Property(p => p.Status)
+                .HasColumnType("varchar(1)")
+                .HasConversion(status => (char)status, status => (PaymentStatus)status)
+                .IsRequired();
+
+            builder.Property(p => p.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");
 
             builder
-               .HasOne(p => p.ServiceProvider)
-               .WithMany(p => p.Payments)
-               .HasForeignKey(p => p.ServiceProviderId)
-               .OnDelete(DeleteBehavior.Restrict);
+                .Property(p => p.PaymentType)
+                .HasConversion(type => (char)type, type => (PaymentType)type)
+                .IsRequired()
+                .HasColumnType("varchar(1)");
         }
     }
 }

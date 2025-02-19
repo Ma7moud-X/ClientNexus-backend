@@ -12,28 +12,9 @@ namespace Database.Configurations.Services
 
             builder.HasBaseType<Service>();
 
-            builder.Property(a => a.Type)
-                .IsRequired();
+            builder.Property(a => a.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at).IsRequired().HasColumnType("varchar(1)");
 
-            builder.Property(a => a.Date)
-                .IsRequired();
-                
-            builder.Property(a => a.Price)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)");
-    
-            builder
-                .HasOne(a => a.ServiceProvider)
-                .WithMany(a => a.Appointments)
-                .HasForeignKey(a => a.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
-            builder
-                .HasOne(a => a.Slot)
-                .WithOne(a => a.Appointment)
-                .HasForeignKey<Appointment>(a => a.SlotId)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(a => a.Date).IsRequired();
         }
     }
 }

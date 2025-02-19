@@ -11,8 +11,8 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
         builder.ToTable("Admins");
 
         builder.Property(a => a.ApprovedById).IsRequired(false);
-        
-        
+
+
         builder
             .HasOne(a => a.ApprovingAdmin)
             .WithMany(a => a.ApprovedAdmins)
@@ -23,18 +23,6 @@ public class AdminConfig : IEntityTypeConfiguration<Admin>
             .HasOne(a => a.AccessLevel)
             .WithMany(a => a.Admins)
             .HasForeignKey(a => a.AccessLevelId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder
-            .HasMany(a => a.Problems)
-            .WithOne(a => a.Admin)
-            .HasForeignKey(a => a.AdminId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        builder
-            .HasMany(a => a.Documents)
-            .WithOne(a => a.UploadedBy)
-            .HasForeignKey(a => a.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder

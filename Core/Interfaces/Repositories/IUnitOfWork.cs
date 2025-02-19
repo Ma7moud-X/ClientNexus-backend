@@ -1,5 +1,6 @@
 using Database.Models;
 using Database.Models.Content;
+using Database.Models.Others;
 using Database.Models.Roles;
 using Database.Models.Services;
 using Database.Models.Users;
@@ -10,23 +11,28 @@ namespace Core.Interfaces.Repositories;
 public interface IUnitOfWork : IDisposable
 {
     // Document Models
-    IBaseRepo<Category> Categories { get; }
+    IBaseRepo<DCategory> DCategories { get; }
     IBaseRepo<Document> Documents { get; }
     IBaseRepo<DocumentCategory> DocumentCategories { get; }
+    IBaseRepo<DocumentType> DocumentTypes { get; }
 
     // User Models
     IBaseRepo<BaseUser> BaseUsers { get; }
     IBaseRepo<Role> Roles { get; }
     IBaseRepo<Client> Clients { get; }
     IBaseRepo<ServiceProvider> ServiceProviders { get; }
+    IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; }
+    IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations { get; }
+    IBaseRepo<Specialization> Specializations { get; }
 
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
 
-    IBaseRepo<Lawyer> Lawyers { get; }
-    IBaseRepo<LawyerLicence> LawyerLicences { get; }
-    IBaseRepo<LawyerSpecialization> LawyerSpecializations { get; }
+    IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
+    IBaseRepo<City> Cities { get; }
+    IBaseRepo<State> States { get; }
+    IBaseRepo<Country> Countries { get; }
     IBaseRepo<ClientServiceProviderFeedback> Feedbacks { get; }
     IBaseRepo<PhoneNumber> PhoneNumbers { get; }
 
@@ -34,17 +40,20 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Service> Services { get; }
     IBaseRepo<Question> Questions { get; }
     IBaseRepo<EmergencyCase> EmergencyCases { get; }
+    IBaseRepo<EmergencyCategory> EmergencyCategories { get; }
     IBaseRepo<ConsultationCase> ConsultationCases { get; }
     IBaseRepo<Appointment> Appointments { get; }
+    IBaseRepo<AppointmentCost> AppointmentCosts { get; }
     IBaseRepo<CaseFile> CaseFiles { get; }
 
     // Others
     IBaseRepo<Payment> Payments { get; }
+    IBaseRepo<ServicePayment> ServicePayments { get; }
+    IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; }
     IBaseRepo<Problem> Problems { get; }
     IBaseRepo<Subscription> Subscriptions { get; }
     IBaseRepo<Slot> Slots { get; }
-    IBaseRepo<SlotType> SlotTypes { get; }
-    IBaseRepo<SlotServiceProvider> SlotServiceProviders { get; }
+    IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
 
     // Functions
     Task SaveChangesAsync();

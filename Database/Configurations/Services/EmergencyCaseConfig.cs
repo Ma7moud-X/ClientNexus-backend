@@ -12,23 +12,9 @@ namespace Database.Configurations
 
             builder.HasBaseType<Service>();
 
-            builder.Property(e => e.Location)
+            builder.Property(e => e.CurrentLocation)
                 .IsRequired()
                 .HasMaxLength(255);
-
-            builder.Property(e => e.Category)
-                .IsRequired()
-                .HasMaxLength(100);
-
-            builder.Property(e => e.Price)
-                .IsRequired()
-                .HasColumnType("decimal(18,2)");
-
-            builder
-                .HasOne(e => e.ServiceProvider)
-                .WithMany(e => e.EmergencyCases)
-                .HasForeignKey(e => e.ServiceProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

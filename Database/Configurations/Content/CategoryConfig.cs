@@ -4,22 +4,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Configurations.Content;
 
-public class CategoryConfig : IEntityTypeConfiguration<Category>
+public class CategoryConfig : IEntityTypeConfiguration<DCategory>
 {
-    public void Configure(EntityTypeBuilder<Category> builder)
+    public void Configure(EntityTypeBuilder<DCategory> builder)
     {
-        builder.ToTable("Categories");
+        builder.ToTable("DCategories");
         
-        builder.HasKey( c => c.Id);
+        builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Name)
             .HasColumnType("nvarchar(100)")
             .IsRequired(true);
 
-        builder
-            .HasMany(c => c.DocumentsCategories)
-            .WithOne(c => c.Category)
-            .HasForeignKey(c => c.CategoryId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // builder
+        //     .HasMany(c => c.DocumentsCategories)
+        //     .WithOne(c => c.Category)
+        //     .HasForeignKey(c => c.CategoryId)
+        //     .OnDelete(DeleteBehavior.Cascade);
     }
 }

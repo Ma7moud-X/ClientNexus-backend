@@ -1,40 +1,28 @@
-using Database.Models.Users;
-
 namespace Database.Models
 {
-    public enum PaymentServiceType
-    {
-        Consultation,
-        Appointment,
-        EmergencyCase,
-        Subscription,
-        Other
-    }
-
     public enum PaymentStatus
     {
-        Pending,
-        Completed,
-        Failed,
-        Refunded
+        Pending = 'P',
+        Completed = 'C',
+        Failed = 'F',
+        Refunded = 'R',
+    }
+
+    public enum PaymentType
+    {
+        Subscription = 'S',
+        Service = 'V',
     }
 
     public class Payment
     {
         public int Id { get; set; }
-        public string Signature { get; set; }
+        public string Signature { get; set; } = default!;
         public decimal Amount { get; set; }
-        public string ReferenceNumber { get; set; }
-        public string PaymentGateway { get; set; }
-        public PaymentStatus Status { get; set; }
+        public string ReferenceNumber { get; set; } = default!;
+        public string PaymentGateway { get; set; } = default!;
+        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
         public DateTime CreatedAt { get; set; }
-        public PaymentServiceType ServiceType { get; set; }
-
-
-        public int ClientId { get; set; }
-        public Client Client { get; set; }
-
-        public int ServiceProviderId { get; set; }
-        public ServiceProvider ServiceProvider { get; set; }
+        public PaymentType PaymentType { get; set; }
     }
 }
