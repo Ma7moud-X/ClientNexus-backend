@@ -30,6 +30,9 @@ public interface IUnitOfWork : IDisposable
 
     IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
+    IBaseRepo<City> Cities { get; }
+    IBaseRepo<State> States { get; }
+    IBaseRepo<Country> Countries { get; }
     IBaseRepo<ClientServiceProviderFeedback> Feedbacks { get; }
     IBaseRepo<PhoneNumber> PhoneNumbers { get; }
 

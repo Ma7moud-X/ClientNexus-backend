@@ -78,6 +78,12 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<AppointmentCost> AppointmentCosts { get; private set; }
 
+    public IBaseRepo<City> Cities { get; private set; }
+
+    public IBaseRepo<State> States { get; private set; }
+
+    public IBaseRepo<Country> Countries { get; private set; }
+
     public readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -100,6 +106,9 @@ public class UnitOfWork : IUnitOfWork
 
         Licenses = new BaseRepo<License>(context);
         Addresses = new BaseRepo<Address>(context);
+        Cities = new BaseRepo<City>(context);
+        States = new BaseRepo<State>(context);
+        Countries = new BaseRepo<Country>(context);
         Feedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
         PhoneNumbers = new BaseRepo<PhoneNumber>(context);
 
