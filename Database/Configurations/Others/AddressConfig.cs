@@ -10,6 +10,10 @@ namespace Database.Configurations
         {
             builder.ToTable("Addresses");
 
+            builder.HasKey(a => new { a.BaseUserId, a.Id });
+
+            builder.Property(a => a.Id).UseIdentityColumn();
+
             builder.Property(a => a.DetailedAddress)
                 .IsRequired(true)
                 .HasMaxLength(200);
