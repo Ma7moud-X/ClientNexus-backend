@@ -30,7 +30,6 @@ namespace Database.Models.Users
         public Subscription? Subscription { get; set; }
         public ICollection<License>? Licenses { get; set; }
 
-        public ICollection<Address>? Addresses { get; set; }
         public ICollection<Problem>? Problems { get; set; }
         public ICollection<Service>? ServicesProvided { get; set; }
         public ICollection<SubscriptionPayment>? SubscriptionPayments { get; set; }

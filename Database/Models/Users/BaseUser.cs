@@ -22,4 +22,5 @@ public class BaseUser : IdentityUser<int>
     public Admin? BlockedBy { get; set; }
 
     public ICollection<PhoneNumber>? PhoneNumbers { get; set; }
+    public ICollection<Address>? Addresses { get; set; }
 }

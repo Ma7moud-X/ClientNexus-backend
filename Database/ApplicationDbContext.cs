@@ -54,6 +54,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
         new PhoneNumberConfig().Configure(modelBuilder.Entity<PhoneNumber>());
         new AccessLevelConfig().Configure(modelBuilder.Entity<AccessLevel>());
         new AddressConfig().Configure(modelBuilder.Entity<Address>());
+        new CityConfig().Configure(modelBuilder.Entity<City>());
+        new StateConfig().Configure(modelBuilder.Entity<State>());
+        new CountryConfig().Configure(modelBuilder.Entity<Country>());
         new SubscriptionConfig().Configure(modelBuilder.Entity<Subscription>());
 
         new SlotConfig().Configure(modelBuilder.Entity<Slot>());
@@ -100,6 +103,9 @@ public class ApplicationDbContext : IdentityDbContext<BaseUser, Role, int>
     public DbSet<PhoneNumber> PhoneNumbers { get; set; }
     public DbSet<AccessLevel> AccessLevels { get; set; }
     public DbSet<Address> Addresses { get; set; }
+    public DbSet<City> Cities { get; set; }
+    public DbSet<State> States { get; set; }
+    public DbSet<Country> Countries { get; set; }
     public DbSet<Subscription> Subscriptions { get; set; }
 
     // Scheduling entities
