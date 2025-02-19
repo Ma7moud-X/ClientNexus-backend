@@ -10,7 +10,9 @@ namespace Database.Configurations.Services
         {
             builder.ToTable("Slots");
 
-            builder.HasKey(s => s.Id);
+            builder.HasKey(s => new { s.ServiceProviderId, s.Id });
+
+            builder.Property(s => s.Id).UseIdentityColumn();
 
             builder.Property(s => s.Date).IsRequired();
 
@@ -26,7 +28,7 @@ namespace Database.Configurations.Services
             builder
                 .HasMany(s => s.Appointments)
                 .WithOne(s => s.Slot)
-                .HasForeignKey(s => s.SlotId)
+                .HasForeignKey(s => new { s.AppointmentProviderId, s.SlotId })
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder

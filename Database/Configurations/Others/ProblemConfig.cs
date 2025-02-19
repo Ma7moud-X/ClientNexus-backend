@@ -10,6 +10,10 @@ namespace Database.Configurations
         {
             builder.ToTable("Problems");
 
+            builder.HasKey(p => new { p.ServiceProviderId, p.Id });
+
+            builder.Property(p => p.Id).UseIdentityColumn();
+
             builder.Property(p => p.Description).HasColumnType("nvarchar(1000)").IsRequired();
 
             builder

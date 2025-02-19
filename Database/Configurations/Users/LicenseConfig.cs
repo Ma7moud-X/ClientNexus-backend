@@ -10,6 +10,10 @@ namespace Database.Configurations
         {
             builder.ToTable("Licenses");
 
+            builder.HasKey(l => new { l.ServiceProviderId, l.Id });
+
+            builder.Property(l => l.Id).UseIdentityColumn();
+
             builder.Property(l => l.LicenceNumber).IsRequired(true).HasMaxLength(50);
 
             builder.Property(l => l.IssuingAuthority).IsRequired(true).HasMaxLength(100);

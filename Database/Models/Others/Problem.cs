@@ -19,6 +19,7 @@ namespace Database.Models
 
     public class Problem
     {
+        public int ServiceProviderId { get; set; }
         public int Id { get; set; }
 
         public string Description { get; set; } = default!;
@@ -32,7 +33,6 @@ namespace Database.Models
         public Client? Client { get; set; }
 
         // ServiceProvider relationship
-        public int ServiceProviderId { get; set; }
         public ServiceProvider? ServiceProvider { get; set; }
 
         // Admin relationship
