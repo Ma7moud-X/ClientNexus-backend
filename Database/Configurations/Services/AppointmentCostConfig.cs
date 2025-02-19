@@ -19,5 +19,10 @@ public class AppointmentCostConfig : IEntityTypeConfiguration<AppointmentCost>
         builder.Property(ac => ac.AppointmentType).HasColumnType("char(1)");
 
         builder.Property(ac => ac.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at);
+
+        builder.HasOne(ac => ac.ServiceProvider)
+            .WithMany(sp => sp.AppointmentCosts)
+            .HasForeignKey(ac => ac.ServiceProviderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

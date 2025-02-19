@@ -38,5 +38,7 @@ namespace Database.Models.Users
 
         public ICollection<ClientServiceProviderFeedback>? ClientServiceProviderFeedbacks { get; set; }
         public ICollection<Client>? ClientsWithFeedbacks { get; set; }
+
+        public ICollection<AppointmentCost>? AppointmentCosts { get; set; }
     }
 }
