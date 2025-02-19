@@ -10,7 +10,7 @@ public class OfficeImageUrlConfig : IEntityTypeConfiguration<OfficeImageUrl>
     {
         builder.ToTable("OfficeImageUrls");
 
-        builder.HasKey(oiu => oiu.Id);
+        builder.HasKey(oiu => new { oiu.ServiceProviderId, oiu.Id });
 
         builder.Property(oiu => oiu.Url).IsRequired().HasMaxLength(1000);
 
