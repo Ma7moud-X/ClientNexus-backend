@@ -56,15 +56,17 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<Problem> Problems { get; private set; }
 
-    public IBaseRepo<Subscription> Subscriptions { get; private set; }
-
     public IBaseRepo<Slot> Slots { get; private set; }
 
     public IBaseRepo<DocumentType> DocumentTypes { get; private set; }
 
     public IBaseRepo<ServiceProviderType> ServiceProviderTypes { get; private set; }
 
-    public IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations { get; private set; }
+    public IBaseRepo<ServiceProviderSpecialization> ServiceProviderSpecializations
+    {
+        get;
+        private set;
+    }
 
     public IBaseRepo<Specialization> Specializations { get; private set; }
 
@@ -125,7 +127,6 @@ public class UnitOfWork : IUnitOfWork
         // Others
         Payments = new BaseRepo<Payment>(context);
         Problems = new BaseRepo<Problem>(context);
-        Subscriptions = new BaseRepo<Subscription>(context);
         Slots = new BaseRepo<Slot>(context);
         OfficeImageUrls = new BaseRepo<OfficeImageUrl>(context);
 

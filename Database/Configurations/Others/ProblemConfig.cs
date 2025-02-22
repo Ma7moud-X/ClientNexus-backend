@@ -20,13 +20,13 @@ namespace Database.Configurations
             builder
                 .Property(p => p.Status)
                 .IsRequired()
-                .HasColumnType("varchar(1)")
+                .HasColumnType("char(1)")
                 .HasConversion(s => (char)s, s => (ProblemStatus)s);
 
             builder
                 .Property(p => p.ReportedBy)
                 .HasConversion(rt => (char)rt, rt => (ReporterType)rt)
-                .HasColumnType("varchar(1)")
+                .HasColumnType("char(1)")
                 .IsRequired();
 
             builder

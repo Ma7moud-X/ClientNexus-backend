@@ -3,6 +3,24 @@ using Database.Models.Services;
 
 namespace Database.Models.Users
 {
+    public enum SubscriptionStatus
+    {
+        NoSubscription = 'N',
+        Active = 'A',
+        Expired = 'E',
+        Suspended = 'S',
+        Cancelled = 'C',
+    }
+
+    public enum SubscriptionType
+    {
+        None = 'N',
+        Free = 'F',
+        Basic = 'B',
+        Premium = 'P',
+    }
+
+
     public class ServiceProvider : BaseUser
     {
         public string Description { get; set; } = default!;
@@ -13,6 +31,10 @@ namespace Database.Models.Users
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
         public int YearsOfExperience { get; set; }
+
+        public SubscriptionType SubType { get; set; }
+        public SubscriptionStatus SubscriptionStatus { get; set; }
+        public DateTime? SubscriptionExpiryDate { get; set; }
 
         public int TypeId { get; set; }
         public ServiceProviderType? Type { get; set; }
@@ -27,7 +49,6 @@ namespace Database.Models.Users
         public int? ApprovedById { get; set; }
         public Admin? ApprovingAdmin { get; set; }
 
-        public Subscription? Subscription { get; set; }
         public ICollection<License>? Licenses { get; set; }
 
         public ICollection<Problem>? Problems { get; set; }

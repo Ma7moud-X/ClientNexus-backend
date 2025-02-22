@@ -16,9 +16,7 @@ public class AppointmentCostConfig : IEntityTypeConfiguration<AppointmentCost>
             .HasColumnType("decimal(10, 2)")
             .IsRequired();
 
-        builder.Property(ac => ac.AppointmentType).HasColumnType("char(1)");
-
-        builder.Property(ac => ac.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at);
+        builder.Property(ac => ac.AppointmentType).HasColumnType("char(1)").HasConversion(at => (char)at, at => (AppointmentType)at);
 
         builder.HasOne(ac => ac.ServiceProvider)
             .WithMany(sp => sp.AppointmentCosts)

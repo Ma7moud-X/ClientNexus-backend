@@ -4,6 +4,7 @@ using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250222120840_RemovingSubscriptionModel")]
+    partial class RemovingSubscriptionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -344,7 +347,7 @@ namespace Database.Migrations
 
                     b.Property<string>("PaymentType")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<string>("ReferenceNumber")
                         .IsRequired()
@@ -358,7 +361,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -404,7 +407,7 @@ namespace Database.Migrations
 
                     b.Property<string>("ReportedBy")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
@@ -417,7 +420,7 @@ namespace Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -598,11 +601,11 @@ namespace Database.Migrations
 
                     b.Property<string>("ServiceType")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("nvarchar(1)");
 
                     b.HasKey("Id");
 
@@ -631,11 +634,11 @@ namespace Database.Migrations
 
                     b.Property<string>("SlotType")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("ServiceProviderId", "Id");
 
@@ -719,7 +722,7 @@ namespace Database.Migrations
 
                     b.Property<string>("UserType")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.HasKey("Id");
 
@@ -937,7 +940,7 @@ namespace Database.Migrations
 
                     b.Property<string>("AppointmentType")
                         .IsRequired()
-                        .HasColumnType("char(1)");
+                        .HasColumnType("varchar(1)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");

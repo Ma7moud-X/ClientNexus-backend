@@ -16,7 +16,7 @@ namespace Database.Configurations
 
             builder.Property(s => s.Description).IsRequired(false).HasMaxLength(500);
 
-            builder.Property(s => s.ServiceType).HasConversion(st => (char)st, st => (ServiceType)st).HasColumnType("varchar(1)").IsRequired();
+            builder.Property(s => s.ServiceType).HasConversion(st => (char)st, st => (ServiceType)st).HasColumnType("char(1)").IsRequired();
             
             builder.Property(s => s.Price)
                 .IsRequired()
@@ -25,6 +25,7 @@ namespace Database.Configurations
             builder
                 .Property(s => s.Status)
                 .HasConversion(st => (char)st, st => (ServiceStatus)st)
+                .HasColumnType("char(1)")
                 .IsRequired();
 
             builder.Property(s => s.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");

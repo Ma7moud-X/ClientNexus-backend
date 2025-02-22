@@ -23,7 +23,7 @@ namespace Database.Configurations
 
             builder
                 .Property(p => p.Status)
-                .HasColumnType("varchar(1)")
+                .HasColumnType("char(1)")
                 .HasConversion(status => (char)status, status => (PaymentStatus)status)
                 .IsRequired();
 
@@ -33,7 +33,7 @@ namespace Database.Configurations
                 .Property(p => p.PaymentType)
                 .HasConversion(type => (char)type, type => (PaymentType)type)
                 .IsRequired()
-                .HasColumnType("varchar(1)");
+                .HasColumnType("char(1)");
         }
     }
 }
