@@ -1,4 +1,5 @@
 using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,4 +1,5 @@
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +14,11 @@ public class BaseUserConfig : IEntityTypeConfiguration<BaseUser>
         builder.Property(u => u.FirstName).HasColumnType("nvarchar(50)").IsRequired();
         builder.Property(u => u.LastName).HasColumnType("nvarchar(50)").IsRequired();
         builder.Property(u => u.PhoneNumber).HasColumnType("varchar(20)");
-        builder.Property(u => u.UserType).HasConversion(ut => (char)ut, ut => (UserType)ut).HasColumnType("char(1)").IsRequired();
+        builder
+            .Property(u => u.UserType)
+            .HasConversion(ut => (char)ut, ut => (UserType)ut)
+            .HasColumnType("char(1)")
+            .IsRequired();
 
         builder
             .HasOne(b => b.BlockedBy)

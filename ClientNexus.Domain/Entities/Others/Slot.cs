@@ -1,22 +1,8 @@
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Domain.Entities.Services
 {
-    public enum SlotStatus
-    {
-        Available = 'A',
-        Pending = 'P',
-        Booked = 'B',
-        Deleted = 'D',
-    }
-
-    public enum SlotType
-    {
-        Online = 'O',
-        InPerson = 'I',
-        PhoneCall = 'P',
-    }
-
     public class Slot
     {
         public int ServiceProviderId { get; set; }

@@ -1,24 +1,9 @@
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Domain.Entities.Services
 {
-    public enum ServiceStatus
-    {
-        Pending = 'P',
-        InProgress = 'I',
-        Done = 'D',
-        Cancelled = 'C',
-    }
-
-    public enum ServiceType
-    {
-        Emergency = 'E',
-        Appointment = 'A',
-        Question = 'Q',
-        Consultation = 'C',
-    }
-
     public class Service
     {
         public int Id { get; set; }

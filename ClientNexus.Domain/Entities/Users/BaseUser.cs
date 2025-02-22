@@ -1,13 +1,9 @@
+using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
 namespace ClientNexus.Domain.Entities.Users;
 
-public enum UserType
-{
-    Client = 'C',
-    ServiceProvider = 'S',
-    Admin = 'A',
-}
+
 
 public class BaseUser : IdentityUser<int>
 {

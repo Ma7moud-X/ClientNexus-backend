@@ -1,4 +1,5 @@
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Domain.Entities.Services;
 

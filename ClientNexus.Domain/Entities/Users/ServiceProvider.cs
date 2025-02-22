@@ -1,25 +1,9 @@
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Domain.Entities.Users
 {
-    public enum SubscriptionStatus
-    {
-        NoSubscription = 'N',
-        Active = 'A',
-        Expired = 'E',
-        Suspended = 'S',
-        Cancelled = 'C',
-    }
-
-    public enum SubscriptionType
-    {
-        None = 'N',
-        Free = 'F',
-        Basic = 'B',
-        Premium = 'P',
-    }
-
 
     public class ServiceProvider : BaseUser
     {

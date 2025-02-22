@@ -1,18 +1,7 @@
+using ClientNexus.Domain.Enums;
+
 namespace ClientNexus.Domain.Entities
 {
-    public enum PaymentStatus
-    {
-        Pending = 'P',
-        Completed = 'C',
-        Failed = 'F',
-        Refunded = 'R',
-    }
-
-    public enum PaymentType
-    {
-        Subscription = 'S',
-        Service = 'V',
-    }
 
     public class Payment
     {

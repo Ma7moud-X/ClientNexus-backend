@@ -1,22 +1,9 @@
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Domain.Entities
 {
-    public enum ProblemStatus
-    {
-        New = 'N',
-        InProgress = 'I',
-        Done = 'D',
-        Cancelled = 'C',
-    }
-
-    public enum ReporterType
-    {
-        Client = 'C',
-        ServiceProvider = 'S',
-    }
-
     public class Problem
     {
         public int Id { get; set; }

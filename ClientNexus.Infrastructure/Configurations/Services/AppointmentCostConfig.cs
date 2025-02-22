@@ -1,6 +1,7 @@
+using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ClientNexus.Domain.Entities.Services;
 
 namespace ClientNexus.Infrastructure.Configurations.Services;
 
@@ -12,13 +13,15 @@ public class AppointmentCostConfig : IEntityTypeConfiguration<AppointmentCost>
 
         builder.HasKey(ac => new { ac.ServiceProviderId, ac.AppointmentType });
 
-        builder.Property(ac => ac.Cost)
-            .HasColumnType("decimal(10, 2)")
-            .IsRequired();
+        builder.Property(ac => ac.Cost).HasColumnType("decimal(10, 2)").IsRequired();
 
-        builder.Property(ac => ac.AppointmentType).HasColumnType("char(1)").HasConversion(at => (char)at, at => (AppointmentType)at);
+        builder
+            .Property(ac => ac.AppointmentType)
+            .HasColumnType("char(1)")
+            .HasConversion(at => (char)at, at => (AppointmentType)at);
 
-        builder.HasOne(ac => ac.ServiceProvider)
+        builder
+            .HasOne(ac => ac.ServiceProvider)
             .WithMany(sp => sp.AppointmentCosts)
             .HasForeignKey(ac => ac.ServiceProviderId)
             .OnDelete(DeleteBehavior.Cascade);

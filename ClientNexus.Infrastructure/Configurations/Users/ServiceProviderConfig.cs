@@ -1,5 +1,6 @@
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,9 +26,17 @@ namespace ClientNexus.Infrastructure.Configurations.Users
 
             builder.Property(sp => sp.IsAvailableForEmergency).HasDefaultValue(false);
 
-            builder.Property(sp => sp.SubscriptionStatus).HasConversion(st => (char)st, st => (SubscriptionStatus)st).HasColumnType("char(1)").IsRequired();
+            builder
+                .Property(sp => sp.SubscriptionStatus)
+                .HasConversion(st => (char)st, st => (SubscriptionStatus)st)
+                .HasColumnType("char(1)")
+                .IsRequired();
 
-            builder.Property(sp => sp.SubType).HasConversion(st => (char)st, st => (SubscriptionType)st).HasColumnType("char(1)").IsRequired();
+            builder
+                .Property(sp => sp.SubType)
+                .HasConversion(st => (char)st, st => (SubscriptionType)st)
+                .HasColumnType("char(1)")
+                .IsRequired();
 
             builder.Property(sp => sp.SubscriptionExpiryDate).IsRequired(false);
 
