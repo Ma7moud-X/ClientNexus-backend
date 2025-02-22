@@ -924,6 +924,10 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SubscriptionType")
+                        .IsRequired()
+                        .HasColumnType("char(1)");
+
                     b.HasIndex("ServiceProviderId");
 
                     b.ToTable("SubscriptionPayments", "ClientNexusSchema");

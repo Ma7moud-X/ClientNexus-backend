@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250222144017_DatabaseTables")]
+    [Migration("20250222151913_DatabaseTables")]
     partial class DatabaseTables
     {
         /// <inheritdoc />
@@ -926,6 +926,10 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SubscriptionType")
+                        .IsRequired()
+                        .HasColumnType("char(1)");
 
                     b.HasIndex("ServiceProviderId");
 

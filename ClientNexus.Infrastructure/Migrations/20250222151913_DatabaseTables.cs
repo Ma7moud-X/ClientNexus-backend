@@ -768,6 +768,7 @@ namespace ClientNexus.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
+                    SubscriptionType = table.Column<string>(type: "char(1)", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
