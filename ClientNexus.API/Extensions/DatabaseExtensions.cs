@@ -1,7 +1,7 @@
 using ClientNexus.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClientNexus.Extensions;
+namespace ClientNexus.API.Extensions;
 
 public static class DatabaseExtensions
 {

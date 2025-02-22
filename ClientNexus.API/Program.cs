@@ -1,4 +1,4 @@
-using ClientNexus.Extensions;
+using ClientNexus.API.Extensions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure.Repositories;
 
