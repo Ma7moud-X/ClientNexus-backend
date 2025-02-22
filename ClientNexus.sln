@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{5C91D59F-4480-4F07-B0B8-03A8E035661D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientNexus.API", "ClientNexus.API\ClientNexus.API.csproj", "{5C91D59F-4480-4F07-B0B8-03A8E035661D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{5B46DDFF-FE25-4536-B604-60D9611A765C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientNexus.Infrastructure", "ClientNexus.Infrastructure\ClientNexus.Infrastructure.csproj", "{5B46DDFF-FE25-4536-B604-60D9611A765C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{BAA2AC73-6027-4B09-9773-142EFC7E3102}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientNexus.Application", "ClientNexus.Application\ClientNexus.Application.csproj", "{BAA2AC73-6027-4B09-9773-142EFC7E3102}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientNexus.Domain", "ClientNexus.Domain\ClientNexus.Domain.csproj", "{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,18 @@ Global
 		{BAA2AC73-6027-4B09-9773-142EFC7E3102}.Release|x64.Build.0 = Release|Any CPU
 		{BAA2AC73-6027-4B09-9773-142EFC7E3102}.Release|x86.ActiveCfg = Release|Any CPU
 		{BAA2AC73-6027-4B09-9773-142EFC7E3102}.Release|x86.Build.0 = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|x64.Build.0 = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Debug|x86.Build.0 = Debug|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|x64.ActiveCfg = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|x64.Build.0 = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|x86.ActiveCfg = Release|Any CPU
+		{882BC21C-D159-4FA5-BC12-D00CAB36A4E8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
