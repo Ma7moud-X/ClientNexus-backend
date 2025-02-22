@@ -55,10 +55,10 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
 
     // Functions
-    Task SaveChangesAsync();
-    Task<T?> FromSqlQuerySingleAsync<T>(string query, params SqlParameter[] parameters);
-    Task<IEnumerable<T>> FromSqlQueryListAsync<T>(string query, params SqlParameter[] parameters);
-    Task<int> ExecuteSqlAsync(string query, params SqlParameter[] parameters);
+    Task<int> SaveChangesAsync();
+    Task<T?> SqlGetSingleAsync<T>(string query, params SqlParameter[] parameters);
+    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params SqlParameter[] parameters);
+    Task<int> SqlExecuteAsync(string query, params SqlParameter[] parameters);
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();

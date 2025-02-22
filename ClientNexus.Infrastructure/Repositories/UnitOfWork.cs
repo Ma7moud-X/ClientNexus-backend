@@ -1,10 +1,10 @@
-using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Entities.Content;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Roles;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -143,7 +143,7 @@ public class UnitOfWork : IUnitOfWork
         _context.Dispose();
     }
 
-    public async Task<IEnumerable<T>> FromSqlQueryListAsync<T>(
+    public async Task<IEnumerable<T>> SqlGetListAsync<T>(
         string query,
         params SqlParameter[] parameters
     )
@@ -151,17 +151,17 @@ public class UnitOfWork : IUnitOfWork
         return await _context.Database.SqlQueryRaw<T>(query, parameters).ToListAsync();
     }
 
-    public async Task<T?> FromSqlQuerySingleAsync<T>(string query, params SqlParameter[] parameters)
+    public async Task<T?> SqlGetSingleAsync<T>(string query, params SqlParameter[] parameters)
     {
         return await _context.Database.SqlQueryRaw<T>(query, parameters).FirstOrDefaultAsync();
     }
 
-    public async Task SaveChangesAsync()
+    public async Task<int> SaveChangesAsync()
     {
-        await _context.SaveChangesAsync();
+        return await _context.SaveChangesAsync();
     }
 
-    public async Task<int> ExecuteSqlAsync(string query, params SqlParameter[] parameters)
+    public async Task<int> SqlExecuteAsync(string query, params SqlParameter[] parameters)
     {
         return await _context.Database.ExecuteSqlRawAsync(query, parameters);
     }
