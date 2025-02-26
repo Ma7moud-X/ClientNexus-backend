@@ -1,7 +1,7 @@
 using ClientNexus.API.Extensions;
+using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure.Repositories;
-using ClientNexus.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,14 +14,19 @@ var app = builder.Build();
 
 app.MapGet(
     "/",
-    async (IFileUploadService fileUploadService) =>
+    async (IFileService fileService) =>
     {
-        using (FileStream fileStream = new FileStream("../LICENSE", FileMode.Open))
+        IEnumerable<string> filesUrls;
+        try
         {
-            await fileUploadService.UploadFileAsync(fileStream, "gg", "plain/text");
+            filesUrls = await fileService.GetFilesUrlsWithPrefixAsync("images/");
         }
-        
-        
+        catch (Exception)
+        {
+            return [""];
+        }
+
+        return filesUrls;
     }
 );
 
