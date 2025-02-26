@@ -2,6 +2,7 @@ namespace ClientNexus.Application.Enums;
 
 public enum FileType {
     Jpeg,
+    Jpg,
     Png,
     MsWord,
     Pdf,
@@ -12,6 +13,8 @@ public static class FileTypeExtensions {
     public static string GetMimeType(this FileType fileType) {
         switch (fileType) {
             case FileType.Jpeg:
+                return "image/jpeg";
+            case FileType.Jpg:
                 return "image/jpeg";
             case FileType.Png:
                 return "image/png";
