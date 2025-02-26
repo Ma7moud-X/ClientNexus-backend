@@ -1,6 +1,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Enums;
 
 namespace ClientNexus.Application.Services;
 
@@ -27,6 +28,11 @@ public class S3Service : IFileService
 
     public async Task<IEnumerable<string>> GetFilesUrlsWithPrefixAsync(string prefix)
     {
+        if (string.IsNullOrWhiteSpace(prefix))
+        {
+            throw new ArgumentNullException(nameof(prefix), "prefix cannot be null or empty");
+        }
+
         string? continuationToken = null;
         List<string> filesUrls = new List<string>();
         do
@@ -37,34 +43,46 @@ public class S3Service : IFileService
                 Prefix = prefix,
                 ContinuationToken = continuationToken
             };
-            
+
             ListObjectsV2Response? response;
-            try {
+            try
+            {
                 response = await _s3Client.ListObjectsV2Async(request);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception($"Error while trying to get objects with prefix '{prefix}'", ex);
             }
-            
+
             foreach (var obj in response.S3Objects)
             {
                 filesUrls.Add($"https://{_bucketName}.s3.amazonaws.com/{obj.Key}");
             }
-            
+
             continuationToken = response.IsTruncated ? response.NextContinuationToken : null;
         } while (continuationToken != null);
 
         return filesUrls;
     }
 
-    public async Task<string> UploadFileAsync(Stream fileStream, string key, string contentType)
+    public async Task<string> UploadFileAsync(Stream fileStream, string key, FileType fileType)
     {
+        if (fileStream is null || !fileStream.CanRead)
+        {
+            throw new ArgumentException("Invalid file stream. File stream can not be null and must be readable");
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Invalid key. Key cannot be null or whitespace");
+        }
+
         var putRequest = new PutObjectRequest()
         {
             BucketName = _bucketName,
             Key = key,
             InputStream = fileStream,
-            ContentType = contentType
+            ContentType = fileType.GetMimeType()
         };
 
         try
