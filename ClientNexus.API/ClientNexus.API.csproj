@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../ClientNexus.Application/ClientNexus.Application.csproj" />
     <ProjectReference Include="../ClientNexus.Infrastructure/ClientNexus.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.400" />
   </ItemGroup>
 
  
