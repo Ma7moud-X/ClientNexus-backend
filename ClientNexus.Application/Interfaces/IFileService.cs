@@ -1,9 +1,21 @@
 using ClientNexus.Application.Enums;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Application.Interfaces;
 
 public interface IFileService
 {
-    Task<string> UploadFileAsync(Stream fileStream, string key, FileType fileType);
-    Task<IEnumerable<string>> GetFilesUrlsWithPrefixAsync(string prefix);
+    Task<string> UploadPublicFileAsync(Stream fileStream, FileType fileType, string fileName);
+    Task<string> UploadPublicFileAsync(
+        Stream fileStream,
+        FileType fileType,
+        string fileName,
+        int folderId,
+        UploadedFor uploadedFor
+    );
+    Task<IEnumerable<string>> GetPublicFilesUrlsAsync(
+        UploadedFileType fileType,
+        int folderId,
+        UploadedFor uploadedFor
+    );
 }

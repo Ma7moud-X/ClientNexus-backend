@@ -1,16 +1,16 @@
-using Amazon.S3;
+using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Interfaces;
 using Amazon.S3.Model;
-using ClientNexus.Application.Interfaces;
-using ClientNexus.Application.Enums;
+using Amazon.S3;
 
-namespace ClientNexus.Application.Services;
+namespace ClientNexus.Infrastructure;
 
-public class S3Service : IFileService
+public class S3Storage : IFileStorage
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
 
-    public S3Service(IAmazonS3 s3Client, string bucketName)
+    public S3Storage(IAmazonS3 s3Client, string bucketName)
     {
         if (s3Client is null)
         {
@@ -82,7 +82,7 @@ public class S3Service : IFileService
             BucketName = _bucketName,
             Key = key,
             InputStream = fileStream,
-            ContentType = fileType.GetMimeType()
+            ContentType = fileType.ToMimeType()
         };
 
         try
