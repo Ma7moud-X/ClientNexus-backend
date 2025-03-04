@@ -3,6 +3,8 @@ using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure.Repositories;
 
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDatabase(builder.Configuration);
