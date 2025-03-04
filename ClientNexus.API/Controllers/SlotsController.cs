@@ -20,7 +20,7 @@ namespace ClientNexus.API.Controllers
             //this._response = new();
         }
         /// <summary>
-        /// Get available slots for a service provider within a date range.
+        /// Get available slots for a service provider within a date range
         /// </summary>
         [HttpGet("available")]
         public async Task<ActionResult<IEnumerable<SlotDTO>>> GetAvailableSlots(
@@ -43,13 +43,34 @@ namespace ClientNexus.API.Controllers
         }
 
         // <summary>
-        /// Create a new slot.
+        /// Create a new slot
         /// </summary>
         [HttpPost]
-        public async Task<ActionResult<int>> CreateSlot([FromBody] SlotCreateDTO slotDTO)
+        public async Task<ActionResult<SlotDTO>> CreateSlot([FromBody] SlotCreateDTO slotDTO)
         {
-            var slotId = await _slotService.CreateAsync(slotDTO);
-            return CreatedAtAction(nameof(GetAvailableSlots), new { id = slotId }, slotId);
+            var slot = await _slotService.CreateAsync(slotDTO);
+            return CreatedAtRoute("GetSlotById", new { id = slot.Id }, slot);
         }
+
+        // <summary>
+        /// Update aslot
+        /// </summary>
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<SlotDTO>> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
+        {
+            var slot = await _slotService.Update(id, slotDTO);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Delete slot
+        /// </summary>
+        [HttpDelete("{id:int}", Name = "DeleteSlot")]
+        public async Task<IActionResult> DeleteSlot(int id)
+        {
+            await _slotService.DeleteAsync(id);
+            return NoContent();
+        }
+
     }
 }

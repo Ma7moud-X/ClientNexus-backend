@@ -55,7 +55,7 @@ namespace ClientNexus.Application.Services
             }
             return _mapper.Map<SlotDTO>(slot);
         }
-        public async Task<int> CreateAsync([FromBody] SlotCreateDTO slotDTO)
+        public async Task<SlotDTO> CreateAsync([FromBody] SlotCreateDTO slotDTO)
         {
             if (slotDTO == null)
             {
@@ -75,10 +75,49 @@ namespace ClientNexus.Application.Services
             slot.Status = SlotStatus.Available;
             var createdSlot = await _unitOfWork.Slots.AddAsync(slot);
             await _unitOfWork.SaveChangesAsync();
-            return createdSlot.Id;
+            return _mapper.Map<SlotDTO>(createdSlot);
             
         }
 
-        //public async Task<>
+        public async Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO)
+        {
+            if (slotDTO == null || id!= slotDTO.Id)
+            {
+                throw new ArgumentNullException("Invalid Data");
+            }
+            //check if foreign key is valid
+            var oldSlot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == id);
+            if (oldSlot == null)
+            {
+                throw new KeyNotFoundException("Slot not found.");
+            }
+            //check if updated foreign key is valid
+            if (await _unitOfWork.ServiceProviders.GetByIdAsync(slotDTO.ServiceProviderId) == null)
+            {
+                throw new ArgumentException("Invalid Service Provider Id");
+            }
+            //check if updated date is a valid date
+            if (slotDTO.Date < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Slot date cannot be in the past");
+            }
+            Slot updatedSlot = _mapper.Map<Slot>(slotDTO);
+            updatedSlot = _unitOfWork.Slots.Update(oldSlot, updatedSlot);
+            await _unitOfWork.SaveChangesAsync();
+            return _mapper.Map<SlotDTO>(updatedSlot);
+
+        }
+
+        public async Task DeleteAsync (int slotId)
+        {
+            Slot? slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == slotId);
+            if (slot == null)
+            {
+                throw new KeyNotFoundException("Invalid slot ID");
+            }
+            _unitOfWork.Slots.Delete(slot);
+            await _unitOfWork.SaveChangesAsync();
+
+        }
     }
 }

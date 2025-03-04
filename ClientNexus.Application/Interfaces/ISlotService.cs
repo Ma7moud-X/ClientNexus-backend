@@ -11,8 +11,9 @@ namespace ClientNexus.Application.Interfaces
     public interface ISlotService
     {
         Task<IEnumerable<SlotDTO>> GetAvailableSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate);
-        Task<int> CreateAsync([FromBody] SlotCreateDTO slotDTO);
+        Task<SlotDTO> CreateAsync([FromBody] SlotCreateDTO slotDTO);
         Task<SlotDTO> GetSlotByIdAsync(int id);
-
+        Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO);
+        Task DeleteAsync(int slotId);
     }
 }
