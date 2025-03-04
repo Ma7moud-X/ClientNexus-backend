@@ -123,3 +123,6 @@ src/.vs/config/applicationhost.config
 
 # google-authentication
 *-firebase-adminsdk*
+
+# environment variables
+.env
