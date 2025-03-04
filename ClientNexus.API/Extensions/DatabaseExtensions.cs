@@ -13,7 +13,7 @@ public static class DatabaseExtensions
             throw new Exception("Database connection string environment variable is not set");
         }
 
-        // Console.WriteLine(connectionStr);
+        Console.WriteLine(connectionStr);
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {
