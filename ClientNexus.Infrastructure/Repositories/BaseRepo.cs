@@ -143,7 +143,13 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     
     public EType Update(EType oldEntity, EType updatedEntity)
     {
-        _context.Entry<EType>(oldEntity).CurrentValues.SetValues(updatedEntity);
+        var entry = _context.Entry<EType>(oldEntity);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Set<EType>().Attach(oldEntity);
+        }
+        entry.CurrentValues.SetValues(updatedEntity);
+        entry.State = EntityState.Modified;
         return updatedEntity;
     }
 }
