@@ -123,15 +123,33 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         return await query.ToListAsync();
     }
+    public async Task<EType?> FirstOrDefaultAsync(Expression<Func<EType, bool>> condExp,Func<IQueryable<EType>, IQueryable<EType>>? include = null)
+    {
+        IQueryable<EType> q = _context.Set<EType>().AsNoTracking();
+
+        if (include != null)
+        {
+            q = include(q);
+        }
+
+        return await q.FirstOrDefaultAsync(condExp);
+    }
+
 
     public async Task<EType?> GetByIdAsync(int id)
     {
         return await _context.Set<EType>().FindAsync(id);
     }
-
+    
     public EType Update(EType oldEntity, EType updatedEntity)
     {
-        _context.Entry<EType>(oldEntity).CurrentValues.SetValues(updatedEntity);
+        var entry = _context.Entry<EType>(oldEntity);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Set<EType>().Attach(oldEntity);
+        }
+        entry.CurrentValues.SetValues(updatedEntity);
+        entry.State = EntityState.Modified;
         return updatedEntity;
     }
 }

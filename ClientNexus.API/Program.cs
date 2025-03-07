@@ -1,4 +1,8 @@
 using ClientNexus.API.Extensions;
+
+using ClientNexus.Application.Mapping;
+using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Services;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
@@ -13,6 +17,10 @@ builder.Services.AddFileService();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
+
+builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
+
+builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 builder.Services.AddControllers();
 
@@ -32,5 +40,5 @@ app.MapGet(
         return "Hello World!";
     }
 );
-
+app.MapControllers();
 app.Run();

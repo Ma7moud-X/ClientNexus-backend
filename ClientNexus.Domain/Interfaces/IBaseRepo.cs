@@ -24,6 +24,7 @@ public interface IBaseRepo<EType>
         int limit = 20
     );
     Task<EType> AddAsync(EType entity);
+    Task<EType?> FirstOrDefaultAsync(Expression<Func<EType, bool>> condExp, Func<IQueryable<EType>, IQueryable<EType>>? include = null);
     EType Update(EType oldEntity, EType updatedEntity);
     void Delete(EType entity);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
