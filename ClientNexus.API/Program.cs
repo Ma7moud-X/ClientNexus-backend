@@ -1,9 +1,13 @@
 using ClientNexus.API.Extensions;
+
 using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Services;
 using ClientNexus.Domain.Interfaces;
+using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
+
+DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +15,8 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
+builder.Services.AddRedisCache();
 
 builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
 

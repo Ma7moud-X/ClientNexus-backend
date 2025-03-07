@@ -120,3 +120,9 @@ src/.vs/config/applicationhost.config
 # vscode
 .vscode
 .fake
+
+# google-authentication
+*-firebase-adminsdk*
+
+# environment variables
+.env

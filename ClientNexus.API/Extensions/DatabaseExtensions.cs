@@ -7,26 +7,13 @@ public static class DatabaseExtensions
 {
     public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        var dbServer = Environment.GetEnvironmentVariable("DB_SERVER");
-        var dbUser = Environment.GetEnvironmentVariable("DB_USER");
-        var dbPass = Environment.GetEnvironmentVariable("DB_PASS");
-        if (dbServer is null || dbUser is null || dbPass is null)
+        var connectionStr = Environment.GetEnvironmentVariable("DB_CONNECTION_STR");
+        if (connectionStr is null)
         {
-            throw new Exception("Database environment variables are not set");
+            throw new Exception("Database connection string environment variable is not set");
         }
 
-        string? connectionStrTemplate = configuration.GetConnectionString("DefaultConnection");
-        if (connectionStrTemplate is null)
-        {
-            throw new Exception("Connection string is null");
-        }
-
-        string connectionStr = connectionStrTemplate
-            .Replace("{DB_SERVER}", dbServer)
-            .Replace("{DB_USER}", dbUser)
-            .Replace("{DB_PASS}", dbPass);
-
-        Console.WriteLine(connectionStr);
+        // Console.WriteLine(connectionStr);
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {
