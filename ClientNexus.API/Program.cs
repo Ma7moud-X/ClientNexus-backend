@@ -16,9 +16,10 @@ builder.Services.AddS3Storage();
 builder.Services.AddFileService();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
-builder.Services.AddRedisCache();
+//builder.Services.AddRedisCache();
 
-builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
+builder.Services.AddScoped<ISlotService, SlotService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 

@@ -51,7 +51,7 @@ namespace ClientNexus.Application.Services
             Slot? slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == slotId); 
             if (slot == null)
             {
-                throw new KeyNotFoundException("Invalid slot ID");
+                throw new KeyNotFoundException("Invalid ID");
             }
             return _mapper.Map<SlotDTO>(slot);
         }
@@ -82,27 +82,20 @@ namespace ClientNexus.Application.Services
         public async Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO)
         {
             if (slotDTO == null || id!= slotDTO.Id)
-            {
                 throw new ArgumentNullException("Invalid Data");
-            }
             //check if foreign key is valid
-            var oldSlot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == id);
-            if (oldSlot == null)
-            {
+            var existingSlot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == id);
+            if (existingSlot == null)
                 throw new KeyNotFoundException("Slot not found.");
-            }
             //check if updated foreign key is valid
             if (await _unitOfWork.ServiceProviders.GetByIdAsync(slotDTO.ServiceProviderId) == null)
-            {
-                throw new ArgumentException("Invalid Service Provider Id");
-            }
+                 throw new ArgumentException("Invalid Service Provider Id");
             //check if updated date is a valid date
             if (slotDTO.Date < DateTime.UtcNow)
-            {
                 throw new ArgumentException("Slot date cannot be in the past");
-            }
+
             Slot updatedSlot = _mapper.Map<Slot>(slotDTO);
-            updatedSlot = _unitOfWork.Slots.Update(oldSlot, updatedSlot);
+            updatedSlot = _unitOfWork.Slots.Update(existingSlot, updatedSlot);
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<SlotDTO>(updatedSlot);
 
