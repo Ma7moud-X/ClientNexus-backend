@@ -1,8 +1,9 @@
 using ClientNexus.API.Extensions;
-
-using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
+using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
@@ -35,9 +36,12 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    () =>
+    async (IUnitOfWork unitOfWork) =>
     {
-        return "Hello World!";
+        var admin = await unitOfWork.Admins.GetByIdAsync(7);
+
+        
+        return admin;
     }
 );
 app.MapControllers();
