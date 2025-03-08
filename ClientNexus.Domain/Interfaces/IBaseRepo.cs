@@ -16,13 +16,13 @@ public interface IBaseRepo<EType>
         int limit = 20,
         string[]? includes = null
     );
-    Task<IEnumerable<object>> GetByConditionAsync(
-        Expression<Func<EType, bool>>? condExp,
-        Expression<Func<EType, object>> selectExp,
-        bool getAll = false,
-        int offset = 0,
-        int limit = 20
-    );
+    // Task<IEnumerable<object>> GetByConditionAsync(
+    //     Expression<Func<EType, bool>>? condExp,
+    //     Expression<Func<EType, object>> selectExp,
+    //     bool getAll = false,
+    //     int offset = 0,
+    //     int limit = 20
+    // );
     Task<EType> AddAsync(EType entity);
     Task<EType?> FirstOrDefaultAsync(Expression<Func<EType, bool>> condExp, Func<IQueryable<EType>, IQueryable<EType>>? include = null);
     EType Update(EType oldEntity, EType updatedEntity);

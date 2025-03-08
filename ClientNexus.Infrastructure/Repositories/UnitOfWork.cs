@@ -145,15 +145,25 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<IEnumerable<T>> SqlGetListAsync<T>(
         string query,
-        params SqlParameter[] parameters
+        params Parameter[] parameters
     )
     {
-        return await _context.Database.SqlQueryRaw<T>(query, parameters).ToListAsync();
+        return await _context
+            .Database.SqlQueryRaw<T>(
+                query,
+                [.. parameters.Select(p => new SqlParameter(p.Key, p.Value))]
+            )
+            .ToListAsync();
     }
 
-    public async Task<T?> SqlGetSingleAsync<T>(string query, params SqlParameter[] parameters)
+    public async Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
     {
-        return await _context.Database.SqlQueryRaw<T>(query, parameters).FirstOrDefaultAsync();
+        return await _context
+            .Database.SqlQueryRaw<T>(
+                query,
+                [.. parameters.Select(p => new SqlParameter(p.Key, p.Value))]
+            )
+            .FirstOrDefaultAsync();
     }
 
     public async Task<int> SaveChangesAsync()
@@ -161,9 +171,12 @@ public class UnitOfWork : IUnitOfWork
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<int> SqlExecuteAsync(string query, params SqlParameter[] parameters)
+    public async Task<int> SqlExecuteAsync(string query, params Parameter[] parameters)
     {
-        return await _context.Database.ExecuteSqlRawAsync(query, parameters);
+        return await _context.Database.ExecuteSqlRawAsync(
+            query,
+            [.. parameters.Select(p => new SqlParameter(p.Key, p.Value))]
+        );
     }
 
     public async Task BeginTransactionAsync()
