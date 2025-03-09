@@ -1,8 +1,8 @@
 using ClientNexus.API.Extensions;
+using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
-using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
@@ -18,6 +18,9 @@ builder.Services.AddFileService();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IHttpService, HttpService>();
+builder.Services.AddLocationService();
 
 builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
 
@@ -36,12 +39,19 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IUnitOfWork unitOfWork) =>
+    async (ILocationService locationService) =>
     {
-        var admin = await unitOfWork.Admins.GetByIdAsync(7);
+        var origin = (longitude: 30.585912, latitude: 31.498384);
+        var destination = (longitude: 30.587162, latitude: 31.495284);
 
-        
-        return admin;
+        var travelDistance = await locationService.GetTravelDistanceAsync(
+            origin,
+            destination,
+            TravelProfile.Walk,
+            DistanceUnit.Meters
+        );
+
+        return Results.Ok(travelDistance);
     }
 );
 app.MapControllers();
