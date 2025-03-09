@@ -11,9 +11,11 @@ namespace ClientNexus.Infrastructure.Configurations.Services
         {
             builder.ToTable("Slots");
 
-            builder.HasKey(s => new { s.ServiceProviderId, s.Id });
-
+            builder.HasKey(s => s.Id );
+            
             builder.Property(s => s.Id).UseIdentityColumn();
+
+            builder.HasIndex(s => new { s.ServiceProviderId, s.Date }).IsUnique();  // Ensure unique provider-date combination
 
             builder.Property(s => s.Date).IsRequired();
 
@@ -29,7 +31,7 @@ namespace ClientNexus.Infrastructure.Configurations.Services
             builder
                 .HasMany(s => s.Appointments)
                 .WithOne(s => s.Slot)
-                .HasForeignKey(s => new { s.AppointmentProviderId, s.SlotId })
+                .HasForeignKey(s => s.SlotId )
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder
