@@ -17,6 +17,8 @@ namespace ClientNexus.Infrastructure.Configurations.Services
 
             builder.HasIndex(s => new { s.ServiceProviderId, s.Date }).IsUnique();  // Ensure unique provider-date combination
 
+            builder.Property(s => s.ServiceProviderId).IsRequired();
+
             builder.Property(s => s.Date).IsRequired();
 
             builder
@@ -31,7 +33,7 @@ namespace ClientNexus.Infrastructure.Configurations.Services
             builder
                 .HasMany(s => s.Appointments)
                 .WithOne(s => s.Slot)
-                .HasForeignKey(s => s.SlotId )
+                .HasForeignKey(s => s.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder

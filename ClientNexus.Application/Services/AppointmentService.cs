@@ -41,7 +41,7 @@ namespace ClientNexus.Application.Services
             var providerExists = await _unitOfWork.ServiceProviders.GetByIdAsync(providerId);
             if (providerExists == null)
                 throw new KeyNotFoundException("Provider not found");
-            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.AppointmentProviderId == providerId, offset:offset, limit:limit);
+            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit, includes: new string[] {"Slot"});
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
         public async Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit)
