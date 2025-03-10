@@ -39,18 +39,10 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (ILocationService locationService) =>
+    async (IEventPublisher publisher) =>
     {
-        var origin = (longitude: 30.58592461674914, latitude: 31.497931738895662);
-        var destination = (longitude: 30.59278627805768, latitude: 31.48601581685873);
-
-        var travelDistance = await locationService.GetTravelDistanceAsync(
-            origin,
-            destination,
-            TravelProfile.Walk
-        );
-
-        return Results.Ok(travelDistance);
+        await publisher.PublishAsync("test-channel", "working!!?");
+        return Results.Ok("Hello World!");
     }
 );
 app.MapControllers();

@@ -476,4 +476,57 @@ public class RedisCache : ICache
                 Latitude = res.Value.Latitude,
             };
     }
+
+    public async Task<string?> PopListStringAsync(string key, TimeSpan? timeout = null)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        if (timeout is not null && timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentException("timeout must be greater than zero", nameof(timeout));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+
+        RedisResult res = await executor.ExecuteAsync(
+            "BLPOP",
+            key,
+            timeout ?? TimeSpan.FromSeconds(0)
+        );
+
+        if (res.IsNull)
+        {
+            return null;
+        }
+
+        return res.ToString();
+    }
+
+    public Task<T?> PopListObjectAsync<T>(string key, TimeSpan? timeout = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> SetHashStringAsync(string key, string field, string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> SetHashObjectAsync<T>(string key, string field, T value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> GetHashStringAsync(string key, string field)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<T?> GetHashObjectAsync<T>(string key, string field)
+    {
+        throw new NotImplementedException();
+    }
 }

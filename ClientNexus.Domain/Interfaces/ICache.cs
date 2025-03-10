@@ -17,6 +17,8 @@ public interface ICache
     public Task<IEnumerable<T?>?> GetListObjectAsync<T>(string key);
     public Task<string?> GetListStringAsync(string key, int index);
     public Task<T?> GetListObjectAsync<T>(string key, int index);
+    public Task<string?> PopListStringAsync(string key, TimeSpan? timeout = null);
+    public Task<T?> PopListObjectAsync<T>(string key, TimeSpan? timeout = null);
 
     public Task<bool> AddGeoLocationAsync(
         string key,
@@ -38,10 +40,7 @@ public interface ICache
         double radius,
         DistanceUnit unit = DistanceUnit.Meters
     );
-    public Task<Location?> GetGeoLocationAsync(
-        string key,
-        string identifier
-    );
+    public Task<Location?> GetGeoLocationAsync(string key, string identifier);
 
     public Task<bool> AddToSetStringAsync(string key, string value);
     public Task<bool> RemoveFromSetStringAsync(string key, string value);
@@ -53,4 +52,10 @@ public interface ICache
     public Task<bool> RemoveKeyAsync(string key);
 
     public Task<bool> SetExpiryAsync(string key, TimeSpan expiration);
+
+    public Task<bool> SetHashStringAsync(string key, string field, string value);
+    public Task<bool> SetHashObjectAsync<T>(string key, string field, T value);
+
+    public Task<string?> GetHashStringAsync(string key, string field);
+    public Task<T?> GetHashObjectAsync<T>(string key, string field);
 }
