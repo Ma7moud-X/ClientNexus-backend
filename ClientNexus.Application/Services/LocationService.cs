@@ -38,12 +38,39 @@ public class LocationService : ILocationService
         TravelProfile travelProfile
     )
     {
-        var orsResponse = await _httpService.SendRequestAsync<OsrmResponse>(
-            $"{BaseUrl}{travelProfile.ToApiString()}/{origin.longitude},{origin.latitude};{destination.longitude},{destination.latitude}?overview=false",
-            HttpMethod.Get
-        );
+        if (
+            origin.longitude < -180
+            || origin.longitude > 180
+            || origin.latitude < -90
+            || origin.latitude > 90
+            || destination.longitude < -180
+            || destination.longitude > 180
+            || destination.latitude < -90
+            || destination.latitude > 90
+        )
+        {
+            throw new ArgumentOutOfRangeException("Coordinates are out of range");
+        }
 
-        Route route = orsResponse.routes[0];
+        OsrmResponse? response;
+        try
+        {
+            response = await _httpService.SendRequestAsync<OsrmResponse>(
+                $"{BaseUrl}{travelProfile.ToApiString()}/{origin.longitude},{origin.latitude};{destination.longitude},{destination.latitude}?overview=false",
+                HttpMethod.Get
+            );
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error fetching travel distance", ex);
+        }
+
+        if (response is null || response.routes.Count == 0)
+        {
+            throw new Exception("No routes found");
+        }
+
+        Route route = response.routes[0];
         return new TravelDistance
         {
             Distance = (int)route.distance,
