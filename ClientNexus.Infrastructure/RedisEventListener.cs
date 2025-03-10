@@ -1,17 +1,20 @@
+using System.Threading.Channels;
 using ClientNexus.Domain.Interfaces;
+using StackExchange.Redis;
 
 namespace ClientNexus.Infrastructure;
 
 public class RedisEventListener : IEventListener
 {
     private readonly IEventSubscriber _eventSubscriber;
+    private readonly IConnectionMultiplexer _redis;
     private string? _channel = null;
-    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-    private readonly Queue<string> _messageQueue = new Queue<string>();
+    private readonly Channel<string> _messageQueue = Channel.CreateUnbounded<string>();
 
-    public RedisEventListener(IEventSubscriber eventSubscriber)
+    public RedisEventListener(IConnectionMultiplexer redis)
     {
-        _eventSubscriber = eventSubscriber;
+        _redis = redis;
+        _eventSubscriber = new RedisEventSubscriber(redis);
     }
 
     public async Task<string> ListenAsync(CancellationToken cancellationToken)
@@ -23,8 +26,7 @@ public class RedisEventListener : IEventListener
             );
         }
 
-        await _semaphore.WaitAsync(cancellationToken);
-        return _messageQueue.Dequeue();
+        return await _messageQueue.Reader.ReadAsync(cancellationToken);
     }
 
     public async Task SubscribeAsync(string channel)
@@ -45,10 +47,9 @@ public class RedisEventListener : IEventListener
         {
             await _eventSubscriber.SubscribeAsync(
                 _channel,
-                (message) =>
+                async (message) =>
                 {
-                    _messageQueue.Enqueue(message);
-                    _semaphore.Release();
+                    await _messageQueue.Writer.WriteAsync(message);
                 }
             );
         }
@@ -60,11 +61,12 @@ public class RedisEventListener : IEventListener
                 ex
             );
         }
-        _semaphore.Wait();
     }
 
     public void Dispose()
     {
-        _semaphore.Dispose();
+        _eventSubscriber.Dispose();
+
+        // TODO: Dispose of the message queue if necessary
     }
 }

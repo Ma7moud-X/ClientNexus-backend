@@ -39,10 +39,14 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IEventPublisher publisher) =>
+    async (IEventListener listener) =>
     {
-        await publisher.PublishAsync("test-channel", "working!!?");
-        return Results.Ok("Hello World!");
+        await listener.SubscribeAsync("test_channel");
+        while (true)
+        {
+            var message = await listener.ListenAsync(CancellationToken.None);
+            Console.WriteLine($"Received message: {message}");
+        }
     }
 );
 app.MapControllers();
