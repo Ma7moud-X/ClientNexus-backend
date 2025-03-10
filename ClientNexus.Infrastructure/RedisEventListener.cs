@@ -7,13 +7,14 @@ namespace ClientNexus.Infrastructure;
 public class RedisEventListener : IEventListener
 {
     private readonly IEventSubscriber _eventSubscriber;
-    private readonly IConnectionMultiplexer _redis;
+    private readonly ICache _cache;
     private string? _channel = null;
     private readonly Channel<string> _messageQueue = Channel.CreateUnbounded<string>();
+    private bool _disposed = false;
 
-    public RedisEventListener(IConnectionMultiplexer redis)
+    public RedisEventListener(IConnectionMultiplexer redis, ICache cache)
     {
-        _redis = redis;
+        _cache = cache;
         _eventSubscriber = new RedisEventSubscriber(redis);
     }
 
@@ -63,10 +64,71 @@ public class RedisEventListener : IEventListener
         }
     }
 
-    public void Dispose()
+    public async Task CloseAsync(bool save = false, string? saveToListAtKey = null)
     {
+        if (_channel is null)
+        {
+            throw new InvalidOperationException("Not subscribed to any channel.");
+        }
+
+        if (_disposed)
+        {
+            throw new InvalidOperationException("Already closed.");
+        }
+
+        if (save && string.IsNullOrEmpty(saveToListAtKey))
+        {
+            throw new ArgumentException(
+                "saveToListAtKey cannot be null or empty when save is true.",
+                nameof(saveToListAtKey)
+            );
+        }
+
+        _disposed = true;
         _eventSubscriber.Dispose();
 
-        // TODO: Dispose of the message queue if necessary
+        if (!save)
+        {
+            return;
+        }
+
+        while (true)
+        {
+            bool isRead = _messageQueue.Reader.TryRead(out var message);
+            if (!isRead)
+            {
+                break;
+            }
+
+            if (message is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                await _cache.AddToListStringAsync(saveToListAtKey!, message);
+            }
+            catch (Exception ex)
+            {
+                ex.Data["unsaved"] = _messageQueue;
+                // Handle exceptions related to saving messages
+                throw new InvalidOperationException(
+                    $"Failed to save message to list '{saveToListAtKey}'.",
+                    ex
+                );
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _eventSubscriber.Dispose();
+        _disposed = true;
     }
 }
