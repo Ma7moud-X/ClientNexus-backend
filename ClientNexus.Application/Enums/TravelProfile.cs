@@ -3,7 +3,7 @@ namespace ClientNexus.Application.Enums;
 public enum TravelProfile
 {
     Car = 'c',
-    Bike = 'b',
+    Cycling = 'b',
     Walk = 'w',
 }
 
@@ -13,9 +13,9 @@ public static class TravelProfileExtensions
     {
         return profile switch
         {
-            TravelProfile.Car => "driving-car",
-            TravelProfile.Bike => "cycling-regular",
-            TravelProfile.Walk => "foot-walking",
+            TravelProfile.Car => "car",
+            TravelProfile.Cycling => "bike",
+            TravelProfile.Walk => "foot",
             _ => throw new ArgumentOutOfRangeException(nameof(profile), profile, null),
         };
     }

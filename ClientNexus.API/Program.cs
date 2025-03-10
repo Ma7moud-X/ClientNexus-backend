@@ -41,14 +41,13 @@ app.MapGet(
     "/",
     async (ILocationService locationService) =>
     {
-        var origin = (longitude: 30.585912, latitude: 31.498384);
-        var destination = (longitude: 30.587162, latitude: 31.495284);
+        var origin = (longitude: 30.58592461674914, latitude: 31.497931738895662);
+        var destination = (longitude: 30.59278627805768, latitude: 31.48601581685873);
 
         var travelDistance = await locationService.GetTravelDistanceAsync(
             origin,
             destination,
-            TravelProfile.Walk,
-            DistanceUnit.Meters
+            TravelProfile.Walk
         );
 
         return Results.Ok(travelDistance);

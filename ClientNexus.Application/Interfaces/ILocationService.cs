@@ -10,7 +10,6 @@ public interface ILocationService
     public Task<TravelDistance> GetTravelDistanceAsync(
         (double longitude, double latitude) origin,
         (double longitude, double latitude) destination,
-        TravelProfile travelProfile,
-        DistanceUnit distanceUnit = DistanceUnit.Meters
+        TravelProfile travelProfile
     );
 }
