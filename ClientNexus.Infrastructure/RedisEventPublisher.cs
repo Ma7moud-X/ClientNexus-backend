@@ -6,12 +6,13 @@ namespace ClientNexus.Infrastructure;
 public class RedisEventPublisher : IEventPublisher
 {
     private readonly IConnectionMultiplexer _redis;
+
     public RedisEventPublisher(IConnectionMultiplexer redis)
     {
         _redis = redis;
     }
 
-    public async Task PublishAsync(string channel, string message)
+    public async Task<long> PublishAsync(string channel, string message)
     {
         if (string.IsNullOrEmpty(channel))
         {
@@ -20,6 +21,6 @@ public class RedisEventPublisher : IEventPublisher
 
         var subscriber = _redis.GetSubscriber();
         var redisChannel = RedisChannel.Literal(channel);
-        await subscriber.PublishAsync(redisChannel, message);
+        return await subscriber.PublishAsync(redisChannel, message);
     }
 }

@@ -41,15 +41,12 @@ app.MapGet(
     "/",
     async (IEventListener listener) =>
     {
-        await listener.SubscribeAsync("test-channel");
+        await listener.SubscribeAsync("test_channel");
         while (true)
         {
             var message = await listener.ListenAsync(CancellationToken.None);
             Console.WriteLine($"Received message: {message}");
-            break;
         }
-
-        await listener.CloseAsync(true, "test-list");
     }
 );
 app.MapControllers();
