@@ -1,50 +1,4 @@
-<<<<<<< Updated upstream
 using ClientNexus.API.Extensions;
-
-using ClientNexus.Application.Mapping;
-using ClientNexus.Application.Interfaces;
-using ClientNexus.Application.Services;
-using ClientNexus.Domain.Interfaces;
-using ClientNexus.Infrastructure;
-using ClientNexus.Infrastructure.Repositories;
-
-DotNetEnv.Env.Load();
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddS3Storage();
-builder.Services.AddFileService();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
-builder.Services.AddRedisCache();
-
-builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
-
-builder.Services.AddAutoMapper(typeof(MappingConfig));
-
-builder.Services.AddControllers();
-
-builder.Services.AddSwaggerGen();
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.MapGet(
-    "/",
-    () =>
-    {
-        return "Hello World!";
-    }
-);
-app.MapControllers();
-app.Run();
-=======
-﻿using ClientNexus.API.Extensions;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Services;
 using ClientNexus.Domain.Entities.Users;
@@ -55,6 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ClientNexus.Domain.Entities.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
+
 
 // NEW: Registering UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -102,6 +59,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+
+
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var token = context.SecurityToken as JwtSecurityToken;
+                if (token != null && AuthService.IsTokenRevoked(token.RawData))
+                {
+                    context.Fail("Token has been revoked.");
+                }
+            }
+        };
     });
 
 // NEW - Swagger Configuration
@@ -132,4 +103,4 @@ app.MapControllers();
 app.MapGet("/", () => "Hello World!"); // NEW - Restored test endpoint
 
 app.Run();
->>>>>>> Stashed changes
+

@@ -9,7 +9,9 @@ namespace ClientNexus.API.Controllers
 {
     using ClientNexus.Application.DTOs;
     using ClientNexus.Application.Interfaces;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using System.IdentityModel.Tokens.Jwt;
 
     [ApiController]
     [Route("api/[controller]")]
@@ -23,15 +25,17 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto) // NEW - Explicitly binding from body
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
-            var user = await _authService.LoginAsync(loginDto);
+            var authResponse = await _authService.LoginAsync(loginDto);
 
-            if (user == null)
+            if (authResponse == null)
                 return Unauthorized("Invalid email or password.");
 
-            return Ok(user);
+            return Ok(authResponse);
         }
+
+
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDTO registerDto) // NEW - Explicitly binding from body
@@ -42,5 +46,24 @@ namespace ClientNexus.API.Controllers
             var user = await _authService.RegisterAsync(registerDto);
             return CreatedAtAction(nameof(Login), new { email = user.Email }, user);
         }
+
+
+
+       
+        [HttpPost("logout")]
+        public async Task<IActionResult> SignOut([FromHeader] string authorization)
+        {
+            if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
+                return BadRequest("Invalid token format.");
+
+            var token = authorization.Substring(7); // Remove "Bearer " prefix
+
+            var result = await _authService.SignOutAsync(token);
+            if (!result)
+                return BadRequest("Logout failed.");
+
+            return Ok("User successfully signed out.");
+        }
+
     }
 }
