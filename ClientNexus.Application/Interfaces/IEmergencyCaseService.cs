@@ -6,5 +6,5 @@ namespace ClientNexus.Application.Interfaces;
 
 public interface IEmergencyCaseService
 {
-    Task<EmergencyCase> CreateEmergencyCaseAsync(EmergencyCaseDTO emergencyDTO);
+    Task<EmergencyCase> CreateEmergencyCaseAsync(CreateEmergencyCaseDTO emergencyDTO, int clientId);
 }

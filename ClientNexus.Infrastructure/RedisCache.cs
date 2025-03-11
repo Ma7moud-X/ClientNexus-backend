@@ -622,4 +622,18 @@ public class RedisCache : ICache
         var res = await LeftPopListStringAsync(key);
         return res is null ? default : JsonSerializer.Deserialize<T>(res);
     }
+
+    public async Task<bool> RemoveHashFieldAsync(string key, string field)
+    {
+        if (string.IsNullOrWhiteSpace(key)) {
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(field)) {
+            throw new ArgumentException("Field cannot be null or whitespace.", nameof(field));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.HashDeleteAsync(key, field);
+    }
 }

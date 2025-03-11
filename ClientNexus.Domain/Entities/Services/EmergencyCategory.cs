@@ -10,5 +10,5 @@ public class EmergencyCategory
     public int ServiceProviderTypeId { get; set; }
     public ServiceProviderType? ServiceProviderType {get; set;}
     
-    public ICollection<EmergencyCase>? EmergencyCases { get; set; }
+    // public ICollection<EmergencyCase>? EmergencyCases { get; set; }
 }

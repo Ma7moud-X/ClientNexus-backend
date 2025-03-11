@@ -30,7 +30,6 @@ public static class CacheExtensions
 
         services.AddScoped<ICache, RedisCache>();
         services.AddSingleton<IEventPublisher, RedisEventPublisher>();
-        services.AddTransient<IEventSubscriber, RedisEventSubscriber>();
         services.AddTransient<IEventListener, RedisEventListener>();
     }
 }

@@ -1,4 +1,5 @@
 using ClientNexus.API.Extensions;
+using ClientNexus.Application.DTO;
 using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Mapping;
@@ -21,7 +22,7 @@ builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpService, HttpService>();
 builder.Services.AddLocationService();
-
+builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
@@ -39,14 +40,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IEventListener listener) =>
+    () =>
     {
-        await listener.SubscribeAsync("test_channel");
-        while (true)
-        {
-            var message = await listener.ListenAsync(CancellationToken.None);
-            Console.WriteLine($"Received message: {message}");
-        }
+        return "Hello World!";
     }
 );
 app.MapControllers();

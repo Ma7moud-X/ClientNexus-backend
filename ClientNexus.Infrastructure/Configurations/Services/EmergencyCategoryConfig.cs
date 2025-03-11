@@ -20,9 +20,9 @@ public class EmergencyCategoryConfig : IEntityTypeConfiguration<EmergencyCategor
             .HasForeignKey(ec => ec.ServiceProviderTypeId)
             .OnDelete(DeleteBehavior.Cascade);
             
-        builder.HasMany(ec => ec.EmergencyCases)
-            .WithOne(ec => ec.EmergencyCategory)
-            .HasForeignKey(ec => ec.EmergencyCategoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // builder.HasMany(ec => ec.EmergencyCases)
+        //     .WithOne(ec => ec.EmergencyCategory)
+        //     .HasForeignKey(ec => ec.EmergencyCategoryId)
+        //     .OnDelete(DeleteBehavior.Restrict);
     }
 }

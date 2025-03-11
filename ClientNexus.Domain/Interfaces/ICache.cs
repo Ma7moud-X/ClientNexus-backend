@@ -81,4 +81,5 @@ public interface ICache
 
     public Task<string?> GetHashStringAsync(string key, string field);
     public Task<T?> GetHashObjectAsync<T>(string key, string field);
+    public Task<bool> RemoveHashFieldAsync(string key, string field);
 }
