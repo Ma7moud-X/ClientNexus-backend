@@ -82,7 +82,7 @@ public class OfferService : IOfferService
 
     public async Task<bool> CreateOfferAsync(
         int serviceId,
-        decimal Price,
+        decimal price,
         ServiceProviderOverview serviceProvider,
         TravelDistance travelDistance
     )
@@ -90,9 +90,9 @@ public class OfferService : IOfferService
         ArgumentNullException.ThrowIfNull(serviceProvider);
         ArgumentNullException.ThrowIfNull(travelDistance);
 
-        if (Price <= 0)
+        if (price <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(Price), "Price must be greater than 0");
+            throw new ArgumentOutOfRangeException(nameof(price), "Price must be greater than 0");
         }
 
         string offerStr = JsonSerializer.Serialize(
@@ -101,7 +101,7 @@ public class OfferService : IOfferService
                 ServiceProviderId = serviceProvider.ServiceProviderId,
                 FirstName = serviceProvider.FirstName,
                 LastName = serviceProvider.LastName,
-                Price = Price,
+                Price = price,
                 TimeForArrival = travelDistance.Duration,
                 TimeUnit = travelDistance.DurationUnit,
                 Rating = serviceProvider.Rating,
@@ -112,16 +112,6 @@ public class OfferService : IOfferService
 
         try
         {
-            long receivedByCount = await _eventPublisher.PublishAsync(
-                $"{string.Format(_keyTemplate, serviceId)}offersChannel",
-                offerStr
-            );
-
-            if (receivedByCount != 0)
-            {
-                return true;
-            }
-
             TimeSpan? offerTTL = await _cache.GetTTLAsync(
                 $"{string.Format(_keyTemplate, serviceId)}request"
             );
@@ -131,6 +121,21 @@ public class OfferService : IOfferService
                 return false;
             }
 
+            long receivedByCount = await _eventPublisher.PublishAsync(
+                $"{string.Format(_keyTemplate, serviceId)}offersChannel",
+                offerStr
+            );
+
+            if (receivedByCount != 0)
+            {
+                await _cache.SetHashObjectAsync(
+                    $"{string.Format(_keyTemplate, serviceId)}offersHash",
+                    serviceProvider.ServiceProviderId.ToString(),
+                    price
+                );
+                return true;
+            }
+
             long noOfItemsAdded = await _cache.AddToListStringAsync(
                 $"{string.Format(_keyTemplate, serviceId)}offersList",
                 offerStr
@@ -138,6 +143,11 @@ public class OfferService : IOfferService
 
             if (noOfItemsAdded != 0)
             {
+                await _cache.SetHashObjectAsync(
+                    $"{string.Format(_keyTemplate, serviceId)}offersHash",
+                    serviceProvider.ServiceProviderId.ToString(),
+                    price
+                );
                 return true;
             }
         }
