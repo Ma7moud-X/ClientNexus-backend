@@ -121,6 +121,12 @@ public class OfferService : IOfferService
                 return false;
             }
 
+            var hashSet = _cache.SetHashObjectAsync(
+                $"{string.Format(_keyTemplate, serviceId)}offersHash",
+                serviceProvider.ServiceProviderId.ToString(),
+                price
+            );
+
             long receivedByCount = await _eventPublisher.PublishAsync(
                 $"{string.Format(_keyTemplate, serviceId)}offersChannel",
                 offerStr
@@ -128,12 +134,7 @@ public class OfferService : IOfferService
 
             if (receivedByCount != 0)
             {
-                await _cache.SetHashObjectAsync(
-                    $"{string.Format(_keyTemplate, serviceId)}offersHash",
-                    serviceProvider.ServiceProviderId.ToString(),
-                    price
-                );
-                return true;
+                return await hashSet;
             }
 
             long noOfItemsAdded = await _cache.AddToListStringAsync(
@@ -143,12 +144,7 @@ public class OfferService : IOfferService
 
             if (noOfItemsAdded != 0)
             {
-                await _cache.SetHashObjectAsync(
-                    $"{string.Format(_keyTemplate, serviceId)}offersHash",
-                    serviceProvider.ServiceProviderId.ToString(),
-                    price
-                );
-                return true;
+                return await hashSet;
             }
         }
         catch (Exception ex)
