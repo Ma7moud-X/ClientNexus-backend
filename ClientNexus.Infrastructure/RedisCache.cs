@@ -9,13 +9,21 @@ namespace ClientNexus.Infrastructure;
 public class RedisCache : ICache
 {
     private readonly IConnectionMultiplexer _redis;
-    private readonly IDatabase _database;
+    private IDatabase? _databaseBackingField;
+    private IDatabase _database
+    {
+        get
+        {
+            _databaseBackingField ??= _redis.GetDatabase();
+            return _databaseBackingField;
+        }
+    }
+
     private ITransaction? _transaction = null;
 
     public RedisCache(IConnectionMultiplexer redis)
     {
         _redis = redis;
-        _database = _redis.GetDatabase();
     }
 
     public async Task<bool> AddGeoLocationAsync(
@@ -625,15 +633,28 @@ public class RedisCache : ICache
 
     public async Task<bool> RemoveHashFieldAsync(string key, string field)
     {
-        if (string.IsNullOrWhiteSpace(key)) {
+        if (string.IsNullOrWhiteSpace(key))
+        {
             throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
         }
 
-        if (string.IsNullOrWhiteSpace(field)) {
+        if (string.IsNullOrWhiteSpace(field))
+        {
             throw new ArgumentException("Field cannot be null or whitespace.", nameof(field));
         }
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
         return await executor.HashDeleteAsync(key, field);
+    }
+
+    public async Task<TimeSpan?> GetTTLAsync(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.KeyTimeToLiveAsync(key);
     }
 }

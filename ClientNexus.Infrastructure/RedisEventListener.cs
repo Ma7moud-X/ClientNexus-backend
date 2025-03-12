@@ -10,7 +10,7 @@ public class RedisEventListener : IEventListener
     private readonly ICache _cache;
     private string? _channel = null;
     private readonly Channel<string> _messageQueue = Channel.CreateUnbounded<string>();
-    private bool _disposed = false;
+    private bool _manuallyDisposed = false;
 
     public RedisEventListener(IConnectionMultiplexer redis, ICache cache)
     {
@@ -71,7 +71,7 @@ public class RedisEventListener : IEventListener
             throw new InvalidOperationException("Not subscribed to any channel.");
         }
 
-        if (_disposed)
+        if (_manuallyDisposed)
         {
             throw new InvalidOperationException("Already closed.");
         }
@@ -84,7 +84,7 @@ public class RedisEventListener : IEventListener
             );
         }
 
-        _disposed = true;
+        _manuallyDisposed = true;
         _eventSubscriber.Dispose();
 
         if (!save)
@@ -123,12 +123,11 @@ public class RedisEventListener : IEventListener
 
     public void Dispose()
     {
-        if (_disposed)
+        if (_manuallyDisposed)
         {
             return;
         }
 
         _eventSubscriber.Dispose();
-        _disposed = true;
     }
 }

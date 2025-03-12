@@ -40,9 +40,45 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    () =>
+    async (IEventListener eventListener, IOfferService offerService) =>
     {
-        return "Hello World!";
+        await offerService.AllowOffersAsync(
+            new ServiceProviderEmergencyDTO
+            {
+                ServiceId = 1,
+                ClientFirstName = "Test Client First Name",
+                ClientLastName = "Test Client Last Name",
+                Name = "Test Service Name",
+                Description = "Test Service Description",
+                MeetingLatitude = 10.00d,
+                MeetingLongitude = 20.00d,
+            }
+        );
+
+        using var listener = new OfferListener(eventListener, 1);
+        _ = offerService.CreateOfferAsync(
+            1,
+            10.000m,
+            new ClientNexus.Application.Models.ServiceProviderOverview
+            {
+                ServiceProviderId = 1,
+                FirstName = "Test Service Provider First Name",
+                LastName = "Test Service Provider Last Name",
+                Rating = 4.5f,
+                ImageUrl = "test_image_url",
+                YearsOfExperience = 5,
+            },
+            new ClientNexus.Application.Domain.TravelDistance
+            {
+                Distance = 10,
+                DistanceUnit = "meters",
+                Duration = 10,
+                DurationUnit = "minutes",
+            }
+        );
+
+        var dto = await listener.ListenForOfferAsync(CancellationToken.None);
+        Console.WriteLine($"Offer: {dto}");
     }
 );
 app.MapControllers();

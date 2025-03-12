@@ -1,8 +1,8 @@
+using System.Text.Json;
 using ClientNexus.Application.Domain;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
-using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Application.Services;
@@ -10,17 +10,30 @@ namespace ClientNexus.Application.Services;
 public class OfferService : IOfferService
 {
     private readonly ICache _cache;
+    private readonly IEventPublisher _eventPublisher;
     private const string _keyTemplate = "clientnexus:services:{0}:";
 
-    public OfferService(ICache cache)
+    public OfferService(ICache cache, IEventPublisher eventPublisher, IEventListener eventListener)
     {
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(eventPublisher);
+        ArgumentNullException.ThrowIfNull(eventListener);
+
         _cache = cache;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<bool> AllowOffersAsync<T>(T service, int timeoutInMin = 16)
         where T : ServiceProviderServiceDTO
     {
         ArgumentNullException.ThrowIfNull(service);
+        if (timeoutInMin <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(timeoutInMin),
+                "Timeout must be greater than 0"
+            );
+        }
 
         _cache.StartTransaction();
 
@@ -67,22 +80,76 @@ public class OfferService : IOfferService
         return transactionCommitted && await created;
     }
 
-    public Task<bool> CreateOfferAsync(
+    public async Task<bool> CreateOfferAsync(
         int serviceId,
-        double Price,
+        decimal Price,
         ServiceProviderOverview serviceProvider,
         TravelDistance travelDistance
     )
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        ArgumentNullException.ThrowIfNull(travelDistance);
+
+        if (Price <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(Price), "Price must be greater than 0");
+        }
+
+        string offerStr = JsonSerializer.Serialize(
+            new ClientOfferDTO
+            {
+                ServiceProviderId = serviceProvider.ServiceProviderId,
+                FirstName = serviceProvider.FirstName,
+                LastName = serviceProvider.LastName,
+                Price = Price,
+                TimeForArrival = travelDistance.Duration,
+                TimeUnit = travelDistance.DurationUnit,
+                Rating = serviceProvider.Rating,
+                YearsOfExperience = serviceProvider.YearsOfExperience,
+                ImageUrl = serviceProvider.ImageUrl,
+            }
+        );
+
+        try
+        {
+            long receivedByCount = await _eventPublisher.PublishAsync(
+                $"{string.Format(_keyTemplate, serviceId)}offersChannel",
+                offerStr
+            );
+
+            if (receivedByCount != 0)
+            {
+                return true;
+            }
+
+            TimeSpan? offerTTL = await _cache.GetTTLAsync(
+                $"{string.Format(_keyTemplate, serviceId)}request"
+            );
+
+            if (offerTTL is null || offerTTL.Value.TotalMinutes <= 1.2)
+            {
+                return false;
+            }
+
+            long noOfItemsAdded = await _cache.AddToListStringAsync(
+                $"{string.Format(_keyTemplate, serviceId)}offersList",
+                offerStr
+            );
+
+            if (noOfItemsAdded != 0)
+            {
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error communticating with cache server", ex);
+        }
+
+        return false;
     }
 
-    public Task<ClientOfferDTO> GetOfferAsync(int serviceId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<double> GetOfferPriceAsync(int serviceId, int ServiceProviderId)
+    public Task<decimal> GetOfferPriceAsync(int serviceId, int ServiceProviderId)
     {
         throw new NotImplementedException();
     }

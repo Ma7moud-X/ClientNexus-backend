@@ -7,6 +7,7 @@ public class RedisEventSubscriber : IEventSubscriber
 {
     private readonly IConnectionMultiplexer _redis;
     private RedisChannel _redisChannel = default!;
+    private bool _disposed = false;
     private Action<RedisChannel, RedisValue> _subscriptionHandler = default!;
 
     public RedisEventSubscriber(IConnectionMultiplexer redis)
@@ -43,6 +44,12 @@ public class RedisEventSubscriber : IEventSubscriber
             return;
         }
 
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(RedisEventSubscriber));
+        }
+
+        _disposed = true;
         var subscriber = _redis.GetSubscriber();
         subscriber.Unsubscribe(_redisChannel, _subscriptionHandler);
     }
