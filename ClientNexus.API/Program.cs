@@ -2,6 +2,7 @@ using ClientNexus.API.Extensions;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Listeners;
 using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
 using ClientNexus.Domain.Enums;
@@ -40,7 +41,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IEventListener eventListener, IOfferService offerService) =>
+    async (IEventListener eventListener, ICache cache, IOfferService offerService) =>
     {
         await offerService.AllowOffersAsync(
             new ServiceProviderEmergencyDTO
@@ -55,7 +56,10 @@ app.MapGet(
             }
         );
 
-        using var listener = new OfferListener(eventListener, 1);
+        var channelListener = new ChannelOfferListener(eventListener, 1);
+        var missedListener = new MissedOfferListener(cache, 1);
+        var generalListener = new GeneralOfferListener(channelListener, missedListener, 1);
+
         _ = offerService.CreateOfferAsync(
             1,
             10.000m,
@@ -77,7 +81,7 @@ app.MapGet(
             }
         );
 
-        var dto = await listener.ListenForOfferAsync(CancellationToken.None);
+        var dto = await generalListener.ListenForOfferAsync(CancellationToken.None);
         Console.WriteLine($"Offer: {dto}");
     }
 );

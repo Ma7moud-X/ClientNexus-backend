@@ -5,29 +5,39 @@ using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Application.Services;
 
-public class OfferListener : IDisposable
+public class ChannelOfferListener : IDisposable
 {
     private readonly IEventListener _eventListener;
-    private readonly int _serviceId;
+    public int ServiceId { get; init; }
     private bool _isSubscribed = false;
     private bool _manuallyDisposed = false;
     private const string _keyTemplate = "clientnexus:services:{0}:";
 
-    public OfferListener(IEventListener eventListener, int serviceId)
+    public ChannelOfferListener(IEventListener eventListener, int serviceId)
     {
         ArgumentNullException.ThrowIfNull(eventListener);
         _eventListener = eventListener;
-        _serviceId = serviceId;
+        ServiceId = serviceId;
+    }
+
+    public async Task SubscribeAsync()
+    {
+        if (_isSubscribed)
+        {
+            return;
+        }
+
+        _isSubscribed = true;
+        await _eventListener.SubscribeAsync(
+            $"{string.Format(_keyTemplate, ServiceId)}offersChannel"
+        );
     }
 
     public async Task<ClientOfferDTO> ListenForOfferAsync(CancellationToken cancellationToken)
     {
         if (!_isSubscribed)
         {
-            _isSubscribed = true;
-            await _eventListener.SubscribeAsync(
-                $"{string.Format(_keyTemplate, _serviceId)}offersChannel"
-            );
+            await SubscribeAsync();
         }
 
         var offer = JsonSerializer.Deserialize<ClientOfferDTO>(
@@ -57,7 +67,7 @@ public class OfferListener : IDisposable
         _manuallyDisposed = true;
         await _eventListener.CloseAsync(
             save,
-            $"{string.Format(_keyTemplate, _serviceId)}offersChannel"
+            $"{string.Format(_keyTemplate, ServiceId)}offersChannel"
         );
     }
 
@@ -70,7 +80,11 @@ public class OfferListener : IDisposable
 
         if (_isSubscribed)
         {
-            _eventListener.Dispose();
+            try
+            {
+                _eventListener.Dispose();
+            }
+            catch (Exception) { }
         }
     }
 }
