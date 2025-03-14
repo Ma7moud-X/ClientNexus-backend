@@ -64,7 +64,7 @@ namespace ClientNexus.Infrastructure
             new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
             new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
-            new LicenseConfig().Configure(modelBuilder.Entity<License>());
+            //new LicenseConfig().Configure(modelBuilder.Entity<License>());
 
             new ClientServiceProviderFeedbackConfig().Configure(modelBuilder.Entity<ClientServiceProviderFeedback>());
         }
@@ -113,7 +113,6 @@ namespace ClientNexus.Infrastructure
         public DbSet<OfficeImageUrl> OfficeImageUrls { get; set; }
 
         // Lawyer-specific entities
-        public DbSet<License> LawyerLicences { get; set; }
 
         // Feedback entities
         public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }

@@ -11,6 +11,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ClientNexus.Domain.Entities.Services;
 using System.IdentityModel.Tokens.Jwt;
+using Google.Apis.Services;
+using IClientService = ClientNexus.Application.Interfaces.IClientService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,14 @@ builder.Services.AddControllers();
 
 // NEW - Register AuthService
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IserviceProviderService, ServiceProviderService>();
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IAdmainService, AdmainService>();
+builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+
 
 // NEW - Configure Identity with BaseUser
 builder.Services.AddIdentity<BaseUser, IdentityRole<int>>()

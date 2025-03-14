@@ -54,7 +54,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
 
-    IBaseRepo<License> Licenses { get; }
+    //IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
     IBaseRepo<City> Cities { get; }
     IBaseRepo<State> States { get; }

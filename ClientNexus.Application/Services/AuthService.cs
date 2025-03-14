@@ -10,27 +10,41 @@ using Microsoft.Extensions.Configuration;
 using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Concurrent;
+using ClientNexus.Domain.Entities;
+using ClientNexus.Domain.Interfaces;
 
 public class AuthService : IAuthService
 {
+    private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<BaseUser> _userManager;
     private readonly SignInManager<BaseUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly IAddressService _addressService;
+    private readonly IPhoneNumberService _phoneNumberService;
+    private readonly ISpecializationService _specializationService;
 
     private static readonly ConcurrentDictionary<string, DateTime> _revokedTokens = new();
 
 
 
-    public AuthService(UserManager<BaseUser> userManager, SignInManager<BaseUser> signInManager, IConfiguration configuration)
+    public AuthService(UserManager<BaseUser> userManager, SignInManager<BaseUser> signInManager, IConfiguration configuration, IUnitOfWork unitOfWork, IAddressService addressService, IPhoneNumberService phoneNumberService, ISpecializationService specializationService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
-
+        _unitOfWork = unitOfWork;
+        _addressService = addressService;
+        _phoneNumberService = phoneNumberService;
+        _specializationService = specializationService;
     }
 
-    public async Task<BaseUser> RegisterAsync(RegisterUserDTO registerDto)
+    public async Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO registerDto)
     {
+        if (registerDto == null)
+        {
+            throw new ArgumentNullException(nameof(registerDto), "Registration data cannot be null.");
+        }
+
         BaseUser user = registerDto.UserType switch
         {
             UserType.Admin => new Admin
@@ -46,11 +60,16 @@ public class AuthService : IAuthService
             {
                 UserType = UserType.ServiceProvider,
                 BirthDate = registerDto.BirthDate,
-                Description = registerDto.Description ?? string.Empty,
-                MainImage = registerDto.MainImage ?? string.Empty,
-                TypeId = registerDto.TypeId,
+                Description = registerDto.Description ?? throw new ArgumentNullException(nameof(registerDto.Description), "Description is required for ServiceProvider"),
+                ImageIDUrl = registerDto.ImageIDUrl ?? throw new ArgumentNullException(nameof(registerDto.ImageIDUrl), "ImageIDUrl is required for ServiceProvider"),
+                ImageNationalIDUrl = registerDto.ImageNationalIDUrl ?? throw new ArgumentNullException(nameof(registerDto.ImageNationalIDUrl), "ImageNationalIDUrl is required for ServiceProvider"),
+                MainImage = registerDto.MainImage ?? throw new ArgumentNullException(nameof(registerDto.MainImage), "MainImage is required for ServiceProvider"),
+                TypeId = registerDto.TypeId ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "TypeId is required for ServiceProvider"),
                 FirstName = registerDto.FirstName,  // NEW
-                LastName = registerDto.LastName     // NEW
+                LastName = registerDto.LastName,    // NEW
+                Rate = 0,
+                IsApproved = false,
+                YearsOfExperience = registerDto.YearsOfExperience ?? throw new ArgumentNullException(nameof(registerDto.YearsOfExperience), "YearsOfExperience is required for ServiceProvider"),
             },
 
             UserType.Client => new Client
@@ -58,7 +77,8 @@ public class AuthService : IAuthService
                 UserType = UserType.Client,
                 BirthDate = registerDto.BirthDate,
                 FirstName = registerDto.FirstName,  // NEW
-                LastName = registerDto.LastName     // NEW
+                LastName = registerDto.LastName,    // NEW
+                Rate = 0
             },
 
             _ => throw new Exception("Invalid UserType")
@@ -66,14 +86,59 @@ public class AuthService : IAuthService
 
         user.UserName = registerDto.Email;
         user.Email = registerDto.Email;
+        user.PhoneNumber = registerDto.PhoneNumber;
+
+
+
+
 
         var createResult = await _userManager.CreateAsync(user, registerDto.Password);
 
         if (!createResult.Succeeded)
-            throw new Exception(string.Join(", ", createResult.Errors.Select(e => e.Description)));
+        {
+            string errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"User creation failed: {errors}");
+        }
 
-        return user;
+        if (!(registerDto.PhoneNumbers == null || !registerDto.PhoneNumbers.Any()))
+        {
+            user.PhoneNumbers = new List<PhoneNumber>();
+            await _phoneNumberService.AddCollectionOfPhoneNumer(user.PhoneNumbers, registerDto.PhoneNumbers);
+        }
+
+        if (user is ServiceProvider serviceProvider)
+        {
+            serviceProvider.ServiceProviderSpecializations = new List<ServiceProviderSpecialization>();
+            await _specializationService.AddSpecializationsToServiceProvider(serviceProvider.ServiceProviderSpecializations, registerDto.SpecializationIDS, serviceProvider.Id);
+
+
+            // Add multiple addresses using AddressService
+            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            {
+
+                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
+            }
+
+            foreach (var addressDto in registerDto.Addresses)
+            {
+                await _addressService.AddAddressAsync(serviceProvider.Id, addressDto);
+            }
+        }
+        await _unitOfWork.SaveChangesAsync();
+
+        var token = GenerateJwtToken(user);
+
+        return new AuthResponseDTO
+        {
+            Token = token,
+            Email = user.Email!,
+            UserType = user.UserType.ToString()
+        };
+
+
+
     }
+
 
 
 
@@ -119,7 +184,7 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-  
+
 
     public async Task<bool> SignOutAsync(string token) // UPDATED: Accepts token for revocation
     {
@@ -136,6 +201,4 @@ public class AuthService : IAuthService
     {
         return _revokedTokens.ContainsKey(token);
     }
-
-
 }

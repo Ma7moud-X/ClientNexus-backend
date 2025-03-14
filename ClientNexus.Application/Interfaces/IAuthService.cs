@@ -5,10 +5,12 @@
 
     public interface IAuthService
     {
-        Task<AuthResponseDTO?> LoginAsync(LoginDTO loginDto); // UPDATED - Return token response
 
-        Task<BaseUser> RegisterAsync(RegisterUserDTO registerDto);
-        Task<bool> SignOutAsync(string token); // UPDATED: Accepts JWT token for revocation
+        
+            public Task<AuthResponseDTO?> LoginAsync(LoginDTO loginDto);
+            public Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO registerDto);
+
+            public Task<bool> SignOutAsync(string token); // UPDATED: Accepts token for revocation
 
 
     }

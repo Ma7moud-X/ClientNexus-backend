@@ -9,6 +9,8 @@ namespace ClientNexus.API.Controllers
 {
     using ClientNexus.Application.DTOs;
     using ClientNexus.Application.Interfaces;
+    using ClientNexus.Application.Services;
+    using ClientNexus.Domain.Entities;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.IdentityModel.Tokens.Jwt;
@@ -19,15 +21,17 @@ namespace ClientNexus.API.Controllers
     {
         private readonly IAuthService _authService;
 
+
         public AuthController(IAuthService authService)
         {
-            _authService = authService;
+            this._authService = authService;
+
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
-            var authResponse = await _authService.LoginAsync(loginDto);
+            var authResponse = await  _authService.LoginAsync (loginDto);
 
             if (authResponse == null)
                 return Unauthorized("Invalid email or password.");
@@ -40,16 +44,32 @@ namespace ClientNexus.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDTO registerDto) // NEW - Explicitly binding from body
         {
-            if (!ModelState.IsValid) // NEW - Proper validation handling
-                return BadRequest(ModelState);
 
-            var user = await _authService.RegisterAsync(registerDto);
-            return CreatedAtAction(nameof(Login), new { email = user.Email }, user);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse("Invalid request data"));
+
+            try
+            {
+                var response = await _authService.RegisterAsync(registerDto);
+
+                if (response == null)
+                    return BadRequest(ApiResponseDTO<string>.ErrorResponse("Registration failed. Please try again."));
+
+                return CreatedAtAction(nameof(Login), new { email = response.Email },
+                    ApiResponseDTO<AuthResponseDTO>.SuccessResponse(response, "User registered successfully."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+
         }
 
 
 
-       
+
+
         [HttpPost("logout")]
         public async Task<IActionResult> SignOut([FromHeader] string authorization)
         {
@@ -64,6 +84,7 @@ namespace ClientNexus.API.Controllers
 
             return Ok("User successfully signed out.");
         }
+
 
     }
 }
