@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 using ClientNexus.Domain.Interfaces;
-using StackExchange.Redis;
+using Google.Apis.Util;
 
 namespace ClientNexus.Infrastructure;
 
@@ -10,12 +10,12 @@ public class RedisEventListener : IEventListener
     private readonly ICache _cache;
     private string? _channel = null;
     private readonly Channel<string> _messageQueue = Channel.CreateUnbounded<string>();
-    private bool _manuallyDisposed = false;
+    private bool _closed = false;
 
-    public RedisEventListener(IConnectionMultiplexer redis, ICache cache)
+    public RedisEventListener(IEventSubscriber eventSubscriber, ICache cache)
     {
         _cache = cache;
-        _eventSubscriber = new RedisEventSubscriber(redis);
+        _eventSubscriber = eventSubscriber;
     }
 
     public async Task<string> ListenAsync(CancellationToken cancellationToken)
@@ -71,7 +71,7 @@ public class RedisEventListener : IEventListener
             throw new InvalidOperationException("Not subscribed to any channel.");
         }
 
-        if (_manuallyDisposed)
+        if (_closed)
         {
             throw new InvalidOperationException("Already closed.");
         }
@@ -84,11 +84,11 @@ public class RedisEventListener : IEventListener
             );
         }
 
-        _manuallyDisposed = true;
-        _eventSubscriber.Dispose();
+        _eventSubscriber.Unsubscribe();
 
         if (!save)
         {
+            _closed = true;
             return;
         }
 
@@ -119,15 +119,7 @@ public class RedisEventListener : IEventListener
                 );
             }
         }
-    }
 
-    public void Dispose()
-    {
-        if (_manuallyDisposed)
-        {
-            return;
-        }
-
-        _eventSubscriber.Dispose();
+        _closed = true;
     }
 }

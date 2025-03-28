@@ -1,6 +1,6 @@
 namespace ClientNexus.Domain.Interfaces;
 
-public interface IEventListener : IDisposable
+public interface IEventListener
 {
     Task SubscribeAsync(string channel);
     Task<string> ListenAsync(CancellationToken cancellationToken);
