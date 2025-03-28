@@ -8,7 +8,7 @@ public class RedisEventSubscriber : IEventSubscriber
     private readonly IConnectionMultiplexer _redis;
     private RedisChannel _redisChannel = default!;
     private bool _disposed = false;
-    private Action<RedisChannel, RedisValue> _subscriptionHandler = default!;
+    private Action<RedisChannel, RedisValue>? _subscriptionHandler = null;
 
     public RedisEventSubscriber(IConnectionMultiplexer redis)
     {
@@ -17,6 +17,11 @@ public class RedisEventSubscriber : IEventSubscriber
 
     public async Task SubscribeAsync(string channel, Action<string> messageHandler)
     {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(RedisEventSubscriber));
+        }
+
         if (string.IsNullOrEmpty(channel))
         {
             throw new ArgumentException("Channel cannot be null or empty.", nameof(channel));
@@ -37,20 +42,37 @@ public class RedisEventSubscriber : IEventSubscriber
         await subscriber.SubscribeAsync(_redisChannel, _subscriptionHandler);
     }
 
-    public void Dispose()
+    public void Unsubscribe()
     {
-        if (_subscriptionHandler is null)
-        {
-            return;
-        }
-
         if (_disposed)
         {
             throw new ObjectDisposedException(nameof(RedisEventSubscriber));
         }
 
-        _disposed = true;
+        if (_subscriptionHandler is null)
+        {
+            throw new Exception("Not subscribed to any channel.");
+        }
+
         var subscriber = _redis.GetSubscriber();
         subscriber.Unsubscribe(_redisChannel, _subscriptionHandler);
+        _subscriptionHandler = null;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(RedisEventSubscriber));
+        }
+
+        if (_subscriptionHandler is null)
+        {
+            return;
+        }
+
+        var subscriber = _redis.GetSubscriber();
+        subscriber.Unsubscribe(_redisChannel, _subscriptionHandler);
+        _disposed = true;
     }
 }
