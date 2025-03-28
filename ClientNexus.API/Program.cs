@@ -1,11 +1,8 @@
 using ClientNexus.API.Extensions;
 using ClientNexus.Application.DTO;
-using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
-using ClientNexus.Application.Listeners;
 using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
-using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
@@ -25,6 +22,8 @@ builder.Services.AddSingleton<IHttpService, HttpService>();
 builder.Services.AddLocationService();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
+builder.Services.AddOfferListenerServices();
+builder.Services.AddScoped<IOfferSaverService, OfferSaverService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 
@@ -41,7 +40,11 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IEventListener eventListener, ICache cache, IOfferService offerService) =>
+    async (
+        IGeneralOfferListenerService offerListenerService,
+        IOfferService offerService,
+        IOfferSaverService saverService
+    ) =>
     {
         await offerService.AllowOffersAsync(
             new ServiceProviderEmergencyDTO
@@ -53,14 +56,11 @@ app.MapGet(
                 Description = "Test Service Description",
                 MeetingLatitude = 10.00d,
                 MeetingLongitude = 20.00d,
-            }
+            },
+            2
         );
 
-        var channelListener = new ChannelOfferListener(eventListener, 1);
-        var missedListener = new MissedOfferListener(cache, 1);
-        var generalListener = new GeneralOfferListener(channelListener, missedListener, 1);
-
-        _ = offerService.CreateOfferAsync(
+        await offerService.CreateOfferAsync(
             1,
             10.000m,
             new ClientNexus.Application.Models.ServiceProviderOverview
@@ -78,11 +78,13 @@ app.MapGet(
                 DistanceUnit = "meters",
                 Duration = 10,
                 DurationUnit = "minutes",
-            }
+            },
+            TimeSpan.FromSeconds(1000)
         );
 
-        var dto = await generalListener.ListenForOfferAsync(CancellationToken.None);
-        Console.WriteLine($"Offer: {dto}");
+        await offerListenerService.SubscribeAsync(1);
+
+        await offerListenerService.CloseAsync();
     }
 );
 app.MapControllers();

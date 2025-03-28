@@ -6,11 +6,12 @@ namespace ClientNexus.Application.Interfaces;
 
 public interface IOfferService
 {
-    Task<bool> CreateOfferAsync(
+    Task CreateOfferAsync(
         int serviceId,
         decimal Price,
         ServiceProviderOverview serviceProvider,
-        TravelDistance travelDistance
+        TravelDistance travelDistance,
+        TimeSpan offerTTL
     );
 
     Task<decimal> GetOfferPriceAsync(int serviceId, int ServiceProviderId);

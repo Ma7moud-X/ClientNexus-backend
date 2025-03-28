@@ -12,4 +12,6 @@ public class ClientOfferDTO
     public required float Rating { get; init; }
     public required int YearsOfExperience { get; init; }
     public required string ImageUrl { get; init; }
+
+    public required DateTime ExpiresAt { get; init; }
 }
