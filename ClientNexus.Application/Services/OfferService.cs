@@ -185,8 +185,11 @@ public class OfferService : IOfferService
         throw new Exception("Error publishing offer");
     }
 
-    public Task<decimal> GetOfferPriceAsync(int serviceId, int ServiceProviderId)
+    public async Task<decimal?> GetOfferPriceAsync(int serviceId, int ServiceProviderId)
     {
-        throw new NotImplementedException();
+        return await _cache.GetHashObjectAsync<decimal?>(
+            string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
+            ServiceProviderId.ToString()
+        );
     }
 }

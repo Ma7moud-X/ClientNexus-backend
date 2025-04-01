@@ -14,7 +14,7 @@ public interface IOfferService
         TimeSpan offerTTL
     );
 
-    Task<decimal> GetOfferPriceAsync(int serviceId, int ServiceProviderId);
+    Task<decimal?> GetOfferPriceAsync(int serviceId, int ServiceProviderId);
     Task<bool> AllowOffersAsync<T>(T service, int timeoutInMin = 16)
         where T : ServiceProviderServiceDTO;
 }
