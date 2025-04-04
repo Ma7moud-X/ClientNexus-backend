@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -141,6 +142,13 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return await _context.Set<EType>().FindAsync(id);
     }
     
+    public async Task<EType?> GetByIdWithLockAsync(int id)
+    {
+        return await _context.Set<EType>()
+            .FromSqlRaw("SELECT * FROM {typeof(T).Name} WITH (UPDLOCK, ROWLOCK) WHERE Id = {0}", id)
+            .FirstOrDefaultAsync();
+    }
+
     public EType Update(EType oldEntity, EType updatedEntity)
     {
         var entry = _context.Entry<EType>(oldEntity);
