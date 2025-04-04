@@ -14,11 +14,10 @@ public class OfferService : IOfferService
     private readonly IEventPublisher _eventPublisher;
     private const string _keyTemplate = "clientnexus:services:{0}:";
 
-    public OfferService(ICache cache, IEventPublisher eventPublisher, IEventListener eventListener)
+    public OfferService(ICache cache, IEventPublisher eventPublisher)
     {
         ArgumentNullException.ThrowIfNull(cache);
         ArgumentNullException.ThrowIfNull(eventPublisher);
-        ArgumentNullException.ThrowIfNull(eventListener);
 
         _cache = cache;
         _eventPublisher = eventPublisher;

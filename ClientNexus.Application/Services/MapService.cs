@@ -22,12 +22,12 @@ class Route
     public double duration { get; set; }
 }
 
-public class LocationService : ILocationService
+public class MapService : IMapService
 {
     private readonly IHttpService _httpService;
     private const string BaseUrl = "https://router.project-osrm.org/route/v1/";
 
-    public LocationService(IHttpService httpService)
+    public MapService(IHttpService httpService)
     {
         _httpService = httpService;
     }

@@ -23,7 +23,7 @@ namespace ClientNexus.Infrastructure.Configurations
                 .HasColumnType("char(1)")
                 .IsRequired();
 
-            builder.Property(s => s.Price).IsRequired().HasColumnType("decimal(18,2)");
+            builder.Property(s => s.Price).HasColumnType("decimal(18,2)");
 
             builder
                 .Property(s => s.Status)

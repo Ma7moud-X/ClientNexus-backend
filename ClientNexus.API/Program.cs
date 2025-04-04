@@ -19,11 +19,14 @@ builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpService, HttpService>();
-builder.Services.AddLocationService();
+builder.Services.AddMapService();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
 builder.Services.AddOfferListenerServices();
 builder.Services.AddScoped<IOfferSaverService, OfferSaverService>();
+builder.Services.AddScoped<IBaseUserService, BaseUserService>();
+builder.Services.AddScoped<IServiceProviderService, ServiceProviderService>();
+builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 
@@ -40,51 +43,20 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (
-        IGeneralOfferListenerService offerListenerService,
-        IOfferService offerService,
-        IOfferSaverService saverService
-    ) =>
+    async (IEmergencyCaseService emergencyCaseService) =>
     {
-        await offerService.AllowOffersAsync(
-            new ServiceProviderEmergencyDTO
+        return await emergencyCaseService.InitiateEmergencyCaseAsync(
+            new CreateEmergencyCaseDTO
             {
-                ServiceId = 1,
-                ClientFirstName = "Test Client First Name",
-                ClientLastName = "Test Client Last Name",
-                Name = "Test Service Name",
-                Description = "Test Service Description",
-                MeetingLatitude = 10.00d,
-                MeetingLongitude = 20.00d,
+                Name = "Test",
+                Description = "Test",
+                MeetingLongitude = 30.050631105885007,
+                MeetingLatitude = 31.247426029669437,
             },
-            2
+            2,
+            "Mahmoud",
+            "Abuelnaga"
         );
-
-        await offerService.CreateOfferAsync(
-            1,
-            10.000m,
-            new ClientNexus.Application.Models.ServiceProviderOverview
-            {
-                ServiceProviderId = 1,
-                FirstName = "Test Service Provider First Name",
-                LastName = "Test Service Provider Last Name",
-                Rating = 4.5f,
-                ImageUrl = "test_image_url",
-                YearsOfExperience = 5,
-            },
-            new ClientNexus.Application.Domain.TravelDistance
-            {
-                Distance = 10,
-                DistanceUnit = "meters",
-                Duration = 10,
-                DurationUnit = "minutes",
-            },
-            TimeSpan.FromSeconds(1000)
-        );
-
-        await offerListenerService.SubscribeAsync(1);
-
-        await offerListenerService.CloseAsync();
     }
 );
 app.MapControllers();

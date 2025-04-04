@@ -9,13 +9,24 @@ namespace ClientNexus.Application.Services;
 public class EmergencyCaseService : IEmergencyCaseService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOfferService _offerService;
+    private readonly IServiceProviderService _serviceProviderService;
+    private readonly IPushNotification _pushNotificationService;
 
-    public EmergencyCaseService(IUnitOfWork unitOfWork)
+    public EmergencyCaseService(
+        IUnitOfWork unitOfWork,
+        IOfferService offerService,
+        IServiceProviderService serviceProviderService,
+        IPushNotification pushNotificationService
+    )
     {
         _unitOfWork = unitOfWork;
+        _offerService = offerService;
+        _serviceProviderService = serviceProviderService;
+        _pushNotificationService = pushNotificationService;
     }
 
-    public async Task<EmergencyCase> CreateEmergencyCaseAsync(
+    private async Task<EmergencyCase> CreateEmergencyCaseAsync(
         CreateEmergencyCaseDTO emergencyDTO,
         int clientId
     )
@@ -43,6 +54,62 @@ public class EmergencyCaseService : IEmergencyCaseService
         }
 
         return emergencyCase;
+    }
+
+    public async Task<ClientEmergencyDTO> InitiateEmergencyCaseAsync(
+        CreateEmergencyCaseDTO emergencyDTO,
+        int clientId,
+        string clientFirstName,
+        string clientLastName,
+        double notifyServicePorvidersWithinMeters = 3000,
+        int allowOffersWithinMinutes = 160
+    )
+    {
+        ArgumentNullException.ThrowIfNull(emergencyDTO);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientFirstName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientLastName);
+
+        EmergencyCase emergencyCase = await CreateEmergencyCaseAsync(emergencyDTO, clientId);
+        bool offersAllowed = await _offerService.AllowOffersAsync(
+            new ServiceProviderEmergencyDTO
+            {
+                ServiceId = emergencyCase.Id,
+                ClientFirstName = clientFirstName,
+                ClientLastName = clientLastName,
+                Name = emergencyDTO.Name,
+                Description = emergencyDTO.Description,
+                MeetingLatitude = emergencyDTO.MeetingLatitude,
+                MeetingLongitude = emergencyDTO.MeetingLongitude,
+            },
+            allowOffersWithinMinutes
+        );
+
+        if (!offersAllowed)
+        {
+            throw new Exception("Error while allowing offers");
+        }
+
+        var providersTokens =
+            await _serviceProviderService.GetTokensOfServiceProvidersNearLocationAsync(
+                emergencyDTO.MeetingLongitude,
+                emergencyDTO.MeetingLatitude,
+                notifyServicePorvidersWithinMeters
+            );
+
+        foreach (var providerToken in providersTokens)
+        {
+            try
+            {
+                await _pushNotificationService.SendNotificationAsync(
+                    $"New emergency case: {emergencyDTO.Name}",
+                    $"Description: {emergencyDTO.Description}",
+                    providerToken.Token
+                );
+            }
+            catch (Exception) { }
+        }
+
+        return new ClientEmergencyDTO { Id = emergencyCase.Id };
     }
 
     // public async Task<bool> AssignServiceProviderAsync(
