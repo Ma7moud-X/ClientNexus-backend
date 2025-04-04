@@ -4,6 +4,7 @@ using ClientNexus.Application.Services;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.API.Controllers
 {
@@ -23,13 +24,14 @@ namespace ClientNexus.API.Controllers
         /// Get available slots for a service provider within a date range
         /// </summary>
         [HttpGet("available")]
-        public async Task<ActionResult<IEnumerable<SlotDTO>>> GetAvailableSlots(
+        public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlots(
             int serviceProviderId,
             DateTime startDate,
-            DateTime endDate)
+            DateTime endDate,
+            SlotType type,
+            SlotStatus? status)
         {
-            var slots = await _slotService.GetAvailableSlotsAsync(serviceProviderId, startDate, endDate);
-            return Ok(slots);
+            return Ok(await _slotService.GetSlotsAsync(serviceProviderId, startDate, endDate, type, status));
         }
 
         /// <summary>
@@ -38,13 +40,14 @@ namespace ClientNexus.API.Controllers
         [HttpGet("{id:int}", Name = "GetSlotById")]
         public async Task<ActionResult<SlotDTO>> GetSlotById(int id)
         {
-            var slot = await _slotService.GetSlotByIdAsync(id);
-            return Ok(slot);
+            return Ok(await _slotService.GetSlotByIdAsync(id));
         }
 
         // <summary>
         /// Create a new slot
         /// </summary>
+        /// 
+        //authorize: admin , provider
         [HttpPost]
         public async Task<ActionResult<SlotDTO>> CreateSlot([FromBody] SlotCreateDTO slotDTO)
         {
@@ -53,18 +56,31 @@ namespace ClientNexus.API.Controllers
         }
 
         // <summary>
-        /// Update aslot
+        /// Update a slot
         /// </summary>
+        /// 
+        //authorize: admin, provider
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<SlotDTO>> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
+        public async Task<IActionResult> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
         {
-            var slot = await _slotService.Update(id, slotDTO);
-            return NoContent();
+            return Ok(await _slotService.Update(id, slotDTO));
         }
 
+        // <summary>
+        /// Update specific slot status
+        /// </summary>
+        
+        //authorize: admin, provider, client 'to cancel'
+        [HttpPatch("{id:int}/status")]
+        public async Task<IActionResult> UpdateSlotStatus(int id, [FromBody] SlotStatus status)
+        {
+            return Ok( await _slotService.UpdateStatus(id, status));
+        }
         /// <summary>
         /// Delete slot
         /// </summary>
+         
+        //authorize: admin
         [HttpDelete("{id:int}", Name = "DeleteSlot")]
         public async Task<IActionResult> DeleteSlot(int id)
         {
