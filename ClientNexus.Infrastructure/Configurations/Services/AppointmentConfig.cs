@@ -13,7 +13,7 @@ namespace ClientNexus.Infrastructure.Configurations.Services
 
             builder.HasBaseType<Service>();
 
-            builder.Property(a => a.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at).IsRequired().HasColumnType("char(1)");
+            //builder.Property(a => a.AppointmentType).HasConversion(at => (char)at, at => (AppointmentType)at).IsRequired().HasColumnType("char(1)");
 
             builder.Property(a => a.SlotId).IsRequired();
 
