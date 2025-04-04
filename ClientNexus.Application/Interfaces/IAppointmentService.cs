@@ -1,4 +1,5 @@
 ﻿using ClientNexus.Application.DTO;
+using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,8 @@ namespace ClientNexus.Application.Interfaces
         Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit);
         Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit);
         Task<AppointmentDTO> CreateAsync([FromBody] AppointmentCreateDTO appointmentDTO);
-        Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);
+        //Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);
+        Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason);
         Task DeleteAsync(int id);
 
     }

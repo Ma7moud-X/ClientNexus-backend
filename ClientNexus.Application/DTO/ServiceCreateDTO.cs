@@ -13,11 +13,7 @@ namespace ClientNexus.Application.DTO
     {
         public string? Name { get; set; }
         public string? Description { get; set; }
-        [Required]
-        public ServiceStatus Status { get; set; } = ServiceStatus.Pending;
-        [Required]
-        //public ServiceType ServiceType { get; set; }
-        public decimal Price { get; set; }
+
         [Required]
         public int ClientId { get; set; }
         public int? ServiceProviderId { get; set; }

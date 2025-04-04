@@ -18,11 +18,13 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ISlotService _slotService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _slotService = slotService;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -63,52 +65,106 @@ namespace ClientNexus.Application.Services
             */
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
-        public async Task<AppointmentDTO> CreateAsync([FromBody] AppointmentCreateDTO appointmentDTO)
+        public async Task<AppointmentDTO> CreateAsync(AppointmentCreateDTO appointmentDTO)
         {
             if (appointmentDTO == null)
                 throw new ArgumentNullException("Appointment data cannot be null");
-            //check if foreign key is valid
-            if (await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == appointmentDTO.SlotId) == null)
-                throw new ArgumentException("Invalid Slot Id");
-            if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
-                throw new ArgumentException("Invalid Client Id");
-            if (await _unitOfWork.ServiceProviders.GetByIdAsync(appointmentDTO.AppointmentProviderId) == null)
-                throw new ArgumentException("Invalid Provider Id");
 
-            Appointment appoint = _mapper.Map<Appointment>(appointmentDTO);
-            appoint.ServiceType = ServiceType.Appointment;
+            //for concurrency control
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                //check if foreign key is valid
+                var slot = await _unitOfWork.Slots.GetByIdAsync(appointmentDTO.SlotId);
+                if (slot == null || slot.Status != SlotStatus.Available)
+                    throw new KeyNotFoundException("Slot is not Avaliable");
+                if (slot.Status != SlotStatus.Available)
+                    throw new ArgumentException("Slot not avaliable!");
+                if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
+                    throw new KeyNotFoundException("Invalid Client Id");
+                if (await _unitOfWork.ServiceProviders.GetByIdAsync(slot.ServiceProviderId) == null)
+                    throw new KeyNotFoundException("Invalid Provider Id");
 
-            var createdAppoint = await _unitOfWork.Appointments.AddAsync(appoint);
-            await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<AppointmentDTO>(createdAppoint);
+                Appointment appoint = _mapper.Map<Appointment>(appointmentDTO);
+                appoint.ServiceType = ServiceType.Appointment;
+                appoint.Status = ServiceStatus.Pending;
 
+                var createdAppoint = await _unitOfWork.Appointments.AddAsync(appoint);
+
+                //update slot status to be booked
+                await _slotService.UpdateStatus(slot.Id, SlotStatus.Booked);
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+                return _mapper.Map<AppointmentDTO>(createdAppoint);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;  //to preserve origonal error message and stack trace
+            }
+
+            
         }
-        public async Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO)
-        {
-            if (appointmentDTO == null || id != appointmentDTO.Id)
-                throw new ArgumentNullException("Invalid Data");
+        /*
+         public async Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO)
+         {
+             if (appointmentDTO == null || id != appointmentDTO.Id)
+                 throw new ArgumentNullException("Invalid Data");
 
+             Appointment? existingAppointment = await _unitOfWork.Appointments.GetByIdAsync(id);
+             if (existingAppointment == null)
+                 throw new KeyNotFoundException("Appointment not found");
+
+             // Validate foreign keys
+             var slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == appointmentDTO.SlotId);
+             if (slot == null)
+                 throw new ArgumentException("Invalid Slot Id");
+             if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
+                 throw new ArgumentException("Invalid Client Id");
+             if (await _unitOfWork.ServiceProviders.GetByIdAsync(slot.ServiceProviderId) == null)
+                 throw new ArgumentException("Invalid Provider Id");
+
+             Appointment updatedAppointment = _mapper.Map<Appointment>(appointmentDTO);
+
+             updatedAppointment = _unitOfWork.Appointments.Update(existingAppointment, updatedAppointment);
+             await _unitOfWork.SaveChangesAsync();
+
+             return _mapper.Map<AppointmentDTO>(updatedAppointment);
+         }
+        */
+        public async Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason)
+        {
             Appointment? existingAppointment = await _unitOfWork.Appointments.GetByIdAsync(id);
             if (existingAppointment == null)
                 throw new KeyNotFoundException("Appointment not found");
 
-            // Validate foreign keys
-            if (await _unitOfWork.Slots.GetByIdAsync(appointmentDTO.SlotId) == null)
-                throw new ArgumentException("Invalid Slot Id");
-            if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
-                throw new ArgumentException("Invalid Client Id");
-            if (await _unitOfWork.ServiceProviders.GetByIdAsync(appointmentDTO.AppointmentProviderId) == null)
-                throw new ArgumentException("Invalid Provider Id");
+            // Prevent invalid transitions
+            if (existingAppointment.Status == ServiceStatus.Done || existingAppointment.Status == ServiceStatus.Cancelled)
+                throw new InvalidOperationException("Cannot change status of a completed or cancelled appointment.");
 
-            Appointment updatedAppointment = _mapper.Map<Appointment>(appointmentDTO);
 
-            updatedAppointment = _unitOfWork.Appointments.Update(existingAppointment, updatedAppointment);
+            existingAppointment.Status = status;
+
+            if(status == ServiceStatus.InProgress)
+            {
+                existingAppointment.CheckInTime = DateTime.Now;
+            }
+            if (status == ServiceStatus.Done)
+            {
+                existingAppointment.CompletionTime = DateTime.Now;
+            }
+            //return slot status to avaliable in case of cancelling
+            if (status == ServiceStatus.Cancelled)
+            {
+                await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Available);
+                existingAppointment.CancellationReason = reason;
+                existingAppointment.CancellationTime = DateTime.Now;
+            }
             await _unitOfWork.SaveChangesAsync();
-
-            return _mapper.Map<AppointmentDTO>(updatedAppointment);
+            return _mapper.Map<AppointmentDTO>(existingAppointment);
         }
 
-        //to add: Patch to update status
+
         public async Task DeleteAsync(int id)
         {
             var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
@@ -117,6 +173,20 @@ namespace ClientNexus.Application.Services
 
             _unitOfWork.Appointments.Delete(appointment);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        //for notifications
+        public async Task<bool> MarkReminderSentAsync(int appointmentId)
+        {
+            var appointment = await _unitOfWork.Appointments.GetByIdAsync(appointmentId);
+            if (appointment == null)
+                throw new KeyNotFoundException("Appointment not found.");
+
+            appointment.ReminderSent = true;
+            appointment.ReminderSentTime = DateTime.Now;
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
 
     }

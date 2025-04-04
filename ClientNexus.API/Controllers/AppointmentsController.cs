@@ -1,6 +1,7 @@
 ﻿using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Services;
+using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,6 +47,7 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Create a new appointment.
         /// </summary>
+        // authorize: client, admin
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AppointmentCreateDTO appointmentDto)
         {
@@ -53,18 +55,21 @@ namespace ClientNexus.API.Controllers
             return CreatedAtRoute("GetAppointmentById", new { id = appointment.Id }, appointment);
         }
         /// <summary>
-        /// Update an existing appointment.
+        /// Update an existing appointment status.
         /// </summary>
+        // authorize: admin
+
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] AppointmentDTO appointmentDto)
+        public async Task<IActionResult> UpdateStatusAsync(int id, AppointmentStatusUpdateRequest request)
         {
-            var updatedAppointment = await _appointmentService.UpdateAsync(id, appointmentDto);
+            var updatedAppointment = await _appointmentService.UpdateStatusAsync(id, request.Status, request.Reason);
             return NoContent();
         }
-
         /// <summary>
         /// Delete an appointment by ID.
         /// </summary>
+        // authorize: admin 
+
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
