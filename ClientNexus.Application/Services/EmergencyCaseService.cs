@@ -38,7 +38,6 @@ public class EmergencyCaseService : IEmergencyCaseService
             MeetingLatitude = emergencyDTO.MeetingLatitude,
             MeetingLongitude = emergencyDTO.MeetingLongitude,
             ClientId = clientId,
-            ServiceType = ServiceType.Emergency,
             Status = ServiceStatus.Pending,
         };
 
@@ -110,6 +109,27 @@ public class EmergencyCaseService : IEmergencyCaseService
         }
 
         return new ClientEmergencyDTO { Id = emergencyCase.Id };
+    }
+
+    public async Task CancelEmergencyCaseAsync(int emergencyId)
+    {
+        var affectedCount = await _unitOfWork.SqlExecuteAsync(
+            @"
+            UPDATE ClientNexusSchema.Services SET Status = 'C' WHERE Id IN (
+                SELECT Services.Id FROM ClientNexusSchema.Services, ClientNexusSchema.EmergencyCases
+                WHERE ClientNexusSchema.Services.Id = ClientNexusSchema.EmergencyCases.Id
+                    AND ClientNexusSchema.EmergencyCases.Id = @emergencyId
+                    AND ClientNexusSchema.Services.Status = 'P')
+        ",
+            new Parameter("@emergencyId", emergencyId)
+        );
+
+        if (affectedCount == 0)
+        {
+            throw new InvalidOperationException(
+                "Invalid operation. Emergency case does not exist or isn't pending."
+            );
+        }
     }
 
     // public async Task<bool> AssignServiceProviderAsync(

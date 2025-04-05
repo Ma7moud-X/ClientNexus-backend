@@ -12,4 +12,6 @@ public interface IEmergencyCaseService
         double notifyServicePorvidersWithinMeters = 3000,
         int allowOffersWithinMinutes = 160
     );
+
+    Task CancelEmergencyCaseAsync(int emergencyId);
 }

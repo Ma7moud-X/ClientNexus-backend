@@ -4,6 +4,7 @@ using ClientNexus.Application.Domain;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
+using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Application.Services;
@@ -12,15 +13,16 @@ public class OfferService : IOfferService
 {
     private readonly ICache _cache;
     private readonly IEventPublisher _eventPublisher;
-    private const string _keyTemplate = "clientnexus:services:{0}:";
+    private readonly IUnitOfWork _unitOfWork;
 
-    public OfferService(ICache cache, IEventPublisher eventPublisher)
+    public OfferService(ICache cache, IEventPublisher eventPublisher, IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(cache);
         ArgumentNullException.ThrowIfNull(eventPublisher);
 
         _cache = cache;
         _eventPublisher = eventPublisher;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> AllowOffersAsync<T>(T service, int timeoutInMin = 16)
@@ -113,7 +115,7 @@ public class OfferService : IOfferService
         );
 
         TimeSpan? requestTTL = await _cache.GetTTLAsync(
-            $"{string.Format(_keyTemplate, serviceId)}request"
+            string.Format(CacheConstants.ServiceRequestKeyTemplate, serviceId)
         );
 
         if (requestTTL is null || requestTTL.Value.TotalMinutes <= 1)
@@ -121,27 +123,45 @@ public class OfferService : IOfferService
             throw new Exception("Request is no longer accepting offers");
         }
 
-        _cache.StartTransaction();
-        var hashSet = _cache.SetHashObjectAsync(
-            string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
-            serviceProvider.ServiceProviderId.ToString(),
+        // _cache.StartTransaction();
+        // var hashSet = _cache.SetHashObjectAsync(
+        //     string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
+        //     serviceProvider.ServiceProviderId.ToString(),
+        //     price,
+        //     @override: false
+        // );
+        // var expirySet = _cache.SetExpiryAsync(
+        //     string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
+        //     offerTTL < requestTTL ? offerTTL : requestTTL.Value
+        // );
+        // var transactionCommitted1 = await _cache.CommitTransactionAsync();
+
+        // if (!transactionCommitted1)
+        // {
+        //     throw new Exception(
+        //         "Error creating the offer. Transaction saving offer price has failed"
+        //     );
+        // }
+
+        // if (!await hashSet)
+        // {
+        //     throw new Exception(
+        //         "Can't make another offer without waiting for previous offer to expire"
+        //     );
+        // }
+
+        var offerSet = await _cache.SetObjectAsync(
+            string.Format(
+                CacheConstants.ServiceOfferPriceKeyTemplate,
+                serviceId,
+                serviceProvider.ServiceProviderId
+            ),
             price,
+            offerTTL < requestTTL ? offerTTL : requestTTL.Value,
             @override: false
         );
-        var expirySet = _cache.SetExpiryAsync(
-            string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
-            offerTTL < requestTTL ? offerTTL : requestTTL.Value
-        );
-        var transactionCommitted1 = await _cache.CommitTransactionAsync();
 
-        if (!transactionCommitted1)
-        {
-            throw new Exception(
-                "Error creating the offer. Transaction saving offer price has failed"
-            );
-        }
-
-        if (!await hashSet)
+        if (!offerSet)
         {
             throw new Exception(
                 "Can't make another offer without waiting for previous offer to expire"
@@ -184,11 +204,50 @@ public class OfferService : IOfferService
         throw new Exception("Error publishing offer");
     }
 
-    public async Task<decimal?> GetOfferPriceAsync(int serviceId, int ServiceProviderId)
+    public async Task<decimal?> GetOfferPriceAsync(int serviceId, int serviceProviderId)
     {
-        return await _cache.GetHashObjectAsync<decimal?>(
-            string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
-            ServiceProviderId.ToString()
+        return await _cache.GetObjectAsync<decimal?>(
+            string.Format(CacheConstants.ServiceOfferPriceKeyTemplate, serviceId, serviceProviderId)
+        );
+    }
+
+    public async Task AcceptOfferAsync(int serviceId, int serviceProviderId)
+    {
+        var price = await GetOfferPriceAsync(serviceId, serviceProviderId);
+        if (price is null)
+        {
+            throw new Exception("Offer has expired");
+        }
+
+        var serviceStatusEnumerable = await _unitOfWork.Services.GetByConditionAsync(
+            s => s.Id == serviceId,
+            s => s.Status
+        );
+
+        if (serviceStatusEnumerable is null || !serviceStatusEnumerable.Any())
+        {
+            throw new Exception("Service does not exist");
+        }
+
+        var serviceStatus = serviceStatusEnumerable.FirstOrDefault();
+        if (serviceStatus != ServiceStatus.Pending)
+        {
+            throw new Exception("Service is not in a pending state");
+        }
+
+        throw new NotImplementedException();    // TODO: Implement the logic to accept the offer
+
+        int affectedCount = await _unitOfWork.SqlExecuteAsync(
+            @"
+            
+
+
+            UPDATE ClientNexusSchema.Services SET Status = 'I', Price = @price, ServiceProviderId = @serviceProviderId
+            WHERE Id = @serviceId;
+        ",
+            new Parameter("@price", price),
+            new Parameter("@serviceProviderId", serviceProviderId),
+            new Parameter("@serviceId", serviceId)
         );
     }
 }

@@ -1,3 +1,5 @@
+using ClientNexus.Domain.Enums;
+
 namespace ClientNexus.Domain.Entities.Services
 {
     public class EmergencyCase : Service
@@ -8,5 +10,10 @@ namespace ClientNexus.Domain.Entities.Services
 
         // public int EmergencyCategoryId { get; set; }
         // public EmergencyCategory? EmergencyCategory { get; set; }
+
+        public EmergencyCase()
+        {
+            ServiceType = ServiceType.Emergency;
+        }
     }
 }

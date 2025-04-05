@@ -43,20 +43,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IEmergencyCaseService emergencyCaseService) =>
+    async (IOfferService offerService) =>
     {
-        return await emergencyCaseService.InitiateEmergencyCaseAsync(
-            new CreateEmergencyCaseDTO
-            {
-                Name = "Test",
-                Description = "Test",
-                MeetingLongitude = 30.050631105885007,
-                MeetingLatitude = 31.247426029669437,
-            },
-            2,
-            "Mahmoud",
-            "Abuelnaga"
-        );
+        return await offerService.GetOfferPriceAsync(1, 1);
     }
 );
 app.MapControllers();

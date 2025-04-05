@@ -65,7 +65,7 @@ public class ChannelOfferListenerService : IChannelOfferListenerService
         }
 
         await _eventListener.SubscribeAsync(
-            $"{string.Format(CacheConstants.ServiceKeyPrefixTemplate, serviceId)}offersChannel"
+            string.Format(CacheConstants.OffersChannelKeyTemplate, serviceId)
         );
         _serviceId = serviceId;
     }
