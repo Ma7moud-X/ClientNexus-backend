@@ -146,7 +146,7 @@ public class UnitOfWork : IUnitOfWork
     public async Task<IEnumerable<T>> SqlGetListAsync<T>(
         string query,
         params Parameter[] parameters
-    )
+    ) where T : class
     {
         return await _context
             .Database.SqlQueryRaw<T>(
@@ -156,7 +156,7 @@ public class UnitOfWork : IUnitOfWork
             .ToListAsync();
     }
 
-    public async Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
+    public async Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters) where T : class
     {
         return await _context
             .Database.SqlQueryRaw<T>(

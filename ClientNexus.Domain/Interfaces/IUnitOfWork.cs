@@ -82,8 +82,10 @@ public interface IUnitOfWork : IDisposable
 
     // Functions
     Task<int> SaveChangesAsync();
-    Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters);
-    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params Parameter[] parameters);
+    Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
+    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
     Task<int> SqlExecuteAsync(string query, params Parameter[] parameters);
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
