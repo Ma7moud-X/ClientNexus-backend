@@ -43,9 +43,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet(
     "/",
-    async (IOfferService offerService) =>
+    async (IServiceProviderService serviceProviderService) =>
     {
-        return await offerService.GetOfferPriceAsync(1, 1);
+        return await serviceProviderService.SetUnvavailableForEmergencyAsync(2);
     }
 );
 app.MapControllers();

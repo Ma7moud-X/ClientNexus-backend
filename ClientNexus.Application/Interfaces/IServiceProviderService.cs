@@ -10,4 +10,5 @@ public interface IServiceProviderService
         double latitude,
         double radiusInMeters
     );
+    Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId);
 }
