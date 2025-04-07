@@ -33,6 +33,7 @@ namespace ClientNexus.Application.Services
                         sp.ApprovedById,
                         sp.BlockedById,
                         sp.NotificationToken,
+                        sp.PhoneNumber,
                     }
                 )
             ).FirstOrDefault();
@@ -47,12 +48,13 @@ namespace ClientNexus.Application.Services
             return res.IsAvailableForEmergency
                 && res.ApprovedById != null
                 && res.BlockedById == null
-                && res.NotificationToken != null;
+                && res.NotificationToken != null
+                && res.PhoneNumber != null;
         }
 
         public async Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(
             int serviceProviderId
-        ) // TODO: to be implemented
+        )
         {
             return await _unitOfWork.SqlGetSingleAsync<ServiceProviderOverview>(
                 @"
