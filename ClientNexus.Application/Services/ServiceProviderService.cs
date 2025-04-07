@@ -129,9 +129,6 @@ namespace ClientNexus.Application.Services
             {
                 return false;
             }
-            {
-                return false;
-            }
 
             int affectedCount = await _unitOfWork.SqlExecuteAsync(
                 @"
