@@ -14,18 +14,31 @@ public class OfferService : IOfferService
     private readonly ICache _cache;
     private readonly IEventPublisher _eventPublisher;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBaseServiceService _baseServiceService;
+    private readonly IServiceProviderService _serviceProviderService;
 
-    public OfferService(ICache cache, IEventPublisher eventPublisher, IUnitOfWork unitOfWork)
+    public OfferService(
+        ICache cache,
+        IEventPublisher eventPublisher,
+        IUnitOfWork unitOfWork,
+        IBaseServiceService baseServiceService,
+        IServiceProviderService serviceProviderService
+    )
     {
-        ArgumentNullException.ThrowIfNull(cache);
-        ArgumentNullException.ThrowIfNull(eventPublisher);
-
         _cache = cache;
         _eventPublisher = eventPublisher;
         _unitOfWork = unitOfWork;
+        _baseServiceService = baseServiceService;
+        _serviceProviderService = serviceProviderService;
     }
 
-    public async Task<bool> AllowOffersAsync<T>(T service, int timeoutInMin = 16)
+    public async Task<bool> AllowOffersAsync<T>(
+        T service,
+        int clientId,
+        double MeetingLongitude,
+        double MeetingLatitude,
+        int timeoutInMin = 16
+    )
         where T : ServiceProviderServiceDTO
     {
         ArgumentNullException.ThrowIfNull(service);
@@ -37,49 +50,39 @@ public class OfferService : IOfferService
             );
         }
 
-        // _cache.StartTransaction();
+        _cache.StartTransaction();
 
-        // var listCreated = _cache.AddToListStringAsync(
-        //     $"{string.Format(_keyTemplate, service.ServiceId)}offersList",
-        //     "empty"
-        // );
-        // var listExpirySet = _cache.SetExpiryAsync(
-        //     $"{string.Format(_keyTemplate, service.ServiceId)}offersList",
-        //     TimeSpan.FromMinutes(timeoutInMin)
-        // );
-        // var listEmptied = _cache.LeftPopListStringAsync(
-        //     $"{string.Format(_keyTemplate, service.ServiceId)}offersList"
-        // );
-
-        // var hashCreated = _cache.SetHashStringAsync(
-        //     $"{string.Format(_keyTemplate, service.ServiceId)}offersHash",
-        //     "empty",
-        //     "empty"
-        // );
-        // var hashEmptied = _cache.RemoveHashFieldAsync("empty", "empty");
-        // var hashExpirySet = _cache.SetExpiryAsync(
-        //     $"{string.Format(_keyTemplate, service.ServiceId)}offersHash",
-        //     TimeSpan.FromMinutes(timeoutInMin)
-        // );
-
-        // bool transactionCommitted;
-        // try
-        // {
-        //     transactionCommitted = await _cache.CommitTransactionAsync();
-        // }
-        // catch (Exception ex)
-        // {
-        //     throw new Exception("Error committing transaction", ex);
-        // }
-
-        var created = await _cache.SetObjectAsync(
+        var requestCached = _cache.SetObjectAsync(
             string.Format(CacheConstants.ServiceRequestKeyTemplate, service.ServiceId),
             service,
-            TimeSpan.FromMinutes(timeoutInMin),
-            @override: false
+            TimeSpan.FromMinutes(timeoutInMin)
         );
 
-        return created;
+        var longitudeCached = _cache.SetObjectAsync(
+            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, service.ServiceId),
+            MeetingLongitude,
+            TimeSpan.FromMinutes(timeoutInMin)
+        );
+
+        var latitudeCached = _cache.SetObjectAsync(
+            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, service.ServiceId),
+            MeetingLatitude,
+            TimeSpan.FromMinutes(timeoutInMin)
+        );
+
+        // var hasActiveRequestCached = _cache.SetObjectAsync(
+        //     string.Format(CacheConstants.ClientHasActiveEmergencyRequestKeyTemplate, clientId),
+        //     service.ServiceId,
+        //     TimeSpan.FromMinutes(timeoutInMin)
+        // );
+
+        var transactionCommitted = await _cache.CommitTransactionAsync();
+        if (!transactionCommitted)
+        {
+            throw new Exception("Error creating the service request.");
+        }
+
+        return await requestCached;
     }
 
     public async Task CreateOfferAsync(
@@ -122,33 +125,6 @@ public class OfferService : IOfferService
         {
             throw new Exception("Request is no longer accepting offers");
         }
-
-        // _cache.StartTransaction();
-        // var hashSet = _cache.SetHashObjectAsync(
-        //     string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
-        //     serviceProvider.ServiceProviderId.ToString(),
-        //     price,
-        //     @override: false
-        // );
-        // var expirySet = _cache.SetExpiryAsync(
-        //     string.Format(CacheConstants.OffersHashKeyTemplate, serviceId),
-        //     offerTTL < requestTTL ? offerTTL : requestTTL.Value
-        // );
-        // var transactionCommitted1 = await _cache.CommitTransactionAsync();
-
-        // if (!transactionCommitted1)
-        // {
-        //     throw new Exception(
-        //         "Error creating the offer. Transaction saving offer price has failed"
-        //     );
-        // }
-
-        // if (!await hashSet)
-        // {
-        //     throw new Exception(
-        //         "Can't make another offer without waiting for previous offer to expire"
-        //     );
-        // }
 
         var offerSet = await _cache.SetObjectAsync(
             string.Format(
@@ -211,12 +187,12 @@ public class OfferService : IOfferService
         );
     }
 
-    public async Task AcceptOfferAsync(int serviceId, int serviceProviderId)
+    public async Task AcceptOfferAsync(int serviceId, int clientId, int serviceProviderId)
     {
         var price = await GetOfferPriceAsync(serviceId, serviceProviderId);
         if (price is null)
         {
-            throw new Exception("Offer has expired");
+            throw new Exception("Offer has expired or does not exist");
         }
 
         var serviceStatusEnumerable = await _unitOfWork.Services.GetByConditionAsync(
@@ -232,22 +208,46 @@ public class OfferService : IOfferService
         var serviceStatus = serviceStatusEnumerable.FirstOrDefault();
         if (serviceStatus != ServiceStatus.Pending)
         {
-            throw new Exception("Service is not in a pending state");
+            throw new Exception("Service can't accept offers");
         }
 
-        throw new NotImplementedException();    // TODO: Implement the logic to accept the offer
-
-        int affectedCount = await _unitOfWork.SqlExecuteAsync(
-            @"
-            
-
-
-            UPDATE ClientNexusSchema.Services SET Status = 'I', Price = @price, ServiceProviderId = @serviceProviderId
-            WHERE Id = @serviceId;
-        ",
-            new Parameter("@price", price),
-            new Parameter("@serviceProviderId", serviceProviderId),
-            new Parameter("@serviceId", serviceId)
+        bool unAvailableSet = await _serviceProviderService.SetUnvavailableForEmergencyAsync(
+            serviceProviderId
         );
+        if (!unAvailableSet)
+        {
+            throw new Exception("Service provider is no longer available");
+        }
+
+        var assigned = await _baseServiceService.AssignServiceProviderAsync(
+            serviceId,
+            clientId,
+            serviceProviderId,
+            price.Value
+        );
+
+        if (!assigned)
+        {
+            throw new Exception("Failed to assign service provider to service");
+        }
+
+        _cache.StartTransaction();
+
+        var requestRemoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.ServiceRequestKeyTemplate, serviceId)
+        );
+        var cachedOffersRemoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId)
+        );
+        var longitudeRmoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, serviceId)
+        );
+        var latitudeRmoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, serviceId)
+        );
+        
+        var commited = _cache.CommitTransactionAsync();
+
+        // TODO: Add logic of notifying the servAice provider about the offer acceptance
     }
 }

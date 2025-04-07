@@ -15,8 +15,14 @@ public interface IOfferService
     );
 
     Task<decimal?> GetOfferPriceAsync(int serviceId, int ServiceProviderId);
-    Task<bool> AllowOffersAsync<T>(T service, int timeoutInMin = 16)
+    Task<bool> AllowOffersAsync<T>(
+        T service,
+        int clientId,
+        double MeetingLongitude,
+        double MeetingLatitude,
+        int timeoutInMin = 16
+    )
         where T : ServiceProviderServiceDTO;
 
-    Task AcceptOfferAsync(int serviceId, int serviceProviderId);
+    Task AcceptOfferAsync(int serviceId, int clientId, int serviceProviderId);
 }

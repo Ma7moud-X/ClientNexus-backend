@@ -22,9 +22,19 @@ namespace ClientNexus.Application.Services
             _baseUserService = baseUserService;
         }
 
-        public Task<ServiceProviderOverview> GetServiceProviderOverviewAsync(int serviceProviderId) // TODO: to be implemented
+        public async Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(
+            int serviceProviderId
+        ) // TODO: to be implemented
         {
-            throw new NotImplementedException();
+            return await _unitOfWork.SqlGetSingleAsync<ServiceProviderOverview>(
+                @"
+                select ServiceProviders.Id as ServiceProviderId, FirstName, LastName, YearsOfExperience, MainImage as ImageUrl, Rate as Rating
+                from ClientNexusSchema.ServiceProviders join ClientNexusSchema.BaseUsers
+                on BaseUsers.Id = ServiceProviders.Id
+                where ServiceProviders.Id = @serviceProviderId
+                ",
+                new Parameter("@serviceProviderId", serviceProviderId)
+            );
         }
 
         public async Task<
@@ -71,7 +81,7 @@ namespace ClientNexus.Application.Services
                 SELECT IsAvailableForEmergency FROM ClientNexusSchema.ServiceProviders
                 WITH (UPDLOCK, HOLDLOCK)
                 WHERE Id = @serviceProviderId
-            ",
+                ",
                 new Parameter("@serviceProviderId", serviceProviderId)
             );
 

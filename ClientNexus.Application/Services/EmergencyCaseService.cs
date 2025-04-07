@@ -1,3 +1,4 @@
+using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
@@ -12,18 +13,21 @@ public class EmergencyCaseService : IEmergencyCaseService
     private readonly IOfferService _offerService;
     private readonly IServiceProviderService _serviceProviderService;
     private readonly IPushNotification _pushNotificationService;
+    private readonly ICache _cache;
 
     public EmergencyCaseService(
         IUnitOfWork unitOfWork,
         IOfferService offerService,
         IServiceProviderService serviceProviderService,
-        IPushNotification pushNotificationService
+        IPushNotification pushNotificationService,
+        ICache cache
     )
     {
         _unitOfWork = unitOfWork;
         _offerService = offerService;
         _serviceProviderService = serviceProviderService;
         _pushNotificationService = pushNotificationService;
+        _cache = cache;
     }
 
     private async Task<EmergencyCase> CreateEmergencyCaseAsync(
@@ -61,7 +65,7 @@ public class EmergencyCaseService : IEmergencyCaseService
         string clientFirstName,
         string clientLastName,
         double notifyServicePorvidersWithinMeters = 3000,
-        int allowOffersWithinMinutes = 160
+        int allowOffersWithinMinutes = 16
     )
     {
         ArgumentNullException.ThrowIfNull(emergencyDTO);
@@ -77,15 +81,16 @@ public class EmergencyCaseService : IEmergencyCaseService
                 ClientLastName = clientLastName,
                 Name = emergencyDTO.Name,
                 Description = emergencyDTO.Description,
-                MeetingLatitude = emergencyDTO.MeetingLatitude,
-                MeetingLongitude = emergencyDTO.MeetingLongitude,
             },
+            clientId,
+            emergencyDTO.MeetingLongitude,
+            emergencyDTO.MeetingLatitude,
             allowOffersWithinMinutes
         );
 
         if (!offersAllowed)
         {
-            throw new Exception("Error while allowing offers");
+            throw new Exception("Offers are already allowed for this emergency case.");
         }
 
         var providersTokens =
@@ -111,50 +116,63 @@ public class EmergencyCaseService : IEmergencyCaseService
         return new ClientEmergencyDTO { Id = emergencyCase.Id };
     }
 
-    public async Task CancelEmergencyCaseAsync(int emergencyId)
+    public async Task<bool> CheckIfIdExistsAsync(int emergencyCaseId)
     {
-        var affectedCount = await _unitOfWork.SqlExecuteAsync(
-            @"
-            UPDATE ClientNexusSchema.Services SET Status = 'C' WHERE Id IN (
-                SELECT Services.Id FROM ClientNexusSchema.Services, ClientNexusSchema.EmergencyCases
-                WHERE ClientNexusSchema.Services.Id = ClientNexusSchema.EmergencyCases.Id
-                    AND ClientNexusSchema.EmergencyCases.Id = @emergencyId
-                    AND ClientNexusSchema.Services.Status = 'P')
-        ",
-            new Parameter("@emergencyId", emergencyId)
-        );
-
-        if (affectedCount == 0)
-        {
-            throw new InvalidOperationException(
-                "Invalid operation. Emergency case does not exist or isn't pending."
-            );
-        }
+        return await _unitOfWork.EmergencyCases.CheckAnyExistsAsync(ec => ec.Id == emergencyCaseId);
     }
 
-    // public async Task<bool> AssignServiceProviderAsync(
-    //     int emergencyCaseId,
-    //     int clientID,
-    //     int serviceProviderId,
-    //     decimal price
-    // )
-    // {
-    //     var emergencyCase = (
-    //         await _unitOfWork.EmergencyCases.GetByConditionAsync(
-    //             condExp: ec => ec.Id == emergencyCaseId && ec.ClientId == clientID,
-    //             selectExp: sp => new { sp.CreatedAt, sp.ServiceProviderId }
-    //         )
-    //     ).FirstOrDefault();
+    public async Task<bool> ClientHasActiveEmergencyAsync(int clientId)
+    {
+        throw new NotImplementedException();
+    }
 
-    //     bool serviceProviderExists = await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(sp =>
-    //         sp.Id == serviceProviderId
-    //     );
-    //     if (!serviceProviderExists)
-    //     {
-    //         throw new ArgumentException(
-    //             "Invalid service provider ID. Service provider does not exist.",
-    //             nameof(serviceProviderId)
-    //         );
-    //     }
-    // }
+    public async Task<(double longitude, double latitude)?> GetMeetingLocationAsync(
+        int emergencyCaseId
+    )
+    {
+        double? longitude = await _cache.GetObjectAsync<double?>(
+            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, emergencyCaseId)
+        );
+        double? latitude = await _cache.GetObjectAsync<double?>(
+            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, emergencyCaseId)
+        );
+
+        if (longitude is null || latitude is null)
+        {
+            return null;
+        }
+
+        return ((double)longitude, (double)latitude);
+    }
+
+    public async Task<(double longitude, double latitude)?> GetServiceProviderLocationAsync(
+        int serviceProviderId
+    )
+    {
+        var res = await _cache.GetGeoLocationAsync(
+            CacheConstants.AvailableForEmergencyServiceProvidersLocationsKey,
+            serviceProviderId.ToString()
+        );
+
+        if (res is null)
+        {
+            return null;
+        }
+
+        return (res.Longitude, res.Latitude);
+    }
+
+    public async Task<bool> SetServiceProviderLocationAsync(
+        int serviceProviderId,
+        double longitude,
+        double latitude
+    )
+    {
+        return await _cache.AddGeoLocationAsync(
+            CacheConstants.AvailableForEmergencyServiceProvidersLocationsKey,
+            longitude,
+            latitude,
+            serviceProviderId.ToString()
+        );
+    }
 }
