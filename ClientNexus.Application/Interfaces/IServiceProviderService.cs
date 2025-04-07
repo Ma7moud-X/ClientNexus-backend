@@ -13,9 +13,4 @@ public interface IServiceProviderService
     Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId);
     Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId);
     Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId);
-    // Task NotifyAboutOfferAcceptanceAsync(
-    //     int serviceProviderId,
-    //     int serviceId,
-    //     string clientPhoneNumber
-    // );
 }

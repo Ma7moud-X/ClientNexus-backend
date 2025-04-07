@@ -16,13 +16,15 @@ public class OfferService : IOfferService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBaseServiceService _baseServiceService;
     private readonly IServiceProviderService _serviceProviderService;
+    private readonly IPushNotification _pushNotificationService;
 
     public OfferService(
         ICache cache,
         IEventPublisher eventPublisher,
         IUnitOfWork unitOfWork,
         IBaseServiceService baseServiceService,
-        IServiceProviderService serviceProviderService
+        IServiceProviderService serviceProviderService,
+        IPushNotification pushNotificationService
     )
     {
         _cache = cache;
@@ -30,6 +32,7 @@ public class OfferService : IOfferService
         _unitOfWork = unitOfWork;
         _baseServiceService = baseServiceService;
         _serviceProviderService = serviceProviderService;
+        _pushNotificationService = pushNotificationService;
     }
 
     public async Task<bool> AllowOffersAsync<T>(
@@ -239,15 +242,48 @@ public class OfferService : IOfferService
         var cachedOffersRemoved = _cache.RemoveKeyAsync(
             string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId)
         );
-        var longitudeRmoved = _cache.RemoveKeyAsync(
+
+        var MeetingLongitude = _cache.GetObjectAsync<double?>(
             string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, serviceId)
         );
-        var latitudeRmoved = _cache.RemoveKeyAsync(
+        var longitudeRemoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, serviceId)
+        );
+
+        var MeetingLatitude = _cache.GetObjectAsync<double?>(
             string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, serviceId)
         );
-        
-        var commited = _cache.CommitTransactionAsync();
+        var latitudeRemoved = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, serviceId)
+        );
 
-        // TODO: Add logic of notifying the servAice provider about the offer acceptance
+        var commited = await _cache.CommitTransactionAsync();
+
+        var providerToken = (
+            await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                sp => sp.Id == serviceProviderId,
+                sp => sp.NotificationToken
+            )
+        ).FirstOrDefault();
+
+        if (providerToken is null)
+        {
+            throw new Exception("Service provider does not exist");
+        }
+
+        var clientPhoneNumber = (
+            await _unitOfWork.Clients.GetByConditionAsync(c => c.Id == clientId, c => c.PhoneNumber)
+        ).FirstOrDefault();
+
+        if (clientPhoneNumber is null)
+        {
+            throw new Exception("Client phone number does not exist");
+        }
+
+        await _pushNotificationService.SendNotificationAsync(
+            "Offer accepted",
+            $"Meeting Longitude: {await MeetingLongitude}\nMeeting Latitude: {await MeetingLatitude}\nClient Phone Number: {clientPhoneNumber}\nService Id: {serviceId}",
+            providerToken
+        );
     }
 }
