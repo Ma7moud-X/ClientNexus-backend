@@ -22,6 +22,32 @@ namespace ClientNexus.Application.Services
             _baseUserService = baseUserService;
         }
 
+        public async Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId)
+        {
+            var res = (
+                await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                    sp => sp.Id == serviceProviderId,
+                    sp => new
+                    {
+                        sp.IsAvailableForEmergency,
+                        sp.ApprovedById,
+                        sp.BlockedById,
+                    }
+                )
+            ).FirstOrDefault();
+
+            if (res is null)
+            {
+                throw new ArgumentException(
+                    $"Service provider with ID {serviceProviderId} not found"
+                );
+            }
+
+            return res.IsAvailableForEmergency
+                && res.ApprovedById != null
+                && res.BlockedById == null;
+        }
+
         public async Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(
             int serviceProviderId
         ) // TODO: to be implemented
@@ -70,6 +96,38 @@ namespace ClientNexus.Application.Services
             }
 
             return await _baseUserService.GetNotificationTokensAsync(providersIds);
+        }
+
+        public async Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId)
+        {
+            var res = (
+                await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                    sp => sp.Id == serviceProviderId,
+                    sp => new { sp.ApprovedById, sp.BlockedById }
+                )
+            ).FirstOrDefault();
+
+            if (res is null)
+            {
+                throw new ArgumentException(
+                    $"Service provider with ID {serviceProviderId} not found"
+                );
+            }
+
+            if (res.ApprovedById == null || res.BlockedById != null)
+            {
+                return false;
+            }
+
+            int affectedCount = await _unitOfWork.SqlExecuteAsync(
+                @"
+                UPDATE ClientNexusSchema.ServiceProviders SET IsAvailableForEmergency = 1
+                WHERE Id = @serviceProviderId;
+                ",
+                new Parameter("@serviceProviderId", serviceProviderId)
+            );
+
+            return affectedCount == 1;
         }
 
         public async Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId)
