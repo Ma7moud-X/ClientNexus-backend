@@ -32,6 +32,7 @@ namespace ClientNexus.Application.Services
                         sp.IsAvailableForEmergency,
                         sp.ApprovedById,
                         sp.BlockedById,
+                        sp.NotificationToken,
                     }
                 )
             ).FirstOrDefault();
@@ -45,7 +46,8 @@ namespace ClientNexus.Application.Services
 
             return res.IsAvailableForEmergency
                 && res.ApprovedById != null
-                && res.BlockedById == null;
+                && res.BlockedById == null
+                && res.NotificationToken != null;
         }
 
         public async Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(
@@ -103,7 +105,12 @@ namespace ClientNexus.Application.Services
             var res = (
                 await _unitOfWork.ServiceProviders.GetByConditionAsync(
                     sp => sp.Id == serviceProviderId,
-                    sp => new { sp.ApprovedById, sp.BlockedById }
+                    sp => new
+                    {
+                        sp.ApprovedById,
+                        sp.BlockedById,
+                        sp.NotificationToken,
+                    }
                 )
             ).FirstOrDefault();
 
@@ -114,7 +121,14 @@ namespace ClientNexus.Application.Services
                 );
             }
 
-            if (res.ApprovedById == null || res.BlockedById != null)
+            if (
+                res.ApprovedById == null
+                || res.BlockedById != null
+                || res.NotificationToken == null
+            )
+            {
+                return false;
+            }
             {
                 return false;
             }
