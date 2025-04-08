@@ -121,9 +121,62 @@ public class EmergencyCaseService : IEmergencyCaseService
         return await _unitOfWork.EmergencyCases.CheckAnyExistsAsync(ec => ec.Id == emergencyCaseId);
     }
 
-    public async Task<bool> ClientHasActiveEmergencyAsync(int clientId)
+    public async Task<bool> HasActiveEmergencyForClientAsync(int clientId)
     {
-        throw new NotImplementedException();
+        var emergencyCase = (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                ec =>
+                    ec.CreatedAt >= DateTime.UtcNow.AddHours(-6)
+                    && ec.ClientId == clientId
+                    && ec.Status == ServiceStatus.InProgress,
+                limit: 1
+            )
+        ).FirstOrDefault();
+
+        return emergencyCase is not null;
+    }
+
+    public async Task<bool> HasActiveEmergencyForServiceProviderAsync(int serviceProviderId)
+    {
+        var emergencyCase = (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                ec =>
+                    ec.CreatedAt >= DateTime.UtcNow.AddHours(-6)
+                    && ec.ServiceProviderId == serviceProviderId
+                    && ec.Status == ServiceStatus.InProgress,
+                limit: 1
+            )
+        ).FirstOrDefault();
+
+        return emergencyCase is not null;
+    }
+
+    public async Task<bool> IsClientAllowedToCreateEmergencyAsync(int clientId)
+    {
+        var res = (
+            await _unitOfWork.Clients.GetByConditionAsync(
+                c => c.Id == clientId,
+                c => new
+                {
+                    c.IsBlocked,
+                    c.IsDeleted,
+                    c.PhoneNumber,
+                    c.NotificationToken,
+                },
+                limit: 1
+            )
+        ).FirstOrDefault();
+
+        if (res is null)
+        {
+            throw new ArgumentException($"Client with {clientId} does not exist");
+        }
+
+        return !res.IsBlocked
+            && !res.IsDeleted
+            && res.PhoneNumber != null
+            && res.NotificationToken != null
+            && !await HasActiveEmergencyForClientAsync(clientId);
     }
 
     public async Task<(double longitude, double latitude)?> GetMeetingLocationAsync(

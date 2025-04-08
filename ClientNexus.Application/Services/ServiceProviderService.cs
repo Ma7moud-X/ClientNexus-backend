@@ -1,6 +1,7 @@
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
+using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Application.Services
@@ -34,6 +35,7 @@ namespace ClientNexus.Application.Services
                         sp.BlockedById,
                         sp.NotificationToken,
                         sp.PhoneNumber,
+                        sp.IsDeleted,
                     }
                 )
             ).FirstOrDefault();
@@ -45,11 +47,23 @@ namespace ClientNexus.Application.Services
                 );
             }
 
+            var emergencyCase = (
+                await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                    ec =>
+                        ec.CreatedAt >= DateTime.UtcNow.AddHours(-6)
+                        && ec.ServiceProviderId == serviceProviderId
+                        && ec.Status == ServiceStatus.InProgress,
+                    limit: 1
+                )
+            ).FirstOrDefault();
+
             return res.IsAvailableForEmergency
                 && res.ApprovedById != null
                 && res.BlockedById == null
                 && res.NotificationToken != null
-                && res.PhoneNumber != null;
+                && res.PhoneNumber != null
+                && emergencyCase is null
+                && !res.IsDeleted;
         }
 
         public async Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(

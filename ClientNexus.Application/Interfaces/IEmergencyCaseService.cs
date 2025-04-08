@@ -14,7 +14,7 @@ public interface IEmergencyCaseService
     );
 
     Task<bool> CheckIfIdExistsAsync(int emergencyCaseId);
-    Task<bool> ClientHasActiveEmergencyAsync(int clientId);
+    Task<bool> HasActiveEmergencyForClientAsync(int clientId);
     Task<(double longitude, double latitude)?> GetMeetingLocationAsync(int emergencyCaseId);
     Task<(double longitude, double latitude)?> GetServiceProviderLocationAsync(
         int serviceProviderId
@@ -24,4 +24,7 @@ public interface IEmergencyCaseService
         double longitude,
         double latitude
     );
+
+    Task<bool> HasActiveEmergencyForServiceProviderAsync(int serviceProviderId);
+    Task<bool> IsClientAllowedToCreateEmergencyAsync(int clientId);
 }
