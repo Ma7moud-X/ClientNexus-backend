@@ -4,6 +4,7 @@ using ClientNexus.Application.Services;
 using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClientNexus.API.Controllers
 {
@@ -29,6 +30,7 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Get all appointments for a specific provider.
         /// </summary>
+        // authorize: admin, provider
         [HttpGet("provider/{providerId:int}")]
         public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetByProviderId(int providerId, int offset, int limit)
         {
@@ -38,6 +40,7 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Get all appointments for a specific client.
         /// </summary>
+        // authorize: admin, client
         [HttpGet("client/{clientId:int}")]
         public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetByClientId(int clientId, int offset, int limit)
         {
@@ -47,7 +50,7 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Create a new appointment.
         /// </summary>
-        // authorize: client, admin
+        // authorize: client
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AppointmentCreateDTO appointmentDto)
         {
@@ -57,12 +60,15 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Update an existing appointment status.
         /// </summary>
-        // authorize: admin
+        // authorize: admin, provider, client
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateStatusAsync(int id, AppointmentStatusUpdateRequest request)
         {
-            var updatedAppointment = await _appointmentService.UpdateStatusAsync(id, request.Status, request.Reason);
+            // Get the user's role from the claims
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            var updatedAppointment = await _appointmentService.UpdateStatusAsync(id, request.Status, request.Reason, role);
             return NoContent();
         }
         /// <summary>

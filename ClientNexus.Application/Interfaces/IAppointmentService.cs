@@ -16,7 +16,7 @@ namespace ClientNexus.Application.Interfaces
         Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit);
         Task<AppointmentDTO> CreateAsync([FromBody] AppointmentCreateDTO appointmentDTO);
         //Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);
-        Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason);
+        Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason, string role);
         Task DeleteAsync(int id);
 
     }
