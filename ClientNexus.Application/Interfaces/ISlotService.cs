@@ -16,6 +16,6 @@ namespace ClientNexus.Application.Interfaces
         Task<SlotDTO> GetSlotByIdAsync(int id);
         Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO);
         Task<SlotDTO> UpdateStatus(int id, SlotStatus status);
-        Task DeleteAsync(int slotId);
+        Task DeleteAsync(int slotId, string role);
     }
 }

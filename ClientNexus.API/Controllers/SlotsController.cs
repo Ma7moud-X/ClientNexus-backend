@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
+using System.Security.Claims;
 
 namespace ClientNexus.API.Controllers
 {
@@ -23,7 +24,7 @@ namespace ClientNexus.API.Controllers
         /// <summary>
         /// Get available slots for a service provider within a date range
         /// </summary>
-        [HttpGet("available")]
+        [HttpGet(Name = "GetSlots")]
         public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlots(
             int serviceProviderId,
             DateTime startDate,
@@ -31,6 +32,7 @@ namespace ClientNexus.API.Controllers
             SlotType type,
             SlotStatus? status)
         {
+
             return Ok(await _slotService.GetSlotsAsync(serviceProviderId, startDate, endDate, type, status));
         }
 
@@ -44,7 +46,7 @@ namespace ClientNexus.API.Controllers
         }
 
         // <summary>
-        /// Create a new slot
+        /// Service Provider Creates a new slot
         /// </summary>
         /// 
         //authorize: admin , provider
@@ -56,7 +58,7 @@ namespace ClientNexus.API.Controllers
         }
 
         // <summary>
-        /// Update a slot
+        /// Service Provider Updates a slot
         /// </summary>
         /// 
         //authorize: admin, provider
@@ -77,14 +79,17 @@ namespace ClientNexus.API.Controllers
             return Ok( await _slotService.UpdateStatus(id, status));
         }
         /// <summary>
-        /// Delete slot
+        /// Service Provider deletes a slot
         /// </summary>
          
-        //authorize: admin
+        //authorize: provider, admin
         [HttpDelete("{id:int}", Name = "DeleteSlot")]
         public async Task<IActionResult> DeleteSlot(int id)
         {
-            await _slotService.DeleteAsync(id);
+            // Get the user's role from the claims
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            await _slotService.DeleteAsync(id, role);
             return NoContent();
         }
 
