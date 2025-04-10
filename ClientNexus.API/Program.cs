@@ -13,6 +13,7 @@ using ClientNexus.Domain.Entities.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Google.Apis.Services;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,11 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+builder.Services.AddTransient<IOtpService, OtpService>();
+builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
+builder.Services.AddSingleton<ICache, RedisCache>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+
 
 
 // NEW - Configure Identity with BaseUser
