@@ -1,7 +1,8 @@
-using ClientNexus.Domain.Enums;
-using ClientNexus.Domain.Interfaces;
-using Amazon.S3.Model;
 using Amazon.S3;
+using Amazon.S3.Model;
+using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
+using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Infrastructure;
 
@@ -19,7 +20,10 @@ public class S3Storage : IFileStorage
 
         if (string.IsNullOrWhiteSpace(bucketName))
         {
-            throw new ArgumentNullException(nameof(bucketName), "bucketName cannot be null or empty");
+            throw new ArgumentNullException(
+                nameof(bucketName),
+                "bucketName cannot be null or empty"
+            );
         }
 
         _s3Client = s3Client;
@@ -41,7 +45,7 @@ public class S3Storage : IFileStorage
             {
                 BucketName = _bucketName,
                 Prefix = prefix,
-                ContinuationToken = continuationToken
+                ContinuationToken = continuationToken,
             };
 
             ListObjectsV2Response? response;
@@ -51,7 +55,7 @@ public class S3Storage : IFileStorage
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while trying to get objects with prefix '{prefix}'", ex);
+                throw new FileStorageException($"Error getting objects with prefix `{prefix}`", ex);
             }
 
             foreach (var obj in response.S3Objects)
@@ -69,7 +73,9 @@ public class S3Storage : IFileStorage
     {
         if (fileStream is null || !fileStream.CanRead)
         {
-            throw new ArgumentException("Invalid file stream. File stream can not be null and must be readable");
+            throw new ArgumentException(
+                "Invalid file stream. File stream can not be null and must be readable"
+            );
         }
 
         if (string.IsNullOrWhiteSpace(key))
@@ -82,7 +88,7 @@ public class S3Storage : IFileStorage
             BucketName = _bucketName,
             Key = key,
             InputStream = fileStream,
-            ContentType = fileType.ToMimeType()
+            ContentType = fileType.ToMimeType(),
         };
 
         try
@@ -91,7 +97,7 @@ public class S3Storage : IFileStorage
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to upload file to S3: {ex.Message}", ex);
+            throw new FileStorageException("Error uploading file to the storage server", ex);
         }
 
         return $"https://{_bucketName}.s3.amazonaws.com/{key}";

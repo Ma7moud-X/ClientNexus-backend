@@ -1,37 +1,53 @@
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+
 namespace ClientNexus.Infrastructure;
 
 public class FirebasePushNotification : IPushNotification
 {
-
     private readonly FirebaseApp _firebaseApp;
 
     public FirebasePushNotification()
     {
-        string? googleAppCredententials = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+        string? googleAppCredententials = Environment.GetEnvironmentVariable(
+            "GOOGLE_APPLICATION_CREDENTIALS"
+        );
         string? projectId = Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
 
         if (string.IsNullOrWhiteSpace(googleAppCredententials))
         {
-            throw new ArgumentException("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.", nameof(googleAppCredententials));
+            throw new ArgumentException(
+                "GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.",
+                nameof(googleAppCredententials)
+            );
         }
 
         if (string.IsNullOrWhiteSpace(projectId))
         {
-            throw new ArgumentException("GOOGLE_PROJECT_ID environment variable is not set.", nameof(projectId));
+            throw new ArgumentException(
+                "GOOGLE_PROJECT_ID environment variable is not set.",
+                nameof(projectId)
+            );
         }
 
-        _firebaseApp = FirebaseApp.Create(new AppOptions()
-        {
-            Credential = GoogleCredential.FromFile(googleAppCredententials),
-            ProjectId = projectId
-        });
+        _firebaseApp = FirebaseApp.Create(
+            new AppOptions()
+            {
+                Credential = GoogleCredential.FromFile(googleAppCredententials),
+                ProjectId = projectId,
+            }
+        );
     }
 
-    public async Task<string> SendNotificationAsync(string title, string body, string deviceToken, Dictionary<string, string>? data = null)
+    public async Task<string> SendNotificationAsync(
+        string title,
+        string body,
+        string deviceToken,
+        Dictionary<string, string>? data = null
+    )
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -45,18 +61,17 @@ public class FirebasePushNotification : IPushNotification
 
         if (string.IsNullOrWhiteSpace(deviceToken))
         {
-            throw new ArgumentException("Device token cannot be null or whitespace.", nameof(deviceToken));
+            throw new ArgumentException(
+                "Device token cannot be null or whitespace.",
+                nameof(deviceToken)
+            );
         }
 
         var message = new Message()
         {
-            Notification = new Notification
-            {
-                Title = title,
-                Body = body
-            },
+            Notification = new Notification { Title = title, Body = body },
             Data = data,
-            Token = deviceToken
+            Token = deviceToken,
         };
 
         try
@@ -66,7 +81,10 @@ public class FirebasePushNotification : IPushNotification
         }
         catch (FirebaseException ex)
         {
-            throw new Exception($"Failed to send notification: {ex.Message}", ex);
+            throw new NotificationException(
+                $"Failed to send notification with message: `{message}`",
+                ex
+            );
         }
     }
 }

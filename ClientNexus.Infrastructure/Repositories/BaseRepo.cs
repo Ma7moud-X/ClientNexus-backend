@@ -97,9 +97,9 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<object>> GetByConditionAsync(
+    public async Task<IEnumerable<T>> GetByConditionAsync<T>(
         Expression<Func<EType, bool>>? condExp,
-        Expression<Func<EType, object>> selectExp,
+        Expression<Func<EType, T>> selectExp,
         bool getAll = false,
         int offset = 0,
         int limit = 20
@@ -116,7 +116,7 @@ public class BaseRepo<EType> : IBaseRepo<EType>
             throw new Exception("Select expression can't be null");
         }
 
-        IQueryable<object> query = q.Select(selectExp);
+        IQueryable<T> query = q.Select(selectExp);
         if (!getAll)
         {
             query = query.Skip(offset).Take(limit);
@@ -124,7 +124,11 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         return await query.ToListAsync();
     }
-    public async Task<EType?> FirstOrDefaultAsync(Expression<Func<EType, bool>> condExp,Func<IQueryable<EType>, IQueryable<EType>>? include = null)
+
+    public async Task<EType?> FirstOrDefaultAsync(
+        Expression<Func<EType, bool>> condExp,
+        Func<IQueryable<EType>, IQueryable<EType>>? include = null
+    )
     {
         IQueryable<EType> q = _context.Set<EType>().AsNoTracking();
 
@@ -136,12 +140,11 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return await q.FirstOrDefaultAsync(condExp);
     }
 
-
     public async Task<EType?> GetByIdAsync(int id)
     {
         return await _context.Set<EType>().FindAsync(id);
     }
-    
+      
     public async Task<EType?> GetByIdWithLockAsync(int id)
     {
         return await _context.Set<EType>()
