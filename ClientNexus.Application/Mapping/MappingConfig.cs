@@ -10,6 +10,8 @@ namespace ClientNexus.Application.Mapping
         {
             CreateMap<Slot, SlotCreateDTO>().ReverseMap();
             CreateMap<Slot, SlotDTO>().ReverseMap();
+            CreateMap<Appointment, AppointmentCreateDTO>().ReverseMap();
+            CreateMap<Appointment, AppointmentDTO>().ReverseMap();
         }
     }
 }

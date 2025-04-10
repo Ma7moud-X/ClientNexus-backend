@@ -1,16 +1,17 @@
-using ClientNexus.Domain.Enums;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace ClientNexus.Domain.Entities.Services
+namespace ClientNexus.Application.DTO
 {
-    public class Appointment : Service
+    public class AppointmentDTO : ServiceDTO
     {
+        [Required]
+        public int SlotId { get; set; }
         public DateTime? CheckInTime { get; set; }
         public DateTime? CompletionTime { get; set; }
         public string? CancellationReason { get; set; }
         public DateTime? CancellationTime { get; set; }
         public bool ReminderSent { get; set; }  //for notifications
         public DateTime? ReminderSentTime { get; set; }
-        public int SlotId { get; set; }
-        public Slot? Slot { get; set; }
+
     }
 }
