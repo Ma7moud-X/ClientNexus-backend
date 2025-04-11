@@ -15,7 +15,8 @@ namespace ClientNexus.Domain.Entities.Users
         public bool IsApproved { get; set; }
         public bool IsAvailableForEmergency { get; set; }
         public int YearsOfExperience { get; set; }
-
+        public string ImageIDUrl { get; set; } = default!;
+        public string ImageNationalIDUrl { get; set; } = default!;
         public SubscriptionType SubType { get; set; }
         public SubscriptionStatus SubscriptionStatus { get; set; }
         public DateTime? SubscriptionExpiryDate { get; set; }
@@ -32,8 +33,6 @@ namespace ClientNexus.Domain.Entities.Users
 
         public int? ApprovedById { get; set; }
         public Admin? ApprovingAdmin { get; set; }
-
-        public ICollection<License>? Licenses { get; set; }
 
         public ICollection<Problem>? Problems { get; set; }
         public ICollection<Service>? ServicesProvided { get; set; }

@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ClientNexus.Domain.Entities.Users;
 
-
-
 public class BaseUser : IdentityUser<int>
 {
     public string FirstName { get; set; } = default!;
@@ -13,6 +11,7 @@ public class BaseUser : IdentityUser<int>
     public bool IsDeleted { get; set; } = false;
     public DateOnly BirthDate { get; set; }
     public UserType UserType { get; set; }
+    public string? NotificationToken { get; set; }
 
     public int? BlockedById { get; set; }
     public Admin? BlockedBy { get; set; }

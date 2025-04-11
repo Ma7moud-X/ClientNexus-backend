@@ -10,13 +10,21 @@ namespace ClientNexus.Infrastructure;
 public class RedisCache : ICache
 {
     private readonly IConnectionMultiplexer _redis;
-    private readonly IDatabase _database;
+    private IDatabase? _databaseBackingField;
+    private IDatabase _database
+    {
+        get
+        {
+            _databaseBackingField ??= _redis.GetDatabase();
+            return _databaseBackingField;
+        }
+    }
+
     private ITransaction? _transaction = null;
 
     public RedisCache(IConnectionMultiplexer redis)
     {
         _redis = redis;
-        _database = _redis.GetDatabase();
     }
 
     public async Task<bool> AddGeoLocationAsync(
@@ -70,13 +78,17 @@ public class RedisCache : ICache
         return added;
     }
 
-    public async Task<long> AddToListObjectAsync<T>(string key, T value)
+    public async Task<long> AddToListObjectAsync<T>(string key, T value, bool onlyIfExists = false)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return await AddToListStringAsync(key, JsonSerializer.Serialize(value));
+        return await AddToListStringAsync(key, JsonSerializer.Serialize(value), onlyIfExists);
     }
 
-    public async Task<long> AddToListStringAsync(string key, string value)
+    public async Task<long> AddToListStringAsync(
+        string key,
+        string value,
+        bool onlyIfExists = false
+    )
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -93,7 +105,11 @@ public class RedisCache : ICache
         long pushedCount;
         try
         {
-            pushedCount = await executor.ListRightPushAsync(key, value);
+            pushedCount = await executor.ListRightPushAsync(
+                key,
+                value,
+                when: onlyIfExists ? When.Exists : When.Always
+            );
         }
         catch (Exception ex)
         {
@@ -314,13 +330,23 @@ public class RedisCache : ICache
         return expirySet;
     }
 
-    public async Task<bool> SetObjectAsync<T>(string key, T value, TimeSpan? expiration = null)
+    public async Task<bool> SetObjectAsync<T>(
+        string key,
+        T value,
+        TimeSpan? expiration = null,
+        bool @override = true
+    )
     {
         ArgumentNullException.ThrowIfNull(value);
-        return await SetStringAsync(key, JsonSerializer.Serialize(value), expiration);
+        return await SetStringAsync(key, JsonSerializer.Serialize(value), expiration, @override);
     }
 
-    public async Task<bool> SetStringAsync(string key, string value, TimeSpan? expiration = null)
+    public async Task<bool> SetStringAsync(
+        string key,
+        string value,
+        TimeSpan? expiration = null,
+        bool @override = true
+    )
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -342,7 +368,12 @@ public class RedisCache : ICache
         bool isSet;
         try
         {
-            isSet = await executor.StringSetAsync(key, value, expiration);
+            isSet = await executor.StringSetAsync(
+                key,
+                value,
+                expiration,
+                @override ? When.Always : When.NotExists
+            );
         }
         catch (Exception ex)
         {
@@ -637,5 +668,146 @@ public class RedisCache : ICache
                 Longitude = res.Value.Longitude,
                 Latitude = res.Value.Latitude,
             };
+    }
+
+    // public async Task<string?> BlockPopListStringAsync(string key, TimeSpan? timeout = null)
+    // {
+    //     if (string.IsNullOrWhiteSpace(key))
+    //     {
+    //         throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+    //     }
+
+    //     if (timeout is not null && timeout <= TimeSpan.Zero)
+    //     {
+    //         throw new ArgumentException("timeout must be greater than zero", nameof(timeout));
+    //     }
+
+    //     IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+
+    //     RedisResult res = await executor.ExecuteAsync(
+    //         "BLPOP",
+    //         key,
+    //         timeout ?? TimeSpan.FromSeconds(0)
+    //     );
+
+    //     if (res.IsNull)
+    //     {
+    //         return null;
+    //     }
+
+    //     return res.ToString();
+    // }
+
+    // public Task<T?> BlockPopListObjectAsync<T>(string key, TimeSpan? timeout = null)
+    // {
+    //     throw new NotImplementedException();
+    // }
+
+    public async Task<bool> SetHashStringAsync(
+        string key,
+        string field,
+        string value,
+        bool @override = true
+    )
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            throw new ArgumentException("field cannot be null or whitespace", nameof(field));
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException("value cannot be null or whitespace", nameof(value));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.HashSetAsync(
+            key,
+            field,
+            value,
+            @override ? When.Always : When.NotExists
+        );
+    }
+
+    public async Task<bool> SetHashObjectAsync<T>(
+        string key,
+        string field,
+        T value,
+        bool @override = true
+    )
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        return await SetHashStringAsync(key, field, JsonSerializer.Serialize(value), @override);
+    }
+
+    public async Task<string?> GetHashStringAsync(string key, string field)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            throw new ArgumentException("field cannot be null or whitespace", nameof(field));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.HashGetAsync(key, field);
+    }
+
+    public async Task<T?> GetHashObjectAsync<T>(string key, string field)
+    {
+        var res = await GetHashStringAsync(key, field);
+        return res is null ? default : JsonSerializer.Deserialize<T>(res);
+    }
+
+    public async Task<string?> LeftPopListStringAsync(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.ListLeftPopAsync(key);
+    }
+
+    public async Task<T?> LeftPopListObjectAsync<T>(string key)
+    {
+        var res = await LeftPopListStringAsync(key);
+        return res is null ? default : JsonSerializer.Deserialize<T>(res);
+    }
+
+    public async Task<bool> RemoveHashFieldAsync(string key, string field)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            throw new ArgumentException("Field cannot be null or whitespace.", nameof(field));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.HashDeleteAsync(key, field);
+    }
+
+    public async Task<TimeSpan?> GetTTLAsync(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
+        return await executor.KeyTimeToLiveAsync(key);
     }
 }

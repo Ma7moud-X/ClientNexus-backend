@@ -11,10 +11,6 @@ namespace ClientNexus.Infrastructure.Configurations
             builder.ToTable("EmergencyCases");
 
             builder.HasBaseType<Service>();
-
-            builder.Property(e => e.CurrentLocation)
-                .IsRequired()
-                .HasMaxLength(255);
         }
     }
 }
