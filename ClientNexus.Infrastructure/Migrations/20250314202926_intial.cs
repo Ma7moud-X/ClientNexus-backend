@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClientNexus.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class DatabaseTables : Migration
+    public partial class intial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,6 +28,22 @@ namespace ClientNexus.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AccessLevels", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetRoles",
+                schema: "ClientNexusSchema",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -94,22 +110,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Roles",
-                schema: "ClientNexusSchema",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Roles", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ServiceProviderTypes",
                 schema: "ClientNexusSchema",
                 columns: table => new
@@ -121,6 +121,29 @@ namespace ClientNexus.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ServiceProviderTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetRoleClaims",
+                schema: "ClientNexusSchema",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoleClaims", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalSchema: "ClientNexusSchema",
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -144,29 +167,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetRoleClaims",
-                schema: "ClientNexusSchema",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetRoleClaims", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetRoleClaims_Roles_RoleId",
-                        column: x => x.RoleId,
-                        principalSchema: "ClientNexusSchema",
-                        principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -427,17 +427,17 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
                     table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalSchema: "ClientNexusSchema",
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_AspNetUserRoles_BaseUsers_UserId",
                         column: x => x.UserId,
                         principalSchema: "ClientNexusSchema",
                         principalTable: "BaseUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_AspNetUserRoles_Roles_RoleId",
-                        column: x => x.RoleId,
-                        principalSchema: "ClientNexusSchema",
-                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -520,6 +520,8 @@ namespace ClientNexus.Infrastructure.Migrations
                     IsApproved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsAvailableForEmergency = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     YearsOfExperience = table.Column<int>(type: "int", nullable: false),
+                    ImageIDUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImageNationalIDUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubType = table.Column<string>(type: "char(1)", nullable: false),
                     SubscriptionStatus = table.Column<string>(type: "char(1)", nullable: false),
                     SubscriptionExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -627,32 +629,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         principalTable: "ServiceProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Licenses",
-                schema: "ClientNexusSchema",
-                columns: table => new
-                {
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    LicenceNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IssuingAuthority = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    IssueDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    ExpiryDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(500)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Licenses", x => new { x.ServiceProviderId, x.Id });
-                    table.ForeignKey(
-                        name: "FK_Licenses_ServiceProviders_ServiceProviderId",
-                        column: x => x.ServiceProviderId,
-                        principalSchema: "ClientNexusSchema",
-                        principalTable: "ServiceProviders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1008,17 +984,6 @@ namespace ClientNexus.Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 schema: "ClientNexusSchema",
-                table: "Roles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
-                {
-                    { -3, null, "Service Provider", "SERVICE PROVIDER" },
-                    { -2, null, "Client", "CLIENT" },
-                    { -1, null, "Admin", "ADMIN" }
-                });
-
-            migrationBuilder.InsertData(
-                schema: "ClientNexusSchema",
                 table: "ServiceProviderTypes",
                 columns: new[] { "Id", "Name" },
                 values: new object[] { -1, "Lawyer" });
@@ -1052,6 +1017,14 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "AspNetRoleClaims",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "RoleNameIndex",
+                schema: "ClientNexusSchema",
+                table: "AspNetRoles",
+                column: "NormalizedName",
+                unique: true,
+                filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -1169,14 +1142,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "Problems",
                 column: "SolvingAdminId");
-
-            migrationBuilder.CreateIndex(
-                name: "RoleNameIndex",
-                schema: "ClientNexusSchema",
-                table: "Roles",
-                column: "NormalizedName",
-                unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ServicePayments_ServiceId",
@@ -1312,10 +1277,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema");
 
             migrationBuilder.DropTable(
-                name: "Licenses",
-                schema: "ClientNexusSchema");
-
-            migrationBuilder.DropTable(
                 name: "OfficeImageUrls",
                 schema: "ClientNexusSchema");
 
@@ -1352,7 +1313,7 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema");
 
             migrationBuilder.DropTable(
-                name: "Roles",
+                name: "AspNetRoles",
                 schema: "ClientNexusSchema");
 
             migrationBuilder.DropTable(

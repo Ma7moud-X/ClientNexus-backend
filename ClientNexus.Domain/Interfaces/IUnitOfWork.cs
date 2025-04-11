@@ -54,7 +54,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
 
-    IBaseRepo<License> Licenses { get; }
+    //IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
     IBaseRepo<City> Cities { get; }
     IBaseRepo<State> States { get; }
@@ -82,8 +82,10 @@ public interface IUnitOfWork : IDisposable
 
     // Functions
     Task<int> SaveChangesAsync();
-    Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters);
-    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params Parameter[] parameters);
+    Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
+    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
     Task<int> SqlExecuteAsync(string query, params Parameter[] parameters);
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
