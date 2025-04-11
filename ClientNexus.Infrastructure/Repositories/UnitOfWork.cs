@@ -74,7 +74,7 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; private set; }
 
     public IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; private set; }
-
+    public IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; private set; }
     public IBaseRepo<EmergencyCategory> EmergencyCategories { get; private set; }
 
     public IBaseRepo<AppointmentCost> AppointmentCosts { get; private set; }
@@ -136,6 +136,8 @@ public class UnitOfWork : IUnitOfWork
 
         ServicePayments = new BaseRepo<ServicePayment>(context);
         SubscriptionPayments = new BaseRepo<SubscriptionPayment>(context);
+
+        ClientServiceProviderFeedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
     }
 
     public void Dispose()

@@ -49,7 +49,7 @@ builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
-
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 
 // NEW - Configure Identity with BaseUser
