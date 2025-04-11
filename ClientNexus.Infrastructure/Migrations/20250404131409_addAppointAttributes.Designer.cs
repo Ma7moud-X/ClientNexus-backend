@@ -4,6 +4,7 @@ using ClientNexus.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250404131409_addAppointAttributes")]
+    partial class addAppointAttributes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -591,7 +594,7 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal?>("Price")
+                    b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ServiceProviderId")
@@ -701,9 +704,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NotificationToken")
-                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -980,14 +980,18 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<double>("MeetingLatitude")
-                        .HasColumnType("float");
+                    b.Property<string>("CurrentLocation")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<double>("MeetingLongitude")
-                        .HasColumnType("float");
-
-                    b.Property<int?>("TimeForArrival")
+                    b.Property<int>("EmergencyCategoryId")
                         .HasColumnType("int");
+
+                    b.Property<int>("TimeForArrival")
+                        .HasColumnType("int");
+
+                    b.HasIndex("EmergencyCategoryId");
 
                     b.ToTable("EmergencyCases", "ClientNexusSchema");
                 });
@@ -1484,11 +1488,19 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCase", b =>
                 {
+                    b.HasOne("ClientNexus.Domain.Entities.Services.EmergencyCategory", "EmergencyCategory")
+                        .WithMany("EmergencyCases")
+                        .HasForeignKey("EmergencyCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ClientNexus.Domain.Entities.Services.Service", null)
                         .WithOne()
                         .HasForeignKey("ClientNexus.Domain.Entities.Services.EmergencyCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("EmergencyCategory");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Question", b =>
@@ -1592,6 +1604,11 @@ namespace ClientNexus.Infrastructure.Migrations
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.State", b =>
                 {
                     b.Navigation("Cities");
+                });
+
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCategory", b =>
+                {
+                    b.Navigation("EmergencyCases");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Service", b =>
