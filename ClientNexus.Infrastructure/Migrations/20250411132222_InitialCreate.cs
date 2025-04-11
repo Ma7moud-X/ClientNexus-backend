@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClientNexus.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class intial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -310,6 +310,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
                     UserType = table.Column<string>(type: "char(1)", nullable: false),
+                    NotificationToken = table.Column<string>(type: "varchar(1000)", nullable: true),
                     BlockedById = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -691,7 +692,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     Status = table.Column<string>(type: "char(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     ServiceType = table.Column<string>(type: "char(1)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -719,16 +720,16 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 columns: table => new
                 {
-                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "char(1)", nullable: false),
                     SlotType = table.Column<string>(type: "char(1)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Slots", x => new { x.ServiceProviderId, x.Id });
+                    table.PrimaryKey("PK_Slots", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Slots_ServiceProviders_ServiceProviderId",
                         column: x => x.ServiceProviderId,
@@ -791,20 +792,13 @@ namespace ClientNexus.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    TimeForArrival = table.Column<int>(type: "int", nullable: false),
-                    CurrentLocation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    EmergencyCategoryId = table.Column<int>(type: "int", nullable: false)
+                    TimeForArrival = table.Column<int>(type: "int", nullable: true),
+                    MeetingLongitude = table.Column<double>(type: "float", nullable: false),
+                    MeetingLatitude = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EmergencyCases", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EmergencyCases_EmergencyCategories_EmergencyCategoryId",
-                        column: x => x.EmergencyCategoryId,
-                        principalSchema: "ClientNexusSchema",
-                        principalTable: "EmergencyCategories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_EmergencyCases_Services_Id",
                         column: x => x.Id,
@@ -915,9 +909,12 @@ namespace ClientNexus.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    AppointmentType = table.Column<string>(type: "char(1)", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AppointmentProviderId = table.Column<int>(type: "int", nullable: false),
+                    CheckInTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletionTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CancellationReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CancellationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReminderSent = table.Column<bool>(type: "bit", nullable: false),
+                    ReminderSentTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     SlotId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -931,11 +928,11 @@ namespace ClientNexus.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Appointments_Slots_AppointmentProviderId_SlotId",
-                        columns: x => new { x.AppointmentProviderId, x.SlotId },
+                        name: "FK_Appointments_Slots_SlotId",
+                        column: x => x.SlotId,
                         principalSchema: "ClientNexusSchema",
                         principalTable: "Slots",
-                        principalColumns: new[] { "ServiceProviderId", "Id" },
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -1007,10 +1004,10 @@ namespace ClientNexus.Infrastructure.Migrations
                 column: "ApprovedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_AppointmentProviderId_SlotId",
+                name: "IX_Appointments_SlotId",
                 schema: "ClientNexusSchema",
                 table: "Appointments",
-                columns: new[] { "AppointmentProviderId", "SlotId" });
+                column: "SlotId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -1107,12 +1104,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 column: "UploadedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmergencyCases_EmergencyCategoryId",
-                schema: "ClientNexusSchema",
-                table: "EmergencyCases",
-                column: "EmergencyCategoryId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_EmergencyCategories_ServiceProviderTypeId",
                 schema: "ClientNexusSchema",
                 table: "EmergencyCategories",
@@ -1180,6 +1171,13 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "Services",
                 column: "ServiceProviderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Slots_ServiceProviderId_Date",
+                schema: "ClientNexusSchema",
+                table: "Slots",
+                columns: new[] { "ServiceProviderId", "Date" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Specializations_ServiceProviderTypeId",
@@ -1277,6 +1275,10 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema");
 
             migrationBuilder.DropTable(
+                name: "EmergencyCategories",
+                schema: "ClientNexusSchema");
+
+            migrationBuilder.DropTable(
                 name: "OfficeImageUrls",
                 schema: "ClientNexusSchema");
 
@@ -1326,10 +1328,6 @@ namespace ClientNexus.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Documents",
-                schema: "ClientNexusSchema");
-
-            migrationBuilder.DropTable(
-                name: "EmergencyCategories",
                 schema: "ClientNexusSchema");
 
             migrationBuilder.DropTable(
