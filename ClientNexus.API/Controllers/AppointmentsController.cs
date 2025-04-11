@@ -22,6 +22,8 @@ namespace ClientNexus.API.Controllers
         /// Get an appointment by ID.
         /// </summary>
         [HttpGet("{id:int}", Name = "GetAppointmentById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<AppointmentDTO>> GetById(int id)
         {
             var appointment = await _appointmentService.GetByIdAsync(id);
@@ -32,6 +34,9 @@ namespace ClientNexus.API.Controllers
         /// </summary>
         // authorize: admin, provider
         [HttpGet("provider/{providerId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetByProviderId(int providerId, int offset, int limit)
         {
             var appointments = await _appointmentService.GetByProviderIdAsync(providerId, offset, limit);
@@ -42,6 +47,9 @@ namespace ClientNexus.API.Controllers
         /// </summary>
         // authorize: admin, client
         [HttpGet("client/{clientId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetByClientId(int clientId, int offset, int limit)
         {
             var appointments = await _appointmentService.GetByClientIdAsync(clientId, offset, limit);
@@ -52,6 +60,9 @@ namespace ClientNexus.API.Controllers
         /// </summary>
         // authorize: client
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] AppointmentCreateDTO appointmentDto)
         {
             var appointment = await _appointmentService.CreateAsync(appointmentDto);
@@ -63,6 +74,9 @@ namespace ClientNexus.API.Controllers
         // authorize: admin, provider, client
 
         [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateStatusAsync(int id, AppointmentStatusUpdateRequest request)
         {
             // Get the user's role from the claims
@@ -77,6 +91,8 @@ namespace ClientNexus.API.Controllers
         // authorize: admin 
 
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
             await _appointmentService.DeleteAsync(id);

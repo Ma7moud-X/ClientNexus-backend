@@ -25,6 +25,9 @@ namespace ClientNexus.API.Controllers
         /// Get available slots for a service provider within a date range
         /// </summary>
         [HttpGet(Name = "GetSlots")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlots(
             int serviceProviderId,
             DateTime startDate,
@@ -40,6 +43,8 @@ namespace ClientNexus.API.Controllers
         /// Get slot by id
         /// </summary>
         [HttpGet("{id:int}", Name = "GetSlotById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<SlotDTO>> GetSlotById(int id)
         {
             return Ok(await _slotService.GetSlotByIdAsync(id));
@@ -51,6 +56,9 @@ namespace ClientNexus.API.Controllers
         /// 
         //authorize: admin , provider
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<SlotDTO>> CreateSlot([FromBody] SlotCreateDTO slotDTO)
         {
             var slot = await _slotService.CreateAsync(slotDTO);
@@ -63,6 +71,9 @@ namespace ClientNexus.API.Controllers
         /// 
         //authorize: admin, provider
         [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
         {
             return Ok(await _slotService.Update(id, slotDTO));
@@ -74,6 +85,9 @@ namespace ClientNexus.API.Controllers
         
         //authorize: admin, provider, client 'to cancel'
         [HttpPatch("{id:int}/status")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateSlotStatus(int id, [FromBody] SlotStatus status)
         {
             return Ok( await _slotService.UpdateStatus(id, status));
@@ -84,6 +98,9 @@ namespace ClientNexus.API.Controllers
          
         //authorize: provider, admin
         [HttpDelete("{id:int}", Name = "DeleteSlot")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteSlot(int id)
         {
             // Get the user's role from the claims
