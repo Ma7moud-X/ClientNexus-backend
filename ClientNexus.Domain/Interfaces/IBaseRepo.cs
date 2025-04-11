@@ -6,7 +6,7 @@ public interface IBaseRepo<EType>
     where EType : class
 {
     Task<EType?> GetByIdAsync(int id);
-    Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null);
+    public IQueryable<EType> GetAllQueryable(params Expression<Func<EType, object>>[] includes);
 
     // Task<IEnumerable<EType>> GetByConditionAsync(IWhereCondition<EType> condition, IPaginate paginate);
     Task<IEnumerable<EType>> GetByConditionAsync(
@@ -30,6 +30,7 @@ public interface IBaseRepo<EType>
     );
     EType Update(EType oldEntity, EType updatedEntity);
     void Delete(EType entity);
+    Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
     // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }

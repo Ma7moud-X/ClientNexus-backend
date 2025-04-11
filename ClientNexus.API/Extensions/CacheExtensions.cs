@@ -28,6 +28,9 @@ public static class CacheExtensions
             throw new InvalidOperationException("Failed to connect to Redis.");
         }
 
-        services.AddScoped<ICache, RedisCache>();
+        services.AddTransient<ICache, RedisCache>();
+        services.AddSingleton<IEventPublisher, RedisEventPublisher>();
+        services.AddTransient<IEventSubscriber, RedisEventSubscriber>();
+        services.AddTransient<IEventListener, RedisEventListener>();
     }
 }
