@@ -17,14 +17,14 @@ namespace ClientNexus.Application.Services
     {
         private readonly IOtpService _otpService;
         private readonly UserManager<BaseUser> _userManager;
-        private readonly ClientService _clientService;
-        private readonly ServiceProviderService _serviceProviderService;
+        private readonly IClientService _clientService;
+        private readonly IServiceProviderService _serviceProviderService;
 
         public PasswordResetService(
             IOtpService otpService,
             UserManager<BaseUser> userManager,
-            ClientService clientService,
-            ServiceProviderService serviceProviderService)
+            IClientService clientService,
+            IServiceProviderService serviceProviderService)
         {
             _otpService = otpService;
             _userManager = userManager;
