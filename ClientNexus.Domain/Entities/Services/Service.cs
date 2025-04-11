@@ -12,7 +12,7 @@ namespace ClientNexus.Domain.Entities.Services
         public ServiceStatus Status { get; set; } = ServiceStatus.Pending;
         public DateTime CreatedAt { get; set; }
         public ServiceType ServiceType { get; set; }
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
 
         public int ClientId { get; set; }
         public Client? Client { get; set; }

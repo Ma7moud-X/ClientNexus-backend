@@ -20,6 +20,8 @@ public class BaseUserConfig : IEntityTypeConfiguration<BaseUser>
             .HasColumnType("char(1)")
             .IsRequired();
 
+        builder.Property(u => u.NotificationToken).HasColumnType("varchar(1000)");
+
         builder
             .HasOne(b => b.BlockedBy)
             .WithMany(b => b.BlockedUsers)

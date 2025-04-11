@@ -4,9 +4,35 @@ using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Roles;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
-using Microsoft.Data.SqlClient;
 
 namespace ClientNexus.Domain.Interfaces;
+
+public class Parameter
+{
+    public Parameter(string key, object value)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("key cannot be null or whitespace", nameof(key));
+        }
+
+        if (!key.StartsWith('@'))
+        {
+            throw new ArgumentException("key must start with @", nameof(key));
+        }
+
+        if (value is null)
+        {
+            throw new ArgumentException("value cannot be null", nameof(value));
+        }
+
+        Key = key;
+        Value = value;
+    }
+
+    public string Key { get; init; }
+    public object Value { get; init; }
+}
 
 public interface IUnitOfWork : IDisposable
 {
@@ -28,7 +54,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Admin> Admins { get; }
     IBaseRepo<AccessLevel> AccessLevels { get; }
 
-    IBaseRepo<License> Licenses { get; }
+    //IBaseRepo<License> Licenses { get; }
     IBaseRepo<Address> Addresses { get; }
     IBaseRepo<City> Cities { get; }
     IBaseRepo<State> States { get; }
@@ -56,9 +82,11 @@ public interface IUnitOfWork : IDisposable
 
     // Functions
     Task<int> SaveChangesAsync();
-    Task<T?> SqlGetSingleAsync<T>(string query, params SqlParameter[] parameters);
-    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params SqlParameter[] parameters);
-    Task<int> SqlExecuteAsync(string query, params SqlParameter[] parameters);
+    Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
+    Task<IEnumerable<T>> SqlGetListAsync<T>(string query, params Parameter[] parameters)
+        where T : class;
+    Task<int> SqlExecuteAsync(string query, params Parameter[] parameters);
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();

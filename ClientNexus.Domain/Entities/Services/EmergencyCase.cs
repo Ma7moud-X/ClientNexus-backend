@@ -1,10 +1,19 @@
+using ClientNexus.Domain.Enums;
+
 namespace ClientNexus.Domain.Entities.Services
 {
     public class EmergencyCase : Service
     {
-        public int TimeForArrival { get; set; }
-        public string CurrentLocation { get; set; } = default!;
-        public int EmergencyCategoryId { get; set; }
-        public EmergencyCategory? EmergencyCategory { get; set; }
+        public int? TimeForArrival { get; set; }
+        public double MeetingLongitude { get; set; }
+        public double MeetingLatitude { get; set; }
+
+        // public int EmergencyCategoryId { get; set; }
+        // public EmergencyCategory? EmergencyCategory { get; set; }
+
+        public EmergencyCase()
+        {
+            ServiceType = ServiceType.Emergency;
+        }
     }
 }

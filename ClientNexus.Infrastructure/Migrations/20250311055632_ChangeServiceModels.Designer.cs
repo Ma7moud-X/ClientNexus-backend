@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250222151913_DatabaseTables")]
-    partial class DatabaseTables
+    [Migration("20250311055632_ChangeServiceModels")]
+    partial class ChangeServiceModels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -969,18 +969,14 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<string>("CurrentLocation")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<double>("MeetingLatitude")
+                        .HasColumnType("float");
 
-                    b.Property<int>("EmergencyCategoryId")
+                    b.Property<double>("MeetingLongitude")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("TimeForArrival")
                         .HasColumnType("int");
-
-                    b.Property<int>("TimeForArrival")
-                        .HasColumnType("int");
-
-                    b.HasIndex("EmergencyCategoryId");
 
                     b.ToTable("EmergencyCases", "ClientNexusSchema");
                 });
@@ -1477,19 +1473,11 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCase", b =>
                 {
-                    b.HasOne("ClientNexus.Domain.Entities.Services.EmergencyCategory", "EmergencyCategory")
-                        .WithMany("EmergencyCases")
-                        .HasForeignKey("EmergencyCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ClientNexus.Domain.Entities.Services.Service", null)
                         .WithOne()
                         .HasForeignKey("ClientNexus.Domain.Entities.Services.EmergencyCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("EmergencyCategory");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Question", b =>
@@ -1593,11 +1581,6 @@ namespace ClientNexus.Infrastructure.Migrations
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.State", b =>
                 {
                     b.Navigation("Cities");
-                });
-
-            modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCategory", b =>
-                {
-                    b.Navigation("EmergencyCases");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Service", b =>
