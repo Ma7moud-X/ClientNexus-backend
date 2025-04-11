@@ -52,18 +52,16 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     // }
 
 
-    public async Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null)
+    public IQueryable<EType> GetAllQueryable(params Expression<Func<EType, object>>[] includes)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
-        if (includes is not null)
+
+        foreach (var include in includes)
         {
-            foreach (string inc in includes)
-            {
-                query = query.Include(inc);
-            }
+            query = query.Include(include);
         }
 
-        return await query.ToListAsync();
+        return query;
     }
 
     public async Task<IEnumerable<EType>> GetByConditionAsync(

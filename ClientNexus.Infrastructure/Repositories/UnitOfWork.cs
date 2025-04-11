@@ -30,7 +30,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IBaseRepo<AccessLevel> AccessLevels { get; private set; }
 
-    public IBaseRepo<License> Licenses { get; private set; }
+    //public IBaseRepo<License> Licenses { get; private set; }
 
     public IBaseRepo<Address> Addresses { get; private set; }
 
@@ -105,7 +105,7 @@ public class UnitOfWork : IUnitOfWork
         Admins = new BaseRepo<Admin>(context);
         AccessLevels = new BaseRepo<AccessLevel>(context);
 
-        Licenses = new BaseRepo<License>(context);
+        //Licenses = new BaseRepo<License>(context);
         Addresses = new BaseRepo<Address>(context);
         Cities = new BaseRepo<City>(context);
         States = new BaseRepo<State>(context);
