@@ -1,5 +1,6 @@
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
@@ -126,9 +127,13 @@ public class EmergencyCaseService : IEmergencyCaseService
         var emergencyCase = (
             await _unitOfWork.EmergencyCases.GetByConditionAsync(
                 ec =>
-                    ec.CreatedAt >= DateTime.UtcNow.AddHours(-6)
-                    && ec.ClientId == clientId
-                    && ec.Status == ServiceStatus.InProgress,
+                    ec.ClientId == clientId
+                    && (
+                        ec.CreatedAt >= DateTime.UtcNow.AddHours(-2)
+                            && ec.Status == ServiceStatus.InProgress
+                        || ec.CreatedAt.AddMinutes(15) >= DateTime.UtcNow
+                            && ec.Status == ServiceStatus.Pending
+                    ),
                 limit: 1
             )
         ).FirstOrDefault();
@@ -141,7 +146,7 @@ public class EmergencyCaseService : IEmergencyCaseService
         var emergencyCase = (
             await _unitOfWork.EmergencyCases.GetByConditionAsync(
                 ec =>
-                    ec.CreatedAt >= DateTime.UtcNow.AddHours(-6)
+                    ec.CreatedAt >= DateTime.UtcNow.AddHours(-2)
                     && ec.ServiceProviderId == serviceProviderId
                     && ec.Status == ServiceStatus.InProgress,
                 limit: 1
@@ -226,6 +231,17 @@ public class EmergencyCaseService : IEmergencyCaseService
             longitude,
             latitude,
             serviceProviderId.ToString()
+        );
+    }
+
+    public async Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id)
+    {
+        return await _unitOfWork.SqlGetSingleAsync<EmergencyCaseOverviewDTO>(
+            @"SELECT EmergencyCases.Id, Name AS Title, Description, Status, CreatedAt, Price, MeetingLongitude, MeetingLatitude, ClientId, ServiceProviderId
+            FROM ClientNexusSchema.EmergencyCases
+            JOIN ClientNexusSchema.Services ON EmergencyCases.Id = Services.Id
+            WHERE EmergencyCases.Id = @id",
+            new Parameter("@id", id)
         );
     }
 }

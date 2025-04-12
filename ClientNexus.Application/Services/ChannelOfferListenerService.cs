@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
@@ -51,7 +52,9 @@ public class ChannelOfferListenerService : IChannelOfferListenerService
 
         if (offer is null)
         {
-            throw new Exception("Error deserializing offer. Offer was received in invalid format");
+            throw new SerializationException(
+                "Error deserializing offer. Offer was received in invalid format"
+            );
         }
 
         return offer;
