@@ -4,9 +4,11 @@ using ClientNexus.API.Utilities;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace ClientNexus.API.Controllers
 {
@@ -17,16 +19,28 @@ namespace ClientNexus.API.Controllers
         private readonly IEmergencyCaseService _emergencyCaseService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGeneralOfferListenerService _generalOfferListener;
+        private readonly IBaseServiceService _baseServiceService;
+        private readonly IOfferService _offerService;
+        private readonly IServiceProviderService _serviceProviderService;
+        private readonly IMapService _mapService;
 
         public EmergencyCaseController(
             IEmergencyCaseService emergencyCaseService,
             IUnitOfWork unitOfWork,
-            IGeneralOfferListenerService generalOfferListener
+            IGeneralOfferListenerService generalOfferListener,
+            IBaseServiceService baseServiceService,
+            IOfferService offerService,
+            IServiceProviderService serviceProviderService,
+            IMapService mapService
         )
         {
             _emergencyCaseService = emergencyCaseService;
             _unitOfWork = unitOfWork;
             _generalOfferListener = generalOfferListener;
+            _baseServiceService = baseServiceService;
+            _offerService = offerService;
+            _serviceProviderService = serviceProviderService;
+            _mapService = mapService;
         }
 
         [HttpPost]
@@ -187,12 +201,15 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("{id:int}/offers-sse")]
         [Authorize(Policy = "IsClient")]
-        public async Task<IActionResult> GetOffersSSE(int id, CancellationToken cancellationToken)
+        public async Task GetOffersSSE(int id, CancellationToken cancellationToken)
         {
             int? userId = User.GetId();
             if (userId is null)
             {
-                return Unauthorized();
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await Response.WriteAsync("Unauthorized", CancellationToken.None);
+                await Response.CompleteAsync();
+                return;
             }
 
             var emergencyDetails = (
@@ -209,27 +226,42 @@ namespace ClientNexus.API.Controllers
 
             if (emergencyDetails is null)
             {
-                return NotFound();
+                Response.StatusCode = StatusCodes.Status404NotFound;
+                await Response.WriteAsync("Not Found", CancellationToken.None);
+                await Response.CompleteAsync();
+                return;
             }
 
             if (emergencyDetails.ClientId != userId)
             {
-                return Unauthorized();
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await Response.WriteAsync("Unauthorized", CancellationToken.None);
+                await Response.CompleteAsync();
+                return;
             }
 
             if (emergencyDetails.Status != ServiceStatus.Pending)
             {
-                return BadRequest(new { Error = "Only pending requests can have offers" });
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                await Response.WriteAsync(
+                    "Only pending requests can have offers",
+                    CancellationToken.None
+                );
+                await Response.CompleteAsync();
+                return;
             }
 
             if (DateTime.UtcNow >= emergencyDetails.CreatedAt.AddMinutes(15))
             {
-                return BadRequest(new { Error = "Request has expired" });
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                await Response.WriteAsync("Request has expired", CancellationToken.None);
+                await Response.CompleteAsync();
+                return;
             }
 
-            Response.Headers["Content-Type"] = "text/event-stream";
-            Response.Headers["Cache-Control"] = "no-cache";
-            Response.Headers["Connection"] = "keep-alive";
+            Response.Headers[HeaderNames.ContentType] = "text/event-stream";
+            Response.Headers[HeaderNames.CacheControl] = "no-cache";
+            Response.Headers[HeaderNames.Connection] = "keep-alive";
 
             await _generalOfferListener.SubscribeAsync(id);
             ClientOfferDTO offer;
@@ -254,7 +286,223 @@ namespace ClientNexus.API.Controllers
             }
             await _generalOfferListener.CloseAsync(save);
 
-            return Ok();
+            return;
+        }
+
+        [HttpDelete("{id:int}")]
+        [Authorize(Policy = "IsClient")]
+        public async Task<IActionResult> CancelEmergencyCase(int id)
+        {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            var emergencyDetails = (
+                await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                    ec => ec.Id == id,
+                    ec => new
+                    {
+                        ec.ClientId,
+                        ec.Status,
+                        ec.CreatedAt,
+                    },
+                    limit: 1
+                )
+            ).FirstOrDefault();
+
+            if (emergencyDetails is null)
+            {
+                return NotFound();
+            }
+
+            if (emergencyDetails.ClientId != userId)
+            {
+                return Unauthorized();
+            }
+
+            if (emergencyDetails.Status != ServiceStatus.Pending)
+            {
+                return BadRequest(
+                    "Emergency case can't be cancelled as it's either in progress or completed."
+                );
+            }
+
+            if (DateTime.UtcNow >= emergencyDetails.CreatedAt.AddMinutes(15))
+            {
+                return BadRequest("Emergency case has expired.");
+            }
+
+            await _baseServiceService.CancelAsync(id);
+            return NoContent();
+        }
+
+        [HttpPost("{id:int}/offers")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> CreateOffer(int id, [FromBody] CreateOfferDTO offerDTO)
+        {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            if (!await _serviceProviderService.CheckIfAllowedToMakeOffersAsync(userId.Value))
+            {
+                return BadRequest(
+                    new
+                    {
+                        Error = "Not allowed to make offers. Reasons: account blocked, account deleted, no phone number registered, notifications not active or you have an active emergency case.",
+                    }
+                );
+            }
+
+            var emergencyLocation = await _emergencyCaseService.GetMeetingLocationAsync(id);
+            if (emergencyLocation is null)
+            {
+                return NotFound();
+            }
+
+            var providerLocation = await _emergencyCaseService.GetServiceProviderLocationAsync(
+                userId.Value
+            );
+            if (providerLocation is null)
+            {
+                return BadRequest("Please enable location services in your app settings.");
+            }
+
+            var providerOverview = await _serviceProviderService.GetServiceProviderOverviewAsync(
+                userId.Value
+            );
+            if (providerOverview is null)
+            {
+                throw new ServerException("Service provider not found.");
+            }
+
+            await _offerService.CreateOfferAsync(
+                id,
+                offerDTO.Price,
+                providerOverview,
+                await _mapService.GetTravelDistanceAsync(
+                    providerLocation.Value,
+                    emergencyLocation.Value,
+                    offerDTO.TransportationType
+                ),
+                TimeSpan.FromMinutes(1)
+            );
+
+            return NoContent();
+        }
+
+        [HttpPut("providers-locations")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> UpdateProviderLocation([FromBody] LocationDTO locationDTO)
+        {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            if (!await _serviceProviderService.CheckIfAllowedToMakeOffersAsync(userId.Value))
+            {
+                return BadRequest(
+                    new
+                    {
+                        Error = "Not allowed to send your location as you can't make offers. Reasons: account blocked, account deleted, no phone number registered, notifications not active or you have an active emergency case.",
+                    }
+                );
+            }
+
+            bool locationSet = await _emergencyCaseService.SetServiceProviderLocationAsync(
+                userId.Value,
+                locationDTO.Longitude,
+                locationDTO.Latitude
+            );
+            if (!locationSet)
+            {
+                return Problem("Unable to set location. Please try again later.");
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id:int}/accept")]
+        [Authorize(Policy = "IsClient")]
+        public async Task<IActionResult> AcceptOffer(int id, [FromBody] AcceptOfferDTO offerDTO)
+        {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            var emergencyDetails = (
+                await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                    ec => ec.Id == id,
+                    ec => new
+                    {
+                        ec.ClientId,
+                        ec.Status,
+                        ec.CreatedAt,
+                    }
+                )
+            ).FirstOrDefault();
+
+            if (emergencyDetails is null)
+            {
+                return NotFound();
+            }
+
+            if (emergencyDetails.ClientId != userId)
+            {
+                return Unauthorized();
+            }
+
+            if (emergencyDetails.Status != ServiceStatus.Pending)
+            {
+                return BadRequest(
+                    "Emergency case can't be accepted as it's either in progress or completed."
+                );
+            }
+
+            if (DateTime.UtcNow >= emergencyDetails.CreatedAt.AddMinutes(15))
+            {
+                return BadRequest("Emergency case has expired.");
+            }
+
+            await _offerService.AcceptOfferAsync(id, userId.Value, offerDTO.ServiceProviderId);
+
+            return NoContent();
+        }
+
+        [HttpPut("available-lawyers/{id:int}")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> SetAvailableForEmergency()
+        {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            if (
+                !await _serviceProviderService.CheckIfAllowedToBeAvailableForEmergencyAsync(
+                    userId.Value
+                )
+            )
+            {
+                return BadRequest(
+                    new
+                    {
+                        Error = "Not allowed to set available lawyers. Reasons: account blocked, account deleted, no phone number registered, notifications not active or you have an active emergency case.",
+                    }
+                );
+            }
+
+            await _serviceProviderService.SetAvailableForEmergencyAsync(userId.Value);
+            return NoContent();
         }
     }
 }
