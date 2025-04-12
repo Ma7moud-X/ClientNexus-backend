@@ -34,7 +34,7 @@ namespace ClientNexus.Application.Services
         
         public async Task<IEnumerable<FeedbackDTO>> GetAllByClientAsync(int clientId)
         {
-            var clientExists = await _unitOfWork.ServiceProviders.GetByIdAsync(clientId) 
+            var clientExists = await _unitOfWork.Clients.GetByIdAsync(clientId) 
             ?? throw new KeyNotFoundException($"Client with ID {clientId} not found");
 
             var feedbacks = await _unitOfWork.ClientServiceProviderFeedbacks.GetByConditionAsync(f => f.ClientId == clientId);
