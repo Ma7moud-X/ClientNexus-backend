@@ -136,6 +136,7 @@ namespace ClientNexus.Application.Services
         {
             return new FeedbackDTO
             {
+                Id = feedback.Id,
                 ClientId = feedback.ClientId,
                 ServiceProviderId = feedback.ServiceProviderId,
                 Rate = feedback.Rate,
