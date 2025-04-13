@@ -103,6 +103,7 @@ public class EmergencyCaseService : IEmergencyCaseService
 
         foreach (var providerToken in providersTokens)
         {
+            // Console.WriteLine($"Sending notification to {providerToken.Token}");
             try
             {
                 await _pushNotificationService.SendNotificationAsync(
@@ -114,7 +115,11 @@ public class EmergencyCaseService : IEmergencyCaseService
             catch (Exception) { }
         }
 
-        return new ClientEmergencyDTO { Id = emergencyCase.Id };
+        return new ClientEmergencyDTO
+        {
+            Id = emergencyCase.Id,
+            TimeoutInMinutes = allowOffersWithinMinutes - 1,
+        };
     }
 
     public async Task<bool> CheckIfIdExistsAsync(int emergencyCaseId)
@@ -226,12 +231,14 @@ public class EmergencyCaseService : IEmergencyCaseService
         double latitude
     )
     {
-        return await _cache.AddGeoLocationAsync(
+        var affectedCount = await _cache.AddGeoLocationAsync(
             CacheConstants.AvailableForEmergencyServiceProvidersLocationsKey,
             longitude,
             latitude,
             serviceProviderId.ToString()
         );
+
+        return true;
     }
 
     public async Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id)
@@ -244,4 +251,17 @@ public class EmergencyCaseService : IEmergencyCaseService
             new Parameter("@id", id)
         );
     }
+
+    // public async Task<bool> CancelEmergencyCaseAsync(int id)
+    // {
+    //     int affectedCount = await _unitOfWork.SqlExecuteAsync(
+    //         @$"
+    //         UPDATE ClientNexusSchema.Services SET Status = '{(char)ServiceStatus.Cancelled}'
+    //         WHERE Id in (
+    //             SELECT Id FROM ClientNexusSchema.EmergencyCases WHERE Id = @id
+    //         )
+    //     ",
+    //         new Parameter("@id", id)
+    //     );
+    // }
 }

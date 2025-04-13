@@ -2,7 +2,7 @@ using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.Application.DTOs
 {
-    public record class EmergencyCaseOverviewDTO
+    public record EmergencyCaseOverviewDTO
     {
         public required int Id { get; init; }
         public required string Title { get; init; }

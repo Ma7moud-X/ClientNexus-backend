@@ -13,6 +13,7 @@ public interface IServiceProviderService
     );
     Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId);
     Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId);
+    Task<bool> CheckIfAllowedToBeAvailableForEmergencyAsync(int serviceProviderId);
     Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId);
     public Task<List<ServiceProviderResponse>> SearchServiceProvidersAsync(string? searchQuery);
     public Task UpdateServiceProviderAsync(
