@@ -13,7 +13,10 @@ using ClientNexus.Domain.Entities.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Google.Apis.Services;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
+using Amazon.S3;
+using Microsoft.OpenApi.Models;
 
+DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -89,6 +92,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSwaggerGen();
+
 }
 
 var app = builder.Build();

@@ -12,10 +12,11 @@ namespace ClientNexus.Application.DTOs
 
         [Required]
         public string DetailedAddress { get; set; }
-        public string? Neighborhood { get; set; }
         public string? MapUrl { get; set; }
         [Required]
         public int CityId { get; set; }
+        [Required]
+        public int StateId { get; set; }
 
     }
 }

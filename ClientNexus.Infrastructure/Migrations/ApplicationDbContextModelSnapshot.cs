@@ -74,13 +74,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("MapUrl")
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Neighborhood")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("StateId")
+                        .HasColumnType("int");
 
                     b.HasKey("BaseUserId", "Id");
 
                     b.HasIndex("CityId");
+
+                    b.HasIndex("StateId");
 
                     b.ToTable("Addresses", "ClientNexusSchema");
                 });
@@ -117,11 +118,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("UploadedById")
+                    b.Property<int?>("UploadedById")
                         .HasColumnType("int");
 
                     b.Property<string>("Url")
@@ -198,9 +202,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -210,8 +211,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CountryId");
 
                     b.HasIndex("StateId");
 
@@ -1053,9 +1052,17 @@ namespace ClientNexus.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ClientNexus.Domain.Entities.Others.State", "State")
+                        .WithMany()
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BaseUser");
 
                     b.Navigation("City");
+
+                    b.Navigation("State");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Content.Document", b =>
@@ -1069,8 +1076,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasOne("ClientNexus.Domain.Entities.Users.Admin", "UploadedBy")
                         .WithMany("UploadedDocuments")
                         .HasForeignKey("UploadedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DocumentType");
 
@@ -1098,18 +1104,10 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
                 {
-                    b.HasOne("ClientNexus.Domain.Entities.Others.Country", "Country")
-                        .WithMany("Cities")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ClientNexus.Domain.Entities.Others.State", "State")
                         .WithMany("Cities")
                         .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Country");
 
                     b.Navigation("State");
                 });
@@ -1523,8 +1521,6 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Country", b =>
                 {
-                    b.Navigation("Cities");
-
                     b.Navigation("States");
                 });
 

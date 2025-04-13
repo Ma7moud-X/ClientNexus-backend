@@ -222,19 +222,11 @@ namespace ClientNexus.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Abbreviation = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    StateId = table.Column<int>(type: "int", nullable: true),
-                    CountryId = table.Column<int>(type: "int", nullable: false)
+                    StateId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cities", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Cities_Countries_CountryId",
-                        column: x => x.CountryId,
-                        principalSchema: "ClientNexusSchema",
-                        principalTable: "Countries",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Cities_States_StateId",
                         column: x => x.StateId,
@@ -253,9 +245,9 @@ namespace ClientNexus.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DetailedAddress = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Neighborhood = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     MapUrl = table.Column<string>(type: "nvarchar(500)", nullable: true),
-                    CityId = table.Column<int>(type: "int", nullable: false)
+                    CityId = table.Column<int>(type: "int", nullable: false),
+                    StateId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -267,6 +259,13 @@ namespace ClientNexus.Infrastructure.Migrations
                         principalTable: "Cities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Addresses_States_StateId",
+                        column: x => x.StateId,
+                        principalSchema: "ClientNexusSchema",
+                        principalTable: "States",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -348,8 +347,9 @@ namespace ClientNexus.Infrastructure.Migrations
                     Title = table.Column<string>(type: "nvarchar(100)", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(2000)", nullable: false),
                     Url = table.Column<string>(type: "varchar(500)", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DocumentTypeId = table.Column<int>(type: "int", nullable: false),
-                    UploadedById = table.Column<int>(type: "int", nullable: false)
+                    UploadedById = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -995,6 +995,12 @@ namespace ClientNexus.Infrastructure.Migrations
                 column: "CityId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Addresses_StateId",
+                schema: "ClientNexusSchema",
+                table: "Addresses",
+                column: "StateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Admins_AccessLevelId",
                 schema: "ClientNexusSchema",
                 table: "Admins",
@@ -1069,12 +1075,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "CaseFiles",
                 column: "ConsultCaseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Cities_CountryId",
-                schema: "ClientNexusSchema",
-                table: "Cities",
-                column: "CountryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Cities_StateId",

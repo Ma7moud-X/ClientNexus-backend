@@ -6,4 +6,6 @@ public interface IFileStorage
 {
     Task<string> UploadFileAsync(Stream fileStream, string key, FileType fileType);
     Task<IEnumerable<string>> GetFilesUrlsWithPrefixAsync(string prefix);
+    Task DeleteFileAsync(string key);
+
 }

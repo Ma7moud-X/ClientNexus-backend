@@ -96,4 +96,14 @@ public class S3Storage : IFileStorage
 
         return $"https://{_bucketName}.s3.amazonaws.com/{key}";
     }
+    public async Task DeleteFileAsync(string key)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        await _s3Client.DeleteObjectAsync(request);
+    }
 }

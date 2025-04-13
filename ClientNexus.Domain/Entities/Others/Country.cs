@@ -7,5 +7,5 @@ public class Country
     public string? Abbreviation { get; set; }
 
     public ICollection<State>? States { get; set; }
-    public ICollection<City>? Cities { get; set; }
+    //public ICollection<City>? Cities { get; set; }
 }

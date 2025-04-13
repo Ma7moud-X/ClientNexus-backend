@@ -77,6 +77,7 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<SlotDTO>(createdSlot);
             
+
         }
 
         public async Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO)
