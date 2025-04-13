@@ -1,3 +1,5 @@
+using ClientNexus.Domain.Enums;
+
 namespace ClientNexus.Domain.Entities.Services
 {
     public class Question : Service
@@ -8,5 +10,9 @@ namespace ClientNexus.Domain.Entities.Services
         public DateTime? AnsweredAt { get; set; }
         public bool? IsAnswerHelpful { get; set; }
 
+        public Question()
+        {
+            ServiceType = ServiceType.Question;
+        }
     }
 }
