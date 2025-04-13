@@ -5,6 +5,7 @@ using ClientNexus.Application.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClientNexus.Application.Services
 {
@@ -64,16 +65,33 @@ namespace ClientNexus.Application.Services
             question.Status = ServiceStatus.Done;
 
             await _unitOfWork.SaveChangesAsync();
+
+            //notify the client that his question is answered
+
+
+            return _mapper.Map<QuestionResponseDTO>(question);
+        }
+        public async Task<QuestionResponseDTO> GetQuestionByIdAsync(int questionId)
+        {
+            var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
+
+            if (question == null)
+                throw new KeyNotFoundException("Invalid Question ID.");
+
             return _mapper.Map<QuestionResponseDTO>(question);
         }
 
-        public async Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit)
+        public async Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit, bool onlyUnanswered = false)
         {
-            if (!await _unitOfWork.Clients.CheckAnyExistsAsync(p => p.Id == clientId))
+            if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
                 throw new KeyNotFoundException("Invalid Client Id.");
 
-            IEnumerable<Question> questions = await _unitOfWork.Questions.GetByConditionAsync(c => c.ClientId == clientId, offset : offset, limit : limit);
+            IEnumerable<Question> questions;
+            if(onlyUnanswered)
+            questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.ClientId == clientId && q.Status == ServiceStatus.Pending, offset : offset, limit : limit);
 
+            else //retrieve all questions answered or not
+                questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.ClientId == clientId, offset: offset, limit: limit);
             return _mapper.Map<List<QuestionResponseDTO>>(questions);
         }
 
@@ -82,7 +100,7 @@ namespace ClientNexus.Application.Services
             if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == providerId))
                 throw new KeyNotFoundException("Invalid Provider Id.");
 
-            IEnumerable<Question> questions = await _unitOfWork.Questions.GetByConditionAsync(c => c.ServiceProviderId == providerId, offset: offset, limit: limit);
+            IEnumerable<Question> questions = await _unitOfWork.Questions.GetByConditionAsync(c => c.Status == ServiceStatus.Done && c.ServiceProviderId == providerId, offset: offset, limit: limit);
 
             return _mapper.Map<List<QuestionResponseDTO>>(questions);
         }
@@ -96,13 +114,68 @@ namespace ClientNexus.Application.Services
             }
             else
             {
+                //retrieve both answered and non-answered questions
                 questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.Status == ServiceStatus.Pending || q.Status == ServiceStatus.Done , offset: offset, limit: limit);
             }
             return _mapper.Map<List<QuestionResponseDTO>>(questions);
         }
 
+        public async Task DeleteQuestionAsync(int questionId, int currentClientId)
+        {
+            var question = await _unitOfWork.Questions
+                .FirstOrDefaultAsync(q => q.Id == questionId);
 
+            if (question == null)
+                throw new KeyNotFoundException("Invalid Question ID.");
 
+            if (question.ClientId != currentClientId)
+                throw new UnauthorizedAccessException("You are not allowed to delete this question.");
 
+            if (question.AnswerBody != null)
+                throw new InvalidOperationException("Cannot delete a question that has already been answered.");
+
+            _unitOfWork.Questions.Delete(question);
+            await _unitOfWork.SaveChangesAsync();
         }
+
+        //patch method -> authorize client
+        //allow editing only unanswered questions
+        public async Task EditQuestionAsync(int questionId, int currentClientId, string updatedBody)
+        {
+            var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
+
+            if (question == null)
+                throw new KeyNotFoundException("Invalid Question ID.");
+
+            if (question.ClientId != currentClientId)
+                throw new UnauthorizedAccessException("You are not allowed to edit this question.");
+
+            if (!string.IsNullOrWhiteSpace(question.AnswerBody))
+                throw new InvalidOperationException("Cannot edit a question that has already been answered.");
+
+            question.QuestionBody = updatedBody;
+            question.UpdatedAt = DateTime.Now;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        //patch method -> authorize client
+        public async Task MarkQuestionHelpfulAsync(int questionId, int currentClientId, bool isHelpful)
+        {
+            var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
+
+            if (question == null)
+                throw new KeyNotFoundException("Invalid Question ID.");
+
+            if (question.ClientId != currentClientId)
+                throw new UnauthorizedAccessException("You are not allowed to rate this question.");
+
+            if (string.IsNullOrWhiteSpace(question.AnswerBody))
+                throw new InvalidOperationException("Cannot mark helpfulness on an unanswered question.");
+
+            question.IsAnswerHelpful = isHelpful;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+
+    }
 }

@@ -12,8 +12,12 @@ namespace ClientNexus.Application.Interfaces
     {
         Task<QuestionResponseDTO> CreateQuestionAsync(int clientId, [FromBody] QuestionCreateDTO dto);
         Task<QuestionResponseDTO> CreateAnswerAsync(int questionId, int providerId, [FromBody] AnswerCreateDTO dto);
-        Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit);
+        Task<QuestionResponseDTO> GetQuestionByIdAsync(int questionId);
+        Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit, bool onlyUnanswered = false);
         Task<List<QuestionResponseDTO>> GetQuestionsAnsweredByProviderAsync(int providerId, int offset, int limit);
         Task<List<QuestionResponseDTO>> GetAllQuestionsAsync(int offset, int limit, bool onlyUnanswered = false);
+        Task DeleteQuestionAsync(int questionId, int currentClientId);
+        Task EditQuestionAsync(int questionId, int currentClientId, string updatedBody);
+        Task MarkQuestionHelpfulAsync(int questionId, int currentClientId, bool isHelpful);
     }
 }
