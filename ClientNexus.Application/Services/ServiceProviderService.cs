@@ -1,10 +1,10 @@
-using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
+using ClientNexus.Domain.ValueObjects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,20 +13,11 @@ namespace ClientNexus.Application.Services
     public class ServiceProviderService : IServiceProviderService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ICache _cache;
-        private readonly IBaseUserService _baseUserService;
         private readonly UserManager<BaseUser> _userManager;
 
-        public ServiceProviderService(
-            IUnitOfWork unitOfWork,
-            ICache cache,
-            IBaseUserService baseUserService,
-            UserManager<BaseUser> userManager
-        )
+        public ServiceProviderService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager)
         {
             _unitOfWork = unitOfWork;
-            _cache = cache;
-            _baseUserService = baseUserService;
             _userManager = userManager;
         }
 
@@ -137,31 +128,18 @@ namespace ClientNexus.Application.Services
             double radiusInMeters
         )
         {
-            var providersLocations = await _cache.GetGeoLocationsInRadiusAsync(
-                CacheConstants.AvailableForEmergencyServiceProvidersLocationsKey,
-                longitude,
-                latitude,
-                radiusInMeters
+            var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                sp =>
+                    sp.CurrentLocation != null
+                    && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
+                        <= radiusInMeters
+                    && sp.LastLocationUpdateTime != null
+                    && sp.LastLocationUpdateTime > DateTime.UtcNow.AddMinutes(-2)
+                    && sp.NotificationToken != null,
+                sp => new NotificationToken { Token = sp.NotificationToken! }
             );
 
-            if (providersLocations is null || !providersLocations.Any())
-            {
-                return Enumerable.Empty<NotificationToken>();
-            }
-
-            IEnumerable<int> providersIds;
-            try
-            {
-                providersIds = providersLocations.Select(l => int.Parse(l.Identifier));
-            }
-            catch (Exception)
-            {
-                throw new InvalidCastException(
-                    "Error casting service provider IDs from cache locations as integers"
-                );
-            }
-
-            return await _baseUserService.GetNotificationTokensAsync(providersIds);
+            return tokens;
         }
 
         public async Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId)

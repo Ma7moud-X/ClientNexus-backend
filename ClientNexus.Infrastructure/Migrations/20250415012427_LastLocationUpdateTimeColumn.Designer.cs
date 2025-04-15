@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250411132222_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250415012427_LastLocationUpdateTimeColumn")]
+    partial class LastLocationUpdateTimeColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -927,11 +928,8 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<double>("MeetingLatitude")
-                        .HasColumnType("float");
-
-                    b.Property<double>("MeetingLongitude")
-                        .HasColumnType("float");
+                    b.Property<Point>("MeetingLocation")
+                        .HasColumnType("geography");
 
                     b.Property<int?>("TimeForArrival")
                         .HasColumnType("int");
@@ -987,8 +985,8 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int?>("ApprovedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("CurrentLocation")
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<Point>("CurrentLocation")
+                        .HasColumnType("geography");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1017,6 +1015,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastLocationUpdateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("MainImage")
                         .IsRequired()
