@@ -1,5 +1,6 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Services;
 using ClientNexus.Domain.Entities.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,8 @@ namespace ClientNexus.API.Controllers
             this.serviceProviderTypeService = serviceProviderTypeService;
         }
         [HttpPost]
+        //[Authorize(Roles = "Admin")]
+
         public async Task<ActionResult<ApiResponseDTO<object>>> AddServiceProviderType([FromBody] string name)
         {
             try
@@ -33,6 +36,26 @@ namespace ClientNexus.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"Unexpected error: {ex.Message}"));
+            }
+        }
+        
+        [HttpDelete("{id}")]
+        //[Authorize(Roles = "Admin")]
+
+        public async Task<ActionResult<ApiResponseDTO<object>>> DeleteServiceProviderTypeAsyn(int id)
+        {
+            try
+            {
+                await serviceProviderTypeService.DeleteServiceProviderTypeAsync(id);
+                return Ok(ApiResponseDTO<object>.SuccessResponse(null, "ServiceProviderType deleted successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<object>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
 

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClientNexus.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class intial : Migration
+    public partial class intial1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -346,7 +346,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(100)", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(2000)", nullable: false),
-                    Url = table.Column<string>(type: "varchar(500)", nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DocumentTypeId = table.Column<int>(type: "int", nullable: false),
                     UploadedById = table.Column<int>(type: "int", nullable: true)

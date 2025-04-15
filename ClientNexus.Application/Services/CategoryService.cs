@@ -52,7 +52,8 @@ namespace ClientNexus.Application.Services
             }
 
             var existingCategory = await _unitOfWork.DCategories
-                .FirstOrDefaultAsync(c => c.Name.Equals(CategoryName, StringComparison.OrdinalIgnoreCase));
+                     .FirstOrDefaultAsync(c => c.Name.ToLower() == CategoryName.ToLower());
+
 
             if (existingCategory != null)
             {
@@ -64,7 +65,7 @@ namespace ClientNexus.Application.Services
                 Name = CategoryName
             };
 
-            _unitOfWork.DCategories.AddAsync(newCategory);
+           await _unitOfWork.DCategories.AddAsync(newCategory);
             await _unitOfWork.SaveChangesAsync();
             return new CategoryResponseDTO
             {

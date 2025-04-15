@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250412204325_intial")]
-    partial class intial
+    [Migration("20250415214717_intial1")]
+    partial class intial1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -130,10 +130,6 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int?>("UploadedById")
                         .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("varchar(500)");
 
                     b.HasKey("Id");
 

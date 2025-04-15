@@ -19,8 +19,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost]
-        [Authorize("Admin")]  // Only admins can add specializations
-
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponseDTO<StateDTO>>> AddState([FromBody] StateDTO stateDTO)
         {
             try
@@ -46,7 +45,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize("Admin")]  // Only admins can add specializations
+        //[Authorize(Roles = "Admin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteState(int id)
         {

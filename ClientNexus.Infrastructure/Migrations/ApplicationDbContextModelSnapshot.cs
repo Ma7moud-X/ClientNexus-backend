@@ -128,10 +128,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int?>("UploadedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("varchar(500)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentTypeId");

@@ -1,26 +1,43 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Services;
+using ClientNexus.Domain.Entities.Content;
+using ClientNexus.Domain.Interfaces;
+using ClientNexus.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace ClientNexus.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize("Admin")]
+
     public class DocumentController : ControllerBase
     {
         private readonly IDocumentService _documentService;
-
-        public DocumentController(IDocumentService documentService)
+        private readonly IUnitOfWork unitOfWork;
+        public DocumentController(IDocumentService documentService, IUnitOfWork unitOfWork)
         {
             _documentService = documentService;
+            this.unitOfWork = unitOfWork;
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> AddDocument([FromBody] DocumentDTO dto)
+        public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> AddDocument([FromForm] DocumentDTO dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                              .SelectMany(v => v.Errors)
+                              .Select(e => e.ErrorMessage)
+                              .ToList();
 
+                return BadRequest(ApiResponseDTO<object>.ErrorResponse("Validation failed."));
+            }
             try
             {
                 var result = await _documentService.AddDocumentAsync(dto);
@@ -40,6 +57,8 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("{documentId}")]
+        //    [Authorize("Admin")]
+
         public async Task<IActionResult> DeleteDocumentAsync(int documentId)
         {
             try
@@ -59,7 +78,19 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred while deleting the document: {ex.Message}"));
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> GetDocuments()
+        {
+            var documents =  await unitOfWork.Documents.GetAllQueryable().ToListAsync();
+       
+            return Ok(documents);
+        }
+
+
 
 
     }
+
+
 }
+

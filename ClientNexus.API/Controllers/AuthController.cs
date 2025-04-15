@@ -42,7 +42,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUserDTO registerDto) // NEW - Explicitly binding from body
+        public async Task<IActionResult> Register([FromForm] RegisterUserDTO registerDto) // NEW - Explicitly binding from body
         {
 
 

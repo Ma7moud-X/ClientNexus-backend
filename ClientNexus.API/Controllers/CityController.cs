@@ -1,5 +1,7 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using Amazon.S3.Model;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +13,24 @@ namespace ClientNexus.API.Controllers
     public class CityController : ControllerBase
     {
         private readonly ICityServicecs _cityService;
-
+        private readonly IUnitOfWork unitOfWork;
         // Constructor to inject the ICityService dependency
-        public CityController(ICityServicecs cityService)
+        public CityController(ICityServicecs cityService , IUnitOfWork unitOfWork)
         {
             _cityService = cityService;
+            this.unitOfWork = unitOfWork;
+        }
+
+        [HttpGet]
+
+        public IActionResult gat()
+        {
+            return Ok(unitOfWork.Cities.GetAllQueryable());
         }
 
         // POST api/city
         [HttpPost]
-        [Authorize("Admin")]  // Only admins can add specializations
+        //[Authorize(Roles = "Admin")]
 
         public async Task<ActionResult<ApiResponseDTO<CityDTO>>> AddCity([FromBody] CityDTO cityDTO)
         {
@@ -53,7 +63,7 @@ namespace ClientNexus.API.Controllers
 
         // DELETE api/city/{id}
         [HttpDelete("{id}")]
-        [Authorize("Admin")]  // Only admins can add specializations
+        //[Authorize(Roles = "Admin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteCity(int id)
         {

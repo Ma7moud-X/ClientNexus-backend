@@ -16,9 +16,10 @@ namespace ClientNexus.Application.DTOs
         public string Content { get; set; } 
         //public int DocumentTypeId { get; set; }
         public int? UploadedById { get; set; }
-        [Required]
+       
         public IFormFile? ImageFile { get; set; }
         [Required]
         public List<int> CategoryIds { get; set; }
+
     }
 }

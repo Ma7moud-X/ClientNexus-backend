@@ -41,7 +41,13 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
-
+builder.Services.AddScoped<IcountryService, CountryService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityServicecs, CityService>();
+builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
 
 // NEW - Configure Identity with BaseUser
 builder.Services.AddIdentity<BaseUser, IdentityRole<int>>()
@@ -91,6 +97,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // NEW - Swagger Configuration
 if (builder.Environment.IsDevelopment())
 {
+    builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
 }
@@ -114,7 +121,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-app.MapGet("/", () => "Hello World!"); // NEW - Restored test endpoint
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
 

@@ -62,6 +62,7 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         return query;
     }
+
     public async Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();

@@ -12,15 +12,18 @@ namespace ClientNexus.Infrastructure.Configurations.Content
 
             builder.HasKey(dc => new { dc.DocumentId, dc.DCategoryId });
 
-            // builder.HasOne(dc => dc.Document)
-            //     .WithMany(dc => dc.DocumentsCategories)
-            //     .HasForeignKey(dc => dc.DocumentId)
-            //     .OnDelete(DeleteBehavior.Cascade);
+            //builder.HasOne(dc => dc.Document)
+            //    .WithMany(dc => dc.DocumentCategories)
+            //    .HasForeignKey(dc => dc.DocumentId)
+            //    .OnDelete(DeleteBehavior.Cascade);
 
-            // builder.HasOne(dc => dc.Category)
-            //     .WithMany(dc => dc.DocumentsCategories)
-            //     .HasForeignKey(dc => dc.CategoryId)
-            //     .OnDelete(DeleteBehavior.Cascade);
+            //builder.HasOne(dc => dc.Category)
+            //    .WithMany(dc => dc.DocumentCategories)
+            //    .HasForeignKey(dc => dc.DCategoryId)
+            //    .OnDelete(DeleteBehavior.Cascade);
+
+  
+
         }
     }
 }

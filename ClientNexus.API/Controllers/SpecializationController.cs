@@ -9,6 +9,7 @@ namespace ClientNexus.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class SpecializationController : ControllerBase
     {
         private readonly ISpecializationService specializationService;
@@ -21,8 +22,8 @@ namespace ClientNexus.API.Controllers
 
 
             [HttpPost]
-            [Authorize("Admin")]  // Only admins can add specializations
-            public async Task<IActionResult> AddNewSpecialization([FromBody] SpecializationDTO specializationDTO)
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddNewSpecialization([FromBody] SpecializationDTO specializationDTO)
             {
                 try
                 {
@@ -47,7 +48,7 @@ namespace ClientNexus.API.Controllers
                 }
             }
         [HttpDelete("delete/{id}")]
-        [Authorize("Admin")]  // Only admins can delete specializations
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSpecialization([FromRoute] int id)
         {
             try

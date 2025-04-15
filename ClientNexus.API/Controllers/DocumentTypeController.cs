@@ -1,6 +1,6 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
+using ClientNexus.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,26 +8,26 @@ namespace ClientNexus.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class DocumentTypeController : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
+        private readonly IDocumentTypeService documentTypeService;
 
-        public CategoryController(ICategoryService categoryService)
+        public DocumentTypeController(IDocumentTypeService documentTypeService)
         {
-            _categoryService = categoryService;
+            this.documentTypeService = documentTypeService;
         }
-
 
         [HttpPost]
         //[Authorize("Admin")]
-        public async Task<IActionResult> AddCategory([FromBody] string categoryName)
+        public async Task<IActionResult> AddDocumentTypeService([FromBody] string DocumentTypeName)
         {
             try
             {
-               var result = await _categoryService.AddCategoryAsync(categoryName);
+                await documentTypeService.AddDocumentTypeAsync(DocumentTypeName);
 
-                var response = ApiResponseDTO<CategoryResponseDTO>.SuccessResponse(result, "Category added successfully.");
-                return Ok(response);
+
+                return Ok(ApiResponseDTO<object>.SuccessResponse(null, $"Document Type '{DocumentTypeName}' added successfully."));
+
             }
             catch (ArgumentException ex)
             {
@@ -45,27 +45,26 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, response);
             }
         }
-        [HttpDelete("{id}")]
-        //[Authorize("Admin")]
 
-        public async Task<IActionResult> DeleteCategory(int id)
+
+        [HttpDelete("{id}")]
+        //[Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponseDTO<object>>> DeleteDocumentTypeAsyn(int id)
         {
             try
             {
-                await _categoryService.DeleteCategoryAsync(id);
-                return Ok(ApiResponseDTO<string>.SuccessResponse(null, "Category deleted successfully"));
+                await documentTypeService.DeleteDocumentTypeAsync(id);
+                return Ok(ApiResponseDTO<object>.SuccessResponse(null, "Document Type deleted successfully."));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+                return NotFound(ApiResponseDTO<object>.ErrorResponse(ex.Message));
             }
-            
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse("An unexpected error occurred."));
+                return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
-
 
     }
 }

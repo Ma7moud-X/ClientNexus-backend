@@ -17,14 +17,14 @@ namespace ClientNexus.Application.Services
 
     public class DocumentService:IDocumentService
     {
-        private readonly IFileStorage _fileStorage;
+        private readonly IFileService fileService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _bucketName;
         private readonly ICategoryService _categoryService;
         
-        public DocumentService(IFileStorage fileStorage, IUnitOfWork unitOfWork,ICategoryService categoryService)
+        public DocumentService(IFileService fileService, IUnitOfWork unitOfWork,ICategoryService categoryService)
         {
-            _fileStorage = fileStorage;
+              this.fileService= fileService;
             _unitOfWork = unitOfWork;
             _bucketName = Environment.GetEnvironmentVariable("S3_BUCKET_NAME");
             _categoryService = categoryService;
@@ -47,7 +47,9 @@ namespace ClientNexus.Application.Services
                 Title = dto.Title,
                 Content = dto.Content,
                 DocumentTypeId = documenttype.Id,
-                UploadedById = dto.UploadedById,    
+                UploadedById = dto.UploadedById,
+                DocumentCategories = new List<DocumentCategory>() 
+
             };
 
 
@@ -59,43 +61,70 @@ namespace ClientNexus.Application.Services
                 string extension = Path.GetExtension(dto.ImageFile.FileName).TrimStart('.').ToLower();
 
                 
-                FileType fileType;
+                //FileType fileType;
 
-                switch (extension)
-                {
-                    case "jpg":
-                    case "jpeg":
-                        fileType = FileType.Jpeg;
-                        break;
-                    case "png":
-                        fileType = FileType.Png;
-                        break;
-                    default:
-                        throw new ArgumentException("Unsupported image type");
-                }
+                //switch (extension)
+                //{
+                //    case "jpg":
+                //    case "jpeg":
+                //        fileType = FileType.Jpeg;
+                //        break;
+                //    case "png":
+                //        fileType = FileType.Png;
+                //        break;
+                //    default:
+                //        throw new ArgumentException("Unsupported image type");
+                //}
 
-                string key = $"Images/{Guid.NewGuid()}.{extension}";
+                string key = $"{Guid.NewGuid()}.{extension}";
 
-                document.ImageUrl = await _fileStorage.UploadFileAsync(stream, key, fileType);
+                document.ImageUrl = await fileService.UploadPublicFileAsync(stream, FileType.Png,key);
             }
             _unitOfWork.Documents.AddAsync(document);
-            await _unitOfWork.SaveChangesAsync();
+            try
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException?.Message;
+                throw new Exception($"SaveChanges failed: {ex.Message}, Inner: {inner}", ex);
+            }
+            try
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException?.Message;
+                throw new Exception($"SaveChanges failed: {ex.Message}, Inner: {inner}", ex);
+            }
 
-            _categoryService.AddCategoriesToDocument(document.DocumentCategories, dto.CategoryIds, document.Id);
+            //await _unitOfWork.SaveChangesAsync();
+
+            await _categoryService.AddCategoriesToDocument(document.DocumentCategories, dto.CategoryIds, document.Id);
             await _unitOfWork.SaveChangesAsync();
+            var categoryNames = (await _unitOfWork.DCategories.GetAllQueryable()
+                .Where(c => dto.CategoryIds.Contains(c.Id))
+                  .Select(c => c.Name)
+                    .ToListAsync());
             return new DocumentResponseDTO
             {
                 Id = document.Id,
                 Title = document.Title,
                 ImageUrl = document.ImageUrl,
                 Content = document.Content,
-                Categories = document.DocumentCategories.Select(dc => dc.Category?.Name).ToList()
+                Categories = categoryNames
             };
         }
         public async Task DeleteDocumentAsync(int documentId)
         {
-            var document = await _unitOfWork.Documents
-                .FirstOrDefaultAsync(d => d.Id == documentId);
+
+
+            var document = await _unitOfWork.Documents.FirstOrDefaultAsync(d=>d.Id==documentId) ;
+
+
+
 
             if (document == null)
             {
@@ -105,18 +134,18 @@ namespace ClientNexus.Application.Services
 
             if (!string.IsNullOrEmpty(document.ImageUrl))
             {
-                var fileKey = document.ImageUrl.Split('/').Last(); 
-               
-                    await _fileStorage.DeleteFileAsync(fileKey); 
-                                 
+                var fileKey = document.ImageUrl.Split('/').Last();
+
+                await fileService.DeleteFileAsync(fileKey);
+
             }
 
-           
+
             _unitOfWork.Documents.Delete(document);
             await _unitOfWork.SaveChangesAsync();
 
         }
-       
+
 
 
     }

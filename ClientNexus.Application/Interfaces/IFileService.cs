@@ -18,4 +18,6 @@ public interface IFileService
         int folderId,
         UploadedFor uploadedFor
     );
+    Task DeleteFileAsync(string key);
+
 }

@@ -14,7 +14,7 @@ public class Document
     public int Id { get; set; }
     public string Title { get; set; } = default!;
     public string Content { get; set; } = default!;
-    public string? Url { get; set; }
+    //public string? Url { get; set; }
     public string? ImageUrl { get; set; }
 
 
