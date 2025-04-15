@@ -190,8 +190,8 @@ namespace ClientNexus.API.Controllers
                         Status = ec.Status,
                         CreatedAt = ec.CreatedAt,
                         Price = ec.Price ?? 0,
-                        MeetingLongitude = ec.MeetingLongitude,
-                        MeetingLatitude = ec.MeetingLatitude,
+                        MeetingLongitude = ec.MeetingLocation!.X,
+                        MeetingLatitude = ec.MeetingLocation!.Y,
                     },
                     offset: offset,
                     limit: limit
@@ -472,12 +472,12 @@ namespace ClientNexus.API.Controllers
                 return BadRequest("Emergency case has expired.");
             }
 
-            await _offerService.AcceptOfferAsync(id, userId.Value, offerDTO.ServiceProviderId);
-
-            return NoContent();
+            return Ok(
+                await _offerService.AcceptOfferAsync(id, userId.Value, offerDTO.ServiceProviderId)
+            );
         }
 
-        [HttpPut("available-lawyers/{id:int}")]
+        [HttpPut("available-lawyers")]
         [Authorize(Policy = "IsServiceProvider")]
         public async Task<IActionResult> SetAvailableForEmergency()
         {
