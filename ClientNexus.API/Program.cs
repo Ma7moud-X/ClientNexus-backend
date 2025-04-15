@@ -71,6 +71,9 @@ builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 652dfac (Add Document service)
 builder.Services.AddScoped<IcountryService, CountryService>();
 builder.Services.AddScoped<IStateService, StateService>();
 builder.Services.AddScoped<ICityServicecs, CityService>();
@@ -78,6 +81,7 @@ builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeServi
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
+<<<<<<< HEAD
 =======
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddScoped<ServiceProviderService>();  // FIX: Register ServiceProviderService
@@ -85,6 +89,8 @@ builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddSingleton<ICache, RedisCache>();
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
 
+=======
+>>>>>>> 652dfac (Add Document service)
 
 
 
