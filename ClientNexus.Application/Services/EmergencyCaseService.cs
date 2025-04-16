@@ -15,19 +15,16 @@ public class EmergencyCaseService : IEmergencyCaseService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IServiceProviderService _serviceProviderService;
     private readonly IPushNotification _pushNotificationService;
-    private readonly ICache _cache;
 
     public EmergencyCaseService(
         IUnitOfWork unitOfWork,
         IServiceProviderService serviceProviderService,
-        IPushNotification pushNotificationService,
-        ICache cache
+        IPushNotification pushNotificationService
     )
     {
         _unitOfWork = unitOfWork;
         _serviceProviderService = serviceProviderService;
         _pushNotificationService = pushNotificationService;
-        _cache = cache;
     }
 
     private async Task<EmergencyCase> CreateEmergencyCaseAsync(

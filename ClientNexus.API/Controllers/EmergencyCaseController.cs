@@ -504,5 +504,46 @@ namespace ClientNexus.API.Controllers
             await _serviceProviderService.SetAvailableForEmergencyAsync(userId.Value);
             return NoContent();
         }
+
+        [HttpPatch("{id:int}/status")]
+        [Authorize]
+        public async Task<IActionResult> UpdateStatus(int id)
+        {
+            int? userId = User.GetId();
+            UserType? userType = User.GetRole();
+            if (userId is null || userType is null || userType.Value == UserType.Client)
+            {
+                return Unauthorized();
+            }
+
+            if (userType.Value == UserType.ServiceProvider)
+            {
+                var emergencyDetails = (
+                    await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                        ec => ec.Id == id && ec.ServiceProviderId == userId.Value,
+                        ec => new { ec.Status },
+                        limit: 1
+                    )
+                ).FirstOrDefault();
+
+                if (emergencyDetails is null)
+                {
+                    return NotFound();
+                }
+
+                if (
+                    emergencyDetails.Status != ServiceStatus.InProgress
+                    && emergencyDetails.Status != ServiceStatus.Done
+                )   // can't happen
+                {
+                    return BadRequest(
+                        "Emergency case can't be marked as done as it's still pending"
+                    );
+                }
+            }
+
+            await _baseServiceService.SetDoneAsync(id);
+            return NoContent();
+        }
     }
 }
