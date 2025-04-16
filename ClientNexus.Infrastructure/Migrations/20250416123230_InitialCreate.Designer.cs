@@ -13,13 +13,8 @@ using NetTopologySuite.Geometries;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250414191103_InitialDatabase.Designer.cs
-    [Migration("20250414191103_InitialDatabase")]
-    partial class InitialDatabase
-========
-    [Migration("20250412143842_InitialCreate")]
+    [Migration("20250416123230_InitialCreate")]
     partial class InitialCreate
->>>>>>>> 1bf35a96a004a3f9aabc05257b5049636fbf72aa:ClientNexus.Infrastructure/Migrations/20250412143842_InitialCreate.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1031,6 +1026,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastLocationUpdateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("MainImage")
                         .IsRequired()
