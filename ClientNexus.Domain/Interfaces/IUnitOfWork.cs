@@ -79,6 +79,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Problem> Problems { get; }
     IBaseRepo<Slot> Slots { get; }
     IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
+    IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks {get; }
 
     // Functions
     Task<int> SaveChangesAsync();

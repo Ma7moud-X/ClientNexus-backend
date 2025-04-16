@@ -440,11 +440,17 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.ClientServiceProviderFeedback", b =>
                 {
-                    b.Property<int>("ServiceProviderId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Feedback")
                         .HasColumnType("nvarchar(1000)");
@@ -452,9 +458,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<float>("Rate")
                         .HasColumnType("real");
 
-                    b.HasKey("ServiceProviderId", "ClientId");
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("ServiceProviderId");
 
                     b.ToTable("ClientServiceProviderFeedbacks", "ClientNexusSchema");
                 });
