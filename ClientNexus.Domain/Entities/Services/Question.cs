@@ -6,6 +6,7 @@ namespace ClientNexus.Domain.Entities.Services
     {
         public required string QuestionBody { get; set; }
         public bool? Visibility { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public string? AnswerBody { get; set; }
         public DateTime? AnsweredAt { get; set; }
         public bool? IsAnswerHelpful { get; set; }

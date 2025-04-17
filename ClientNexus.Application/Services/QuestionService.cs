@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ClientNexus.Domain.Entities.Roles;
 
 namespace ClientNexus.Application.Services
 {
@@ -120,7 +121,7 @@ namespace ClientNexus.Application.Services
             return _mapper.Map<List<QuestionResponseDTO>>(questions);
         }
 
-        public async Task DeleteQuestionAsync(int questionId, int currentClientId)
+        public async Task DeleteQuestionAsync(int questionId, int currentClientId, string role)
         {
             var question = await _unitOfWork.Questions
                 .FirstOrDefaultAsync(q => q.Id == questionId);
@@ -128,7 +129,8 @@ namespace ClientNexus.Application.Services
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
 
-            if (question.ClientId != currentClientId)
+         
+            if (question.ClientId != currentClientId && role != "A")
                 throw new UnauthorizedAccessException("You are not allowed to delete this question.");
 
             if (question.AnswerBody != null)
@@ -140,14 +142,14 @@ namespace ClientNexus.Application.Services
 
         //patch method -> authorize client
         //allow editing only unanswered questions
-        public async Task EditQuestionAsync(int questionId, int currentClientId, string updatedBody)
+        public async Task UpdateQuestionAsync(int questionId, int clientId, string updatedBody)
         {
             var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
 
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
 
-            if (question.ClientId != currentClientId)
+            if (question.ClientId != clientId)
                 throw new UnauthorizedAccessException("You are not allowed to edit this question.");
 
             if (!string.IsNullOrWhiteSpace(question.AnswerBody))
@@ -159,14 +161,14 @@ namespace ClientNexus.Application.Services
         }
 
         //patch method -> authorize client
-        public async Task MarkQuestionHelpfulAsync(int questionId, int currentClientId, bool isHelpful)
+        public async Task MarkQuestionHelpfulAsync(int questionId, int clientId, bool isHelpful)
         {
             var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
 
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
 
-            if (question.ClientId != currentClientId)
+            if (question.ClientId != clientId)
                 throw new UnauthorizedAccessException("You are not allowed to rate this question.");
 
             if (string.IsNullOrWhiteSpace(question.AnswerBody))
