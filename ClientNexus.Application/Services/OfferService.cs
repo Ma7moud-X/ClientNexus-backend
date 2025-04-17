@@ -5,6 +5,7 @@ using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 
 namespace ClientNexus.Application.Services;
@@ -17,6 +18,7 @@ public class OfferService : IOfferService
     private readonly IBaseServiceService _baseServiceService;
     private readonly IServiceProviderService _serviceProviderService;
     private readonly IPushNotification _pushNotificationService;
+    private readonly IEmergencyCaseService _emergencyCaseService;
 
     public OfferService(
         ICache cache,
@@ -24,7 +26,8 @@ public class OfferService : IOfferService
         IUnitOfWork unitOfWork,
         IBaseServiceService baseServiceService,
         IServiceProviderService serviceProviderService,
-        IPushNotification pushNotificationService
+        IPushNotification pushNotificationService,
+        IEmergencyCaseService emergencyCaseService
     )
     {
         _cache = cache;
@@ -33,59 +36,7 @@ public class OfferService : IOfferService
         _baseServiceService = baseServiceService;
         _serviceProviderService = serviceProviderService;
         _pushNotificationService = pushNotificationService;
-    }
-
-    public async Task<bool> AllowOffersAsync<T>(
-        T service,
-        int clientId,
-        double MeetingLongitude,
-        double MeetingLatitude,
-        int timeoutInMin = 16
-    )
-        where T : ServiceProviderServiceDTO
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        if (timeoutInMin <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(timeoutInMin),
-                "Timeout must be greater than 0"
-            );
-        }
-
-        _cache.StartTransaction();
-
-        var requestCached = _cache.SetObjectAsync(
-            string.Format(CacheConstants.ServiceRequestKeyTemplate, service.ServiceId),
-            service,
-            TimeSpan.FromMinutes(timeoutInMin)
-        );
-
-        var longitudeCached = _cache.SetObjectAsync(
-            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, service.ServiceId),
-            MeetingLongitude,
-            TimeSpan.FromMinutes(timeoutInMin)
-        );
-
-        var latitudeCached = _cache.SetObjectAsync(
-            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, service.ServiceId),
-            MeetingLatitude,
-            TimeSpan.FromMinutes(timeoutInMin)
-        );
-
-        // var hasActiveRequestCached = _cache.SetObjectAsync(
-        //     string.Format(CacheConstants.ClientHasActiveEmergencyRequestKeyTemplate, clientId),
-        //     service.ServiceId,
-        //     TimeSpan.FromMinutes(timeoutInMin)
-        // );
-
-        var transactionCommitted = await _cache.CommitTransactionAsync();
-        if (!transactionCommitted)
-        {
-            throw new Exception("Error creating the service request.");
-        }
-
-        return await requestCached;
+        _emergencyCaseService = emergencyCaseService;
     }
 
     public async Task CreateOfferAsync(
@@ -120,13 +71,23 @@ public class OfferService : IOfferService
             }
         );
 
-        TimeSpan? requestTTL = await _cache.GetTTLAsync(
-            string.Format(CacheConstants.ServiceRequestKeyTemplate, serviceId)
-        );
-
-        if (requestTTL is null || requestTTL.Value.TotalMinutes <= 1)
+        DateTime? createdAt = (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                ec => ec.Id == serviceId,
+                ec => ec.CreatedAt
+            )
+        ).FirstOrDefault();
+        if (createdAt is null)
         {
-            throw new Exception("Request is no longer accepting offers");
+            throw new InvalidOperationException("Emergency case not found");
+        }
+
+        TimeSpan requestTTL =
+            createdAt.Value.AddMinutes(GlobalConstants.EmergencyCaseTTL) - createdAt.Value;
+
+        if (requestTTL.TotalMinutes <= 1)
+        {
+            throw new InvalidOperationException("Request is no longer accepting offers");
         }
 
         var offerSet = await _cache.SetObjectAsync(
@@ -136,13 +97,13 @@ public class OfferService : IOfferService
                 serviceProvider.ServiceProviderId
             ),
             price,
-            offerTTL < requestTTL ? offerTTL : requestTTL.Value,
+            offerTTL < requestTTL ? offerTTL : requestTTL,
             @override: false
         );
 
         if (!offerSet)
         {
-            throw new Exception(
+            throw new InvalidOperationException(
                 "Can't make another offer without waiting for previous offer to expire"
             );
         }
@@ -164,7 +125,7 @@ public class OfferService : IOfferService
         );
         _ = _cache.SetExpiryAsync(
             string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId),
-            offerTTL < requestTTL ? offerTTL : requestTTL.Value
+            offerTTL < requestTTL ? offerTTL : requestTTL
         );
         var transactionCommitted2 = await _cache.CommitTransactionAsync();
 
@@ -190,7 +151,11 @@ public class OfferService : IOfferService
         );
     }
 
-    public async Task AcceptOfferAsync(int serviceId, int clientId, int serviceProviderId)
+    public async Task<PhoneNumberDTO> AcceptOfferAsync(
+        int serviceId,
+        int clientId,
+        int serviceProviderId
+    )
     {
         var price = await GetOfferPriceAsync(serviceId, serviceProviderId);
         if (price is null)
@@ -234,56 +199,45 @@ public class OfferService : IOfferService
             throw new Exception("Failed to assign service provider to service");
         }
 
-        _cache.StartTransaction();
-
-        var requestRemoved = _cache.RemoveKeyAsync(
-            string.Format(CacheConstants.ServiceRequestKeyTemplate, serviceId)
-        );
-        var cachedOffersRemoved = _cache.RemoveKeyAsync(
+        var cachedOffersRemoved = await _cache.RemoveKeyAsync(
             string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId)
         );
 
-        var MeetingLongitude = _cache.GetObjectAsync<double?>(
-            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, serviceId)
-        );
-        var longitudeRemoved = _cache.RemoveKeyAsync(
-            string.Format(CacheConstants.ServiceRequestLongitudeKeyTemplate, serviceId)
-        );
-
-        var MeetingLatitude = _cache.GetObjectAsync<double?>(
-            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, serviceId)
-        );
-        var latitudeRemoved = _cache.RemoveKeyAsync(
-            string.Format(CacheConstants.ServiceRequestLatitudeKeyTemplate, serviceId)
-        );
-
-        var commited = await _cache.CommitTransactionAsync();
-
-        var providerToken = (
+        var providerDetails = (
             await _unitOfWork.ServiceProviders.GetByConditionAsync(
                 sp => sp.Id == serviceProviderId,
-                sp => sp.NotificationToken
+                sp => new { sp.NotificationToken, sp.PhoneNumber }
             )
         ).FirstOrDefault();
 
-        if (providerToken is null)
+        if (providerDetails is null)
         {
             throw new Exception("Service provider does not exist");
         }
 
-        var clientPhoneNumber = (
+        if (providerDetails.NotificationToken is null || providerDetails.PhoneNumber is null)
+        {
+            throw new ServerException(
+                "Service provider notification token or phone number does not exist"
+            );
+        }
+
+        string? clientPhoneNumber = (
             await _unitOfWork.Clients.GetByConditionAsync(c => c.Id == clientId, c => c.PhoneNumber)
         ).FirstOrDefault();
 
         if (clientPhoneNumber is null)
         {
-            throw new Exception("Client phone number does not exist");
+            throw new ServerException("Client phone number does not exist");
         }
 
+        var meetingLocation = await _emergencyCaseService.GetMeetingLocationAsync(serviceId);
         await _pushNotificationService.SendNotificationAsync(
             "Offer accepted",
-            $"Meeting Longitude: {await MeetingLongitude}\nMeeting Latitude: {await MeetingLatitude}\nClient Phone Number: {clientPhoneNumber}\nService Id: {serviceId}",
-            providerToken
+            $"Meeting Longitude: {meetingLocation.Value.longitude}\nMeeting Latitude: {meetingLocation.Value.latitude}\nClient Phone Number: {clientPhoneNumber}\nService Id: {serviceId}",
+            providerDetails.NotificationToken
         );
+
+        return new PhoneNumberDTO { PhoneNumber = providerDetails.PhoneNumber };
     }
 }

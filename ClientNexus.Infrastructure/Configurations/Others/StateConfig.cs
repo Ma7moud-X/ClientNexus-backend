@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ClientNexus.Domain.Entities.Others;
 
@@ -21,5 +21,12 @@ public class StateConfig : IEntityTypeConfiguration<State>
             .WithOne(c => c.State)
             .HasForeignKey(c => c.StateId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        //data seeding
+        builder.HasData(
+            new State { Id = 1, Name = "القاهرة", Abbreviation = "CA", CountryId = 1},
+            new State { Id = 2, Name = "الجيزة", Abbreviation = "GZ", CountryId = 1 },
+            new State { Id = 3, Name = "الاسكندرية", Abbreviation = "ALX", CountryId = 1 }
+        );
     }
 }

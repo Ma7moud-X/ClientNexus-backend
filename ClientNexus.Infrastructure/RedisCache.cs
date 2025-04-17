@@ -27,7 +27,7 @@ public class RedisCache : ICache
         _redis = redis;
     }
 
-    public async Task<bool> AddGeoLocationAsync(
+    public async Task<int> AddGeoLocationAsync(
         string key,
         double longitude,
         double latitude,
@@ -62,10 +62,15 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool added;
+        int affectedCount;
         try
         {
-            added = await executor.GeoAddAsync(key, longitude, latitude, identifier);
+            affectedCount =
+                (int)
+                    await executor.ExecuteAsync(
+                        "GEOADD",
+                        new object[] { key, "CH", longitude, latitude, identifier }
+                    );
         }
         catch (Exception ex)
         {
@@ -75,7 +80,7 @@ public class RedisCache : ICache
             );
         }
 
-        return added;
+        return affectedCount;
     }
 
     public async Task<long> AddToListObjectAsync<T>(string key, T value, bool onlyIfExists = false)

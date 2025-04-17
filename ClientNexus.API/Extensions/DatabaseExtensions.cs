@@ -43,10 +43,9 @@ public static class DatabaseExtensions
                 sqlOptions =>
                 {
                     sqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                    sqlOptions.UseNetTopologySuite();
                 }
             );
         });
     }
-
-
 }

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ClientNexus.Domain.Entities.Others;
 
@@ -26,5 +26,10 @@ public class CountryConfig : IEntityTypeConfiguration<Country>
             .WithOne(a => a.Country)
             .HasForeignKey(a => a.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        //data seeding
+        builder.HasData(
+            new Country { Id = 1, Name = "مصر", Abbreviation = "EG"}
+            );
     }
 }

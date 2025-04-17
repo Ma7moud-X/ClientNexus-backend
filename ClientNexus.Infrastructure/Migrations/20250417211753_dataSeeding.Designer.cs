@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250309000437_changeSlotPK")]
-    partial class changeSlotPK
+    [Migration("20250417211753_dataSeeding")]
+    partial class dataSeeding
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -189,42 +190,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ClientNexus.Domain.Entities.License", b =>
-                {
-                    b.Property<int>("ServiceProviderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateOnly>("ExpiryDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateOnly>("IssueDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("IssuingAuthority")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("LicenceNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("ServiceProviderId", "Id");
-
-                    b.ToTable("Licenses", "ClientNexusSchema");
-                });
-
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
                 {
                     b.Property<int>("Id")
@@ -255,6 +220,22 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("StateId");
 
                     b.ToTable("Cities", "ClientNexusSchema");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CountryId = 1,
+                            Name = "مدينة نصر",
+                            StateId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CountryId = 1,
+                            Name = "الهرم",
+                            StateId = 2
+                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Country", b =>
@@ -277,6 +258,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Countries", "ClientNexusSchema");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Abbreviation = "EG",
+                            Name = "مصر"
+                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
@@ -322,6 +311,29 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("CountryId");
 
                     b.ToTable("States", "ClientNexusSchema");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Abbreviation = "CA",
+                            CountryId = 1,
+                            Name = "القاهرة"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Abbreviation = "GZ",
+                            CountryId = 1,
+                            Name = "الجيزة"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Abbreviation = "ALX",
+                            CountryId = 1,
+                            Name = "الاسكندرية"
+                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Payment", b =>
@@ -437,56 +449,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.ToTable("Problems", "ClientNexusSchema");
                 });
 
-            modelBuilder.Entity("ClientNexus.Domain.Entities.Roles.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("Roles", "ClientNexusSchema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = -2,
-                            Name = "Client",
-                            NormalizedName = "CLIENT"
-                        },
-                        new
-                        {
-                            Id = -3,
-                            Name = "Service Provider",
-                            NormalizedName = "SERVICE PROVIDER"
-                        });
-                });
-
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.AppointmentCost", b =>
                 {
                     b.Property<int>("ServiceProviderId")
@@ -594,7 +556,7 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ServiceProviderId")
@@ -607,6 +569,9 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("char(1)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -705,6 +670,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("NotificationToken")
+                        .HasColumnType("varchar(1000)");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
@@ -779,8 +747,13 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = -1,
+                            Id = 1,
                             Name = "Lawyer"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Doctor"
                         });
                 });
 
@@ -804,6 +777,56 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("ServiceProviderTypeId");
 
                     b.ToTable("Specializations", "ClientNexusSchema");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "جنائى",
+                            ServiceProviderTypeId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "مدنى",
+                            ServiceProviderTypeId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "اسرة",
+                            ServiceProviderTypeId = 1
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", "ClientNexusSchema");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -943,14 +966,22 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<int>("AppointmentProviderId")
-                        .HasColumnType("int");
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AppointmentType")
-                        .IsRequired()
-                        .HasColumnType("char(1)");
+                    b.Property<DateTime?>("CancellationTime")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime?>("CheckInTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CompletionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ReminderSent")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReminderSentTime")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("SlotId")
@@ -972,18 +1003,11 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<string>("CurrentLocation")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<Point>("MeetingLocation")
+                        .HasColumnType("geography");
 
-                    b.Property<int>("EmergencyCategoryId")
+                    b.Property<int?>("TimeForArrival")
                         .HasColumnType("int");
-
-                    b.Property<int>("TimeForArrival")
-                        .HasColumnType("int");
-
-                    b.HasIndex("EmergencyCategoryId");
 
                     b.ToTable("EmergencyCases", "ClientNexusSchema");
                 });
@@ -992,10 +1016,25 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<bool>("Visibility")
+                    b.Property<string>("AnswerBody")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsAnswerHelpful")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("QuestionBody")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool?>("Visibility")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasDefaultValue(true);
 
                     b.ToTable("Questions", "ClientNexusSchema");
                 });
@@ -1036,13 +1075,21 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int?>("ApprovedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("CurrentLocation")
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<Point>("CurrentLocation")
+                        .HasColumnType("geography");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ImageIDUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageNationalIDUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsApproved")
                         .ValueGeneratedOnAdd()
@@ -1058,6 +1105,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastLocationUpdateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("MainImage")
                         .IsRequired()
@@ -1148,17 +1198,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Document");
-                });
-
-            modelBuilder.Entity("ClientNexus.Domain.Entities.License", b =>
-                {
-                    b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProvider", "ServiceProvider")
-                        .WithMany("Licenses")
-                        .HasForeignKey("ServiceProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceProvider");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
@@ -1369,7 +1408,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("ClientNexus.Domain.Entities.Roles.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1396,7 +1435,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("ClientNexus.Domain.Entities.Roles.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1480,19 +1519,11 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCase", b =>
                 {
-                    b.HasOne("ClientNexus.Domain.Entities.Services.EmergencyCategory", "EmergencyCategory")
-                        .WithMany("EmergencyCases")
-                        .HasForeignKey("EmergencyCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ClientNexus.Domain.Entities.Services.Service", null)
                         .WithOne()
                         .HasForeignKey("ClientNexus.Domain.Entities.Services.EmergencyCase", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("EmergencyCategory");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Question", b =>
@@ -1598,11 +1629,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("Cities");
                 });
 
-            modelBuilder.Entity("ClientNexus.Domain.Entities.Services.EmergencyCategory", b =>
-                {
-                    b.Navigation("EmergencyCases");
-                });
-
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Service", b =>
                 {
                     b.Navigation("Problem");
@@ -1668,8 +1694,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("AppointmentCosts");
 
                     b.Navigation("ClientServiceProviderFeedbacks");
-
-                    b.Navigation("Licenses");
 
                     b.Navigation("OfficeImageUrls");
 

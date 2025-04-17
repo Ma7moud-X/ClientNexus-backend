@@ -1,14 +1,15 @@
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
+using NetTopologySuite.Geometries;
 
 namespace ClientNexus.Domain.Entities.Users
 {
-
     public class ServiceProvider : BaseUser
     {
         public string Description { get; set; } = default!;
-        public string? CurrentLocation { get; set; }
+        public Point? CurrentLocation { get; set; }
+        public DateTime? LastLocationUpdateTime { get; set; }
         public string MainImage { get; set; } = default!;
         public float Rate { get; set; }
         public bool IsFeatured { get; set; }
@@ -28,8 +29,6 @@ namespace ClientNexus.Domain.Entities.Users
         public ICollection<Specialization>? Specializations { get; set; }
 
         public ICollection<OfficeImageUrl>? OfficeImageUrls { get; set; }
-
-
 
         public int? ApprovedById { get; set; }
         public Admin? ApprovingAdmin { get; set; }

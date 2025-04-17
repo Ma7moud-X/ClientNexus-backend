@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
@@ -11,15 +7,10 @@ namespace ClientNexus.Application.Services
     public class BaseServiceService : IBaseServiceService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IServiceProviderService _serviceProviderService;
 
-        public BaseServiceService(
-            IUnitOfWork unitOfWork,
-            IServiceProviderService serviceProviderService
-        )
+        public BaseServiceService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _serviceProviderService = serviceProviderService;
         }
 
         public async Task<bool> AssignServiceProviderAsync(
@@ -53,7 +44,7 @@ namespace ClientNexus.Application.Services
 
         public async Task CancelAsync(int serviceId)
         {
-            int affectedCount = 0;
+            int affectedCount;
             try
             {
                 affectedCount = await _unitOfWork.SqlExecuteAsync(
@@ -74,6 +65,27 @@ namespace ClientNexus.Application.Services
                     "Invalid operation. Service does not exist or can't be cancelled."
                 );
             }
+        }
+
+        public async Task<bool> SetDoneAsync(int serviceId)
+        {
+            int affectedCount;
+            try
+            {
+                affectedCount = await _unitOfWork.SqlExecuteAsync(
+                    @$"
+                    UPDATE ClientNexusSchema.Services SET Status = '{(char)ServiceStatus.Done}'
+                    WHERE Status IN ('{(char)ServiceStatus.InProgress}', '{(char)ServiceStatus.Done}') AND Id = @serviceId;
+                ",
+                    new Parameter("@serviceId", serviceId)
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Can't set service as done", ex);
+            }
+
+            return affectedCount == 1;
         }
     }
 }

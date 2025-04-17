@@ -7,5 +7,5 @@ public interface IGeneralOfferListenerService
 {
     Task SubscribeAsync(int serviceId);
     Task<ClientOfferDTO> ListenAsync(CancellationToken cancellationToken);
-    Task CloseAsync(bool save = false, IOfferSaverService? offerSaverService = null);
+    Task CloseAsync(bool save = false);
 }
