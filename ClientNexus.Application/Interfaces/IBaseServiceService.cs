@@ -9,5 +9,6 @@ namespace ClientNexus.Application.Interfaces
             decimal price
         );
         Task CancelAsync(int serviceId);
+        Task<bool> SetDoneAsync(int serviceId);
     }
 }

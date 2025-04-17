@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClientNexus.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreate2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -514,7 +515,8 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CurrentLocation = table.Column<string>(type: "nvarchar(500)", nullable: true),
+                    CurrentLocation = table.Column<Point>(type: "geography", nullable: true),
+                    LastLocationUpdateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     MainImage = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Rate = table.Column<float>(type: "real", nullable: false, defaultValue: 0f),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -691,6 +693,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Status = table.Column<string>(type: "char(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ServiceType = table.Column<string>(type: "char(1)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ClientId = table.Column<int>(type: "int", nullable: false),
@@ -793,8 +796,7 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     TimeForArrival = table.Column<int>(type: "int", nullable: true),
-                    MeetingLongitude = table.Column<double>(type: "float", nullable: false),
-                    MeetingLatitude = table.Column<double>(type: "float", nullable: false)
+                    MeetingLocation = table.Column<Point>(type: "geography", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -862,7 +864,11 @@ namespace ClientNexus.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    Visibility = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
+                    QuestionBody = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    Visibility = table.Column<bool>(type: "bit", nullable: true, defaultValue: true),
+                    AnswerBody = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    AnsweredAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsAnswerHelpful = table.Column<bool>(type: "bit", nullable: true)
                 },
                 constraints: table =>
                 {

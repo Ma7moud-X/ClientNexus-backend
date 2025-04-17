@@ -32,7 +32,7 @@ public class GeneralOfferListenerService : IGeneralOfferListenerService
         _cache = cache;
     }
 
-    public async Task CloseAsync(bool save = false, IOfferSaverService? offerSaverService = null)
+    public async Task CloseAsync(bool save = false)
     {
         if (_serviceId is null)
         {
@@ -47,16 +47,16 @@ public class GeneralOfferListenerService : IGeneralOfferListenerService
         if (!save)
         {
             _missedOffers = null;
-            await _cache.RemoveKeyAsync(
-                $"{string.Format(CacheConstants.MissedOffersKeyTemplate, _serviceId)}"
-            );
+            // await _cache.RemoveKeyAsync(
+            //     $"{string.Format(CacheConstants.MissedOffersKeyTemplate, _serviceId)}"
+            // );
         }
         else
         {
-            ArgumentNullException.ThrowIfNull(offerSaverService);
-
             if (_missedOffers is not null)
             {
+                bool transactionStarted = false;
+                TimeSpan timeout = TimeSpan.Zero;
                 for (int idx = _missedOfferIdx; idx < _missedOffers.Count(); idx++)
                 {
                     var offer = _missedOffers.ElementAt(idx);
@@ -65,16 +65,37 @@ public class GeneralOfferListenerService : IGeneralOfferListenerService
                         continue;
                     }
 
-                    if (offer.ExpiresAt >= DateTime.UtcNow)
+                    if (DateTime.UtcNow >= offer.ExpiresAt)
                     {
                         continue;
                     }
 
-                    await offerSaverService.SaveAsync(
-                        offer,
-                        (int)_serviceId,
-                        DateTime.UtcNow - offer.ExpiresAt + TimeSpan.FromSeconds(30)
+                    if (!transactionStarted)
+                    {
+                        transactionStarted = true;
+                        _cache.StartTransaction();
+                    }
+
+                    _ = _cache.AddToListObjectAsync(
+                        string.Format(CacheConstants.MissedOffersKeyTemplate, _serviceId.Value),
+                        offer
                     );
+
+                    var tmp = DateTime.UtcNow - offer.ExpiresAt + TimeSpan.FromSeconds(30);
+                    if (tmp > timeout)
+                    {
+                        timeout = tmp;
+                    }
+                }
+
+                if (transactionStarted)
+                {
+                    _ = _cache.SetExpiryAsync(
+                        string.Format(CacheConstants.MissedOffersKeyTemplate, _serviceId.Value),
+                        timeout
+                    );
+
+                    await _cache.CommitTransactionAsync();
                 }
             }
         }

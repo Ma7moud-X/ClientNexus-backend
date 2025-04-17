@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Interfaces;
@@ -123,6 +124,41 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return await query.ToListAsync();
     }
 
+    public async Task<IEnumerable<T>> GetByConditionAsync<T>(
+        IEnumerable<(string conditionString, object conditionValue)> conditions,
+        Expression<Func<EType, T>> selectExp,
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20
+    )
+    {
+        ArgumentNullException.ThrowIfNull(conditions);
+        ArgumentNullException.ThrowIfNull(selectExp);
+
+        var q = _context.Set<EType>().AsNoTracking();
+        foreach (var condition in conditions)
+        {
+            if (string.IsNullOrEmpty(condition.conditionString) || condition.conditionValue is null) {
+                continue;
+            }
+            
+            q = q.Where(condition.conditionString, condition.conditionValue);
+        }
+
+        if (selectExp is null)
+        {
+            throw new Exception("Select expression can't be null");
+        }
+
+        IQueryable<T> query = q.Select(selectExp);
+        if (!getAll)
+        {
+            query = query.Skip(offset).Take(limit);
+        }
+
+        return await query.ToListAsync();
+    }
+
     public async Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,
         Func<IQueryable<EType>, IQueryable<EType>>? include = null
@@ -142,10 +178,11 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     {
         return await _context.Set<EType>().FindAsync(id);
     }
-      
+
     public async Task<EType?> GetByIdWithLockAsync(int id)
     {
-        return await _context.Set<EType>()
+        return await _context
+            .Set<EType>()
             .FromSqlRaw("SELECT * FROM {typeof(T).Name} WITH (UPDLOCK, ROWLOCK) WHERE Id = {0}", id)
             .FirstOrDefaultAsync();
     }

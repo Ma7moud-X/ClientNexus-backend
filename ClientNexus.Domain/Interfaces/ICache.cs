@@ -33,7 +33,7 @@ public interface ICache
     Task<string?> LeftPopListStringAsync(string key);
     Task<T?> LeftPopListObjectAsync<T>(string key);
 
-    public Task<bool> AddGeoLocationAsync(
+    public Task<int> AddGeoLocationAsync(
         string key,
         double longitude,
         double latitude,

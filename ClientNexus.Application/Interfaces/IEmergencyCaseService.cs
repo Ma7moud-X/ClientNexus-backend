@@ -1,4 +1,5 @@
 using ClientNexus.Application.DTO;
+using ClientNexus.Application.DTOs;
 
 namespace ClientNexus.Application.Interfaces;
 
@@ -27,4 +28,5 @@ public interface IEmergencyCaseService
 
     Task<bool> HasActiveEmergencyForServiceProviderAsync(int serviceProviderId);
     Task<bool> IsClientAllowedToCreateEmergencyAsync(int clientId);
+    Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id);
 }

@@ -38,12 +38,9 @@ namespace ClientNexus.Infrastructure.Configurations.Users
                 .HasColumnType("char(1)")
                 .IsRequired();
 
-            builder.Property(sp => sp.SubscriptionExpiryDate).IsRequired(false);
+            // builder.HasIndex(sp => sp.CurrentLocation);
 
-            builder
-                .Property(sp => sp.CurrentLocation)
-                .IsRequired(false)
-                .HasColumnType("nvarchar(500)");
+            builder.Property(sp => sp.SubscriptionExpiryDate).IsRequired(false);
 
             builder
                 .HasOne(sp => sp.ApprovingAdmin)
