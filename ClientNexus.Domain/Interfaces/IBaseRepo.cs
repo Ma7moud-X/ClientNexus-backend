@@ -23,6 +23,15 @@ public interface IBaseRepo<EType>
         int offset = 0,
         int limit = 20
     );
+
+    Task<IEnumerable<T>> GetByConditionAsync<T>(
+        IEnumerable<(string conditionString, object conditionValue)> conditions,
+        Expression<Func<EType, T>> selectExp,
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20
+    );
+
     Task<EType> AddAsync(EType entity);
     Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,

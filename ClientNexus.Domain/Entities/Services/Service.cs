@@ -10,7 +10,7 @@ namespace ClientNexus.Domain.Entities.Services
         public string? Name { get; set; }
         public string? Description { get; set; }
         public ServiceStatus Status { get; set; } = ServiceStatus.Pending;
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ServiceType ServiceType { get; set; }
         public decimal? Price { get; set; }
 

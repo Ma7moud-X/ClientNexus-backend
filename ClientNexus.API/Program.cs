@@ -1,18 +1,22 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 using ClientNexus.API.Extensions;
+using ClientNexus.API.Utilities.SwaggerUtilities;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
+using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Diagnostics;
-using System.Text.Json;
-using ClientNexus.Domain.Entities.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.OpenApi.Models;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
 
 DotNetEnv.Env.Load();
@@ -37,8 +41,11 @@ builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 builder.Services.AddScoped<IBaseServiceService, BaseServiceService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(() => provider.GetRequiredService<IAppointmentService>()));
+builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(
+    () => provider.GetRequiredService<IAppointmentService>()
+));
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
@@ -50,10 +57,9 @@ builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
 
-
-
 // NEW - Configure Identity with BaseUser
-builder.Services.AddIdentity<BaseUser, IdentityRole<int>>()
+builder
+    .Services.AddIdentity<BaseUser, IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -68,7 +74,22 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 // NEW - JWT Configuration
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
+});
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -79,10 +100,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+            ),
         };
-
-
 
         options.Events = new JwtBearerEvents
         {
@@ -93,13 +114,76 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Fail("Token has been revoked.");
                 }
-            }
+            },
         };
     });
 
-builder.Services.AddControllers();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        "IsClient",
+        policy =>
+        {
+            policy.RequireClaim(ClaimTypes.Role, UserType.Client.ToString());
+        }
+    );
 
-builder.Services.AddSwaggerGen();
+    options.AddPolicy(
+        "IsServiceProvider",
+        policy =>
+        {
+            policy.RequireClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString());
+        }
+    );
+
+    options.AddPolicy(
+        "IsAdmin",
+        policy =>
+        {
+            policy.RequireClaim(ClaimTypes.Role, UserType.Admin.ToString());
+        }
+    );
+});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+// builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+    option.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer",
+        }
+    );
+
+    option.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                new string[] { }
+            },
+        }
+    );
+
+    option.OperationFilter<AuthorizeOperationFilter>();
+});
 var app = builder.Build();
 
 app.UseExceptionHandler(errorApp =>
@@ -119,11 +203,12 @@ app.UseExceptionHandler(errorApp =>
             InvalidOperationException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             KeyNotFoundException => StatusCodes.Status404NotFound,
-            _ => StatusCodes.Status500InternalServerError
+            _ => StatusCodes.Status500InternalServerError,
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = exception?.Message }));
-
+        await context.Response.WriteAsync(
+            JsonSerializer.Serialize(new { error = exception?.Message })
+        );
     });
 });
 
@@ -135,11 +220,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("AllowAllOrigins");
 
 // NEW - Use Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapControllers();
 app.Run();
