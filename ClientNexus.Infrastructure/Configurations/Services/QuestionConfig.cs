@@ -13,9 +13,12 @@ namespace ClientNexus.Infrastructure.Configurations
 
             builder.HasBaseType<Service>();
 
-            builder.Property(q => q.Visibility)
-                .IsRequired()
-                .HasDefaultValue(false);
+            builder.Property(q => q.QuestionBody).IsRequired().HasMaxLength(2000);
+
+            builder.Property(q => q.Visibility).HasDefaultValue(true);
+
+            builder.Property(q => q.AnswerBody).HasMaxLength(2000);
+
         }
     }
 }

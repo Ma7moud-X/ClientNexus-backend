@@ -33,7 +33,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpService, HttpService>();
 builder.Services.AddMapService();
 builder.Services.AddScoped<IOfferService, OfferService>();
-builder.Services.AddScoped<ISlotService, SlotService>(); // Register the service
 builder.Services.AddOfferListenerServices();
 builder.Services.AddScoped<IOfferSaverService, OfferSaverService>();
 builder.Services.AddScoped<IBaseUserService, BaseUserService>();
@@ -45,6 +44,8 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(
     () => provider.GetRequiredService<IAppointmentService>()
 ));
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
