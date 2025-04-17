@@ -144,7 +144,7 @@ namespace ClientNexus.Application.Services
         //allow editing only unanswered questions
         public async Task UpdateQuestionAsync(int questionId, int clientId, string updatedBody)
         {
-            var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
+            var question = await _unitOfWork.Questions.GetByIdAsync(questionId);
 
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
@@ -163,7 +163,7 @@ namespace ClientNexus.Application.Services
         //patch method -> authorize client
         public async Task MarkQuestionHelpfulAsync(int questionId, int clientId, bool isHelpful)
         {
-            var question = await _unitOfWork.Questions.FirstOrDefaultAsync(q => q.Id == questionId);
+            var question = await _unitOfWork.Questions.GetByIdAsync(questionId);
 
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
@@ -172,7 +172,7 @@ namespace ClientNexus.Application.Services
                 throw new UnauthorizedAccessException("You are not allowed to rate this question.");
 
             if (string.IsNullOrWhiteSpace(question.AnswerBody))
-                throw new InvalidOperationException("Cannot mark helpfulness on an unanswered question.");
+                throw new InvalidOperationException("Cannot mark helpfulness on unanswered question.");
 
             question.IsAnswerHelpful = isHelpful;
             await _unitOfWork.SaveChangesAsync();

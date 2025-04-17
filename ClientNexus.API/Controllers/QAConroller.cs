@@ -30,7 +30,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpGet("client")]
-        [Authorize(Roles = "C")]
+        [Authorize(Policy = "IsClient")]
         public async Task<IActionResult> GetQuestionsByClient(int offset = 0, int limit = 10, bool onlyUnanswered = false)
         {
             var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -50,7 +50,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost("question")]
-        [Authorize(Roles = "C")]
+        [Authorize(Policy = "IsClient")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDTO dto)
         {
             var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -59,12 +59,12 @@ namespace ClientNexus.API.Controllers
                 throw new UnauthorizedAccessException("Client ID not found in token.");
             
             var result = await _questionService.CreateQuestionAsync(clientId, dto);
-            return CreatedAtAction(nameof(GetQuestionById), result);
+            return CreatedAtRoute(nameof(GetQuestionById), new { questionId = result.Id }, result);
         }
 
 
         [HttpPost("answer/{questionId:int}")]
-        [Authorize(Roles = "S")]
+        [Authorize(Policy = "IsServiceProvider")]
         public async Task<IActionResult> CreateAnswer(int questionId, [FromBody] AnswerCreateDTO dto)
         {
             var ProviderIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -73,11 +73,11 @@ namespace ClientNexus.API.Controllers
                 throw new UnauthorizedAccessException("Provider ID not found in token.");
 
             var result = await _questionService.CreateAnswerAsync(questionId, providerId, dto);
-            return CreatedAtAction(nameof(GetQuestionById), result);
+            return CreatedAtRoute(nameof(GetQuestionById), new { questionId = result.Id }, result);
         }
 
         [HttpDelete("{questionId}")]
-        [Authorize(Roles = "C,A")]
+        [Authorize(Policy = "IsClientOrAdmin")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -91,7 +91,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPatch("{questionId}")]
-        [Authorize(Roles = "C")]
+        [Authorize(Policy = "IsClient")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] string updatedBody)
         {
             var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -104,7 +104,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPatch("{questionId}/mark")]
-        [Authorize(Roles = "C")]
+        [Authorize(Policy = "IsClient")]
         public async Task<IActionResult> MarkQuestionHelpful(int questionId, [FromQuery] bool isHelpful)
         {
             var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
