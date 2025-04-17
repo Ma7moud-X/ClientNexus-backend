@@ -143,6 +143,31 @@ builder.Services.AddAuthorization(options =>
             policy.RequireClaim(ClaimTypes.Role, UserType.Admin.ToString());
         }
     );
+    options.AddPolicy(
+       "IsClientOrAdmin",
+       policy =>
+       {
+           policy.RequireAssertion(context =>
+               context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString()) ||
+               context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString()));
+       });
+    options.AddPolicy(
+       "IsServiceProviderOrAdmin",
+       policy =>
+       {
+           policy.RequireAssertion(context =>
+               context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString()) ||
+               context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString()));
+       });
+    options.AddPolicy(
+       "IsServiceProviderOrClient",
+       policy =>
+       {
+           policy.RequireAssertion(context =>
+               context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString()) ||
+               context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString()));
+       });
+
 });
 
 builder.Services.AddControllers();
