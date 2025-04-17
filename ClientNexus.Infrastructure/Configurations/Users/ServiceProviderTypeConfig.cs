@@ -17,11 +17,10 @@ public class ServiceProviderTypeConfig : IEntityTypeConfiguration<ServiceProvide
             .HasForeignKey(s => s.TypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        List<ServiceProviderType> serviceProviderTypes =
-        [
-            new ServiceProviderType { Id = -1, Name = "Lawyer" },
-        ];
-
-        builder.HasData(serviceProviderTypes);
+        //Data seeding
+        builder.HasData(
+            new ServiceProviderType { Id = 1, Name = "Lawyer" },
+            new ServiceProviderType { Id = 2, Name = "Doctor" }
+            );
     }
 }

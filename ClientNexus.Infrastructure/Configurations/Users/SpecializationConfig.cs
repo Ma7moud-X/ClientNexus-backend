@@ -1,4 +1,4 @@
-using ClientNexus.Domain.Entities.Users;
+﻿using ClientNexus.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,6 +32,13 @@ public class SpecializationConfig : IEntityTypeConfiguration<Specialization>
                         .WithMany(s => s.ServiceProviderSpecializations)
                         .HasForeignKey(sps => sps.SpecializationId)
                         .OnDelete(DeleteBehavior.Cascade)
+            );
+
+        //data seeding
+        builder.HasData(
+            new Specialization { Id = 1, Name = "جنائى", ServiceProviderTypeId = 1},
+            new Specialization { Id = 2, Name = "مدنى", ServiceProviderTypeId = 1 },
+            new Specialization { Id = 3, Name = "اسرة", ServiceProviderTypeId = 1 }
             );
     }
 }

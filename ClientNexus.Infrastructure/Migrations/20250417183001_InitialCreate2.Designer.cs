@@ -13,8 +13,8 @@ using NetTopologySuite.Geometries;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250415012427_LastLocationUpdateTimeColumn")]
-    partial class LastLocationUpdateTimeColumn
+    [Migration("20250417183001_InitialCreate2")]
+    partial class InitialCreate2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -523,6 +523,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("char(1)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
@@ -941,10 +944,25 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<bool>("Visibility")
+                    b.Property<string>("AnswerBody")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsAnswerHelpful")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("QuestionBody")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool?>("Visibility")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasDefaultValue(true);
 
                     b.ToTable("Questions", "ClientNexusSchema");
                 });
