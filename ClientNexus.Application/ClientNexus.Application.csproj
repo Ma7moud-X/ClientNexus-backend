@@ -2,9 +2,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
+<<<<<<< HEAD
 	      <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.400" />
 		<PackageReference Include="AWSSDK.S3" Version="3.7.416.8" />
 		<PackageReference Include="DotNetEnv" Version="3.1.1" />
+=======
+		<PackageReference Include="FirebaseAdmin" Version="3.1.0" />
+>>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
 	</ItemGroup>

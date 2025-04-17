@@ -7,14 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.400" />
+=======
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+>>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
     <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2" />
+<<<<<<< HEAD
     <PackageReference Include="AWSSDK.S3" Version="3.7.416.8" />
+=======
+    <PackageReference Include="AWSSDK.S3" Version="3.7.415.6" />
+    <PackageReference Include="NRedisStack" Version="0.13.2" />
+>>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
   </ItemGroup>
 
