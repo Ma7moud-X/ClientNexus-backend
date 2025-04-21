@@ -12,7 +12,6 @@ namespace ClientNexus.Application.DTO
     {
         [Required]
         public int Id { get; set; }
-        [Required]
         public int ServiceProviderId { get; set; }
         [Required]
         public DateTime Date { get; set; }

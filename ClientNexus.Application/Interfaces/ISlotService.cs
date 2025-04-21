@@ -11,11 +11,11 @@ namespace ClientNexus.Application.Interfaces
 {
     public interface ISlotService
     {
-        Task<IEnumerable<SlotDTO>> GetSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate, SlotType type, SlotStatus? status);
-        Task<SlotDTO> CreateAsync([FromBody] SlotCreateDTO slotDTO);
+        Task<IEnumerable<SlotDTO>> GetSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate, SlotType type, SlotStatus status);
+        Task<SlotDTO> CreateAsync([FromBody] SlotCreateDTO slotDTO, int serviceProviderId);
         Task<SlotDTO> GetSlotByIdAsync(int id);
         Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO);
-        Task<SlotDTO> UpdateStatus(int id, SlotStatus status);
-        Task DeleteAsync(int slotId, string role);
+        Task<SlotDTO> UpdateStatus(int id, SlotStatus status, int serviceProviderId);
+        Task DeleteAsync(int slotId, int userId, UserType role);
     }
 }

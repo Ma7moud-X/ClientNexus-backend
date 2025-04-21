@@ -1,16 +1,12 @@
 ﻿using AutoMapper;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
-using ClientNexus.Domain.Entities.Roles;
 using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ClientNexus.Application.Services
 {
@@ -28,22 +24,19 @@ namespace ClientNexus.Application.Services
         }
 
         //pagination by date range for calendar display
-        public async Task<IEnumerable<SlotDTO>> GetSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate, SlotType type, SlotStatus? status)
+        public async Task<IEnumerable<SlotDTO>> GetSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate, SlotType type, SlotStatus status)
         {
             if (startDate > endDate)
                 throw new ArgumentException("Start date must be before end date.");
 
-            var providerExists = await _unitOfWork.ServiceProviders.GetByIdAsync(serviceProviderId);
-            if (providerExists == null)
-                throw new KeyNotFoundException("Invalid Service Provider ID.");
+            if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == serviceProviderId))
+                throw new KeyNotFoundException("Invalid Service Provider Id");
 
             // Validate the passed enum values
             if (!Enum.IsDefined(type))
                 throw new ArgumentOutOfRangeException($"Invalid SlotType value: {type}");
 
-            status ??= SlotStatus.Available;
-
-            if (!Enum.IsDefined(status.Value))
+            if (!Enum.IsDefined(status))
                 throw new ArgumentOutOfRangeException($"Invalid SlotStatus value: {status}");
 
             if (startDate < DateTime.Now && status == SlotStatus.Available)
@@ -60,18 +53,18 @@ namespace ClientNexus.Application.Services
         }
         public async Task<SlotDTO> GetSlotByIdAsync(int slotId)
         {
-            Slot? slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == slotId);
+            Slot? slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
             if (slot == null)
                 throw new KeyNotFoundException("Invalid slot ID");
 
             return _mapper.Map<SlotDTO>(slot);
         }
-        public async Task<SlotDTO> CreateAsync([FromBody] SlotCreateDTO slotDTO)
+        public async Task<SlotDTO> CreateAsync(SlotCreateDTO slotDTO, int serviceProviderId)
         {
             if (slotDTO == null)
                 throw new ArgumentNullException("Slot data cannot be null");
             //check if foreign key is valid
-            if (await _unitOfWork.ServiceProviders.GetByIdAsync(slotDTO.ServiceProviderId) == null)
+            if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == serviceProviderId))
                 throw new KeyNotFoundException("Invalid Service Provider Id");
             //check if it is a valid date
             if (slotDTO.Date < DateTime.UtcNow)
@@ -79,13 +72,14 @@ namespace ClientNexus.Application.Services
 
             Slot slot = _mapper.Map<Slot>(slotDTO);
             slot.Status = SlotStatus.Available;
+            slot.ServiceProviderId = serviceProviderId;
             var createdSlot = await _unitOfWork.Slots.AddAsync(slot);
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<SlotDTO>(createdSlot);
 
         }
 
-        public async Task<SlotDTO> Update(int id, [FromBody] SlotDTO slotDTO)
+        public async Task<SlotDTO> Update(int id, SlotDTO slotDTO)
         {
             if (slotDTO == null || id != slotDTO.Id)
                 throw new ArgumentNullException("Invalid Data");
@@ -108,7 +102,7 @@ namespace ClientNexus.Application.Services
 
         }
 
-        public async Task<SlotDTO> UpdateStatus(int id, SlotStatus status)
+        public async Task<SlotDTO> UpdateStatus(int id, SlotStatus status, int serviceProviderId)
         {
             var slot = await _unitOfWork.Slots.GetByIdAsync(id);
             if (slot == null)
@@ -117,20 +111,25 @@ namespace ClientNexus.Application.Services
             if (!Enum.IsDefined(status))
                 throw new ArgumentOutOfRangeException($"Invalid SlotStatus value: {status}");
 
+            if(slot.ServiceProviderId != serviceProviderId)
+                throw new UnauthorizedAccessException("Cannot modify other service providers slots!");
+
             slot.Status = status;
             await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<SlotDTO>(slot);
         }
 
-        public async Task DeleteAsync(int slotId, string role)
+        public async Task DeleteAsync(int slotId, int userId, UserType role)
         {
-            Slot? slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == slotId);
+            Slot? slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
             if (slot == null)
                 throw new KeyNotFoundException("Invalid slot ID");
 
             // Only allow deletion of future slots
             if (slot.Date <= DateTime.Now)
                 throw new InvalidOperationException("Cannot delete past or ongoing slots.");
+            if (role == UserType.ServiceProvider && slot.ServiceProviderId != userId)
+                throw new UnauthorizedAccessException("Cannot delete other service providers slots!");
 
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -152,6 +151,7 @@ namespace ClientNexus.Application.Services
                         appoint.Status = ServiceStatus.Cancelled;
                         appoint.CancellationReason = "Service Provider cancelled this slot";
                         appoint.CancellationTime = DateTime.Now;
+                        //notify client
                     }
 
                     //mark the slot as deleted
@@ -163,7 +163,7 @@ namespace ClientNexus.Application.Services
             catch
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw new Exception("Error occured while Creating the appointment");
+                throw new Exception("Error occured while deleting the slot");
             }
         }
     }

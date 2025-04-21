@@ -15,7 +15,7 @@ namespace ClientNexus.Infrastructure.Configurations.Services
             
             builder.Property(s => s.Id).UseIdentityColumn();
 
-            builder.HasIndex(s => new { s.ServiceProviderId, s.Date }).IsUnique();  // Ensure unique provider-date combination
+            builder.HasIndex(s => new { s.ServiceProviderId, s.Date, s.SlotType }).IsUnique();  // Ensure unique provider-date-type combination
 
             builder.Property(s => s.ServiceProviderId).IsRequired();
 
