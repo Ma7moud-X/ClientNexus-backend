@@ -37,6 +37,7 @@ public interface IBaseRepo<EType>
         Expression<Func<EType, bool>> condExp,
         Func<IQueryable<EType>, IQueryable<EType>>? include = null
     );
+    Task<int> CountAsync(Expression<Func<EType, bool>>? predicate = null);
     EType Update(EType oldEntity, EType updatedEntity);
     void Delete(EType entity);
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);

@@ -13,13 +13,8 @@ using NetTopologySuite.Geometries;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417211753_dataSeeding.Designer.cs
-    [Migration("20250417211753_dataSeeding")]
-    partial class dataSeeding
-========
-    [Migration("20250416151432_ProblemComment")]
-    partial class ProblemComment
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416151432_ProblemComment.Designer.cs
+    [Migration("20250416152015_ProblemTime")]
+    partial class ProblemTime
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -225,22 +220,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("StateId");
 
                     b.ToTable("Cities", "ClientNexusSchema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CountryId = 1,
-                            Name = "مدينة نصر",
-                            StateId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CountryId = 1,
-                            Name = "الهرم",
-                            StateId = 2
-                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Country", b =>
@@ -263,14 +242,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Countries", "ClientNexusSchema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Abbreviation = "EG",
-                            Name = "مصر"
-                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
@@ -316,29 +287,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("CountryId");
 
                     b.ToTable("States", "ClientNexusSchema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Abbreviation = "CA",
-                            CountryId = 1,
-                            Name = "القاهرة"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Abbreviation = "GZ",
-                            CountryId = 1,
-                            Name = "الجيزة"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Abbreviation = "ALX",
-                            CountryId = 1,
-                            Name = "الاسكندرية"
-                        });
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Payment", b =>
@@ -421,6 +369,12 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -588,9 +542,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("char(1)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -766,13 +717,8 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
+                            Id = -1,
                             Name = "Lawyer"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Doctor"
                         });
                 });
 
@@ -796,26 +742,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasIndex("ServiceProviderTypeId");
 
                     b.ToTable("Specializations", "ClientNexusSchema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "جنائى",
-                            ServiceProviderTypeId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "مدنى",
-                            ServiceProviderTypeId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "اسرة",
-                            ServiceProviderTypeId = 1
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -1035,25 +961,10 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
-                    b.Property<string>("AnswerBody")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<DateTime?>("AnsweredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("IsAnswerHelpful")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("QuestionBody")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<bool?>("Visibility")
+                    b.Property<bool>("Visibility")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(false);
 
                     b.ToTable("Questions", "ClientNexusSchema");
                 });

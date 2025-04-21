@@ -187,6 +187,16 @@ public class BaseRepo<EType> : IBaseRepo<EType>
             .FirstOrDefaultAsync();
     }
 
+    public async Task<int> CountAsync(Expression<Func<EType, bool>>? predicate = null)
+    {
+        if (predicate == null)
+        {
+            return await _context.Set<EType>().CountAsync();
+        }
+        
+        return await _context.Set<EType>().Where(predicate).CountAsync();
+    }
+
     public EType Update(EType oldEntity, EType updatedEntity)
     {
         var entry = _context.Entry<EType>(oldEntity);

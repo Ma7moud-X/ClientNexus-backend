@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
+using Microsoft.OpenApi.Models;
 
 DotNetEnv.Env.Load();
 
@@ -56,6 +57,9 @@ builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IProblemService, ProblemService>();
+
 
 // NEW - Configure Identity with BaseUser
 builder
@@ -176,7 +180,7 @@ builder.Services.AddEndpointsApiExplorer();
 // builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(option =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+    option.SwaggerDoc("v2", new OpenApiInfo { Title = "Demo API", Version = "v2" });
     option.AddSecurityDefinition(
         "Bearer",
         new OpenApiSecurityScheme
@@ -240,7 +244,10 @@ app.UseExceptionHandler(errorApp =>
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v2/swagger.json", "ASP.NET Web API v2");
+    });
 }
 
 app.UseHttpsRedirection();
