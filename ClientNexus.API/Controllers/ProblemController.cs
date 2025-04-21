@@ -27,7 +27,17 @@ namespace ClientNexus.API.Controllers
         {
             try
             {
-                var problem = await _problemService.GetProblemByIdAsync(id);
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (userIdClaim == null || userRoleClaim == null)
+                {
+                    return BadRequest("User ID or role not found in claims");
+                }
+
+                int userId = int.Parse(userIdClaim);
+                
+                var problem = await _problemService.GetProblemByIdAsync(id, userId, userRoleClaim);
                 return Ok(problem);
             }
             catch (KeyNotFoundException ex)

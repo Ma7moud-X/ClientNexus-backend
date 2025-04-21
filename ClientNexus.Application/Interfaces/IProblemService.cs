@@ -12,7 +12,7 @@ namespace ClientNexus.Application.Interfaces
         Task<ProblemListItemDto> CreateProblemAsync(CreateProblemDto createProblemDto);
         Task<IEnumerable<ProblemListItemDto>> GetClientProblemsAsync(int clientId, int pageNumber = 1, int pageSize = 10);
         Task<IEnumerable<ProblemListItemDto>> GetServiceProviderProblemsAsync(int serviceProviderId, int pageNumber = 1, int pageSize = 10);
-        Task<ProblemListItemDto> GetProblemByIdAsync(int id);
+        Task<ProblemListItemDto> GetProblemByIdAsync(int id, int userId, string userRole);
         Task<ProblemListItemDto> UpdateProblemAsync(UpdateProblemDto updateProblemDto, int id);
         Task<bool> DeleteProblemAsync(int id);
         Task<IEnumerable<ProblemAdminDto>> GetAllProblemsAsync(int pageNumber = 1, int pageSize = 10);

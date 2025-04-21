@@ -14,10 +14,13 @@ namespace ClientNexus.Application.Services
     public class ProblemService : IProblemService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPushNotification _pushNotificationService;
 
-        public ProblemService(IUnitOfWork unitOfWork)
+
+        public ProblemService(IUnitOfWork unitOfWork, IPushNotification pushNotificationService)
         {
             _unitOfWork = unitOfWork;
+            _pushNotificationService = pushNotificationService;
         }
 
         public async Task<ProblemListItemDto> CreateProblemAsync(CreateProblemDto createProblemDto)
@@ -58,7 +61,7 @@ namespace ClientNexus.Application.Services
             int skip = (pageNumber - 1) * pageSize;
 
             var problems = await _unitOfWork.Problems.GetByConditionAsync(
-                f => f.ClientId == clientId, 
+                f => f.ClientId == clientId && f.ReportedBy == ReporterType.Client, 
                 false, 
                 skip, 
                 pageSize);
@@ -74,7 +77,7 @@ namespace ClientNexus.Application.Services
             int skip = (pageNumber - 1) * pageSize;
 
             var problems = await _unitOfWork.Problems.GetByConditionAsync(
-                f => f.ServiceProviderId == serviceProviderId, 
+                f => f.ServiceProviderId == serviceProviderId && f.ReportedBy == ReporterType.ServiceProvider, 
                 false, 
                 skip, 
                 pageSize);
@@ -82,10 +85,23 @@ namespace ClientNexus.Application.Services
             return problems.Select(MapToProblemListItemDto);
         }
 
-        public async Task<ProblemListItemDto> GetProblemByIdAsync(int id)
+        public async Task<ProblemListItemDto> GetProblemByIdAsync(int id, int userId, string userRole)
         {
             var problem = await _unitOfWork.Problems.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Invalid Problem ID");
+                ?? throw new KeyNotFoundException("Invalid Problem ID");
+
+            // Check if the user has permission to view this problem
+            bool hasPermission = false;
+
+            if (userRole == "Admin")
+                hasPermission = true;
+            else if (userRole == "Client" && problem.ClientId == userId && problem.ReportedBy == ReporterType.Client)
+                hasPermission = true;
+            else if (userRole == "ServiceProvider" && problem.ServiceProviderId == userId && problem.ReportedBy == ReporterType.ServiceProvider)
+                hasPermission = true;
+            
+            if (!hasPermission)
+                throw new UnauthorizedAccessException("You don't have permission to view this problem or you didn't create this problem");
 
             return MapToProblemListItemDto(problem);
         }
@@ -185,6 +201,22 @@ namespace ClientNexus.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
 
+            // Send notification only to the user who reported the issue
+            if (problem.ReportedBy == ReporterType.Client && 
+                !string.IsNullOrEmpty(problem.Client?.NotificationToken))
+            {
+                string title = "Problem Status Update";
+                string body = $"Your reported problem has been updated to {problem.Status}";
+                await _pushNotificationService.SendNotificationAsync(title, body, problem.Client.NotificationToken);
+            }
+            else if (problem.ReportedBy == ReporterType.ServiceProvider && 
+                    !string.IsNullOrEmpty(problem.ServiceProvider?.NotificationToken))
+            {
+                string title = "Problem Status Update";
+                string body = $"Your reported problem has been updated to {problem.Status}";
+                await _pushNotificationService.SendNotificationAsync(title, body, problem.ServiceProvider.NotificationToken);
+            }
+
             return MapToProblemAdminDto(problem);
         }
 
@@ -208,6 +240,22 @@ namespace ClientNexus.Application.Services
             problem.SolvingAdminId ??= commentDto.SolvingAdminId;
 
             await _unitOfWork.SaveChangesAsync();
+
+            // Send notification only to the user who reported the issue
+            if (problem.ReportedBy == ReporterType.Client && 
+                !string.IsNullOrEmpty(problem.Client?.NotificationToken))
+            {
+                string title = "Admin Comment on Your Problem";
+                string body = "An administrator has added a comment to your reported problem";
+                await _pushNotificationService.SendNotificationAsync(title, body, problem.Client.NotificationToken);
+            }
+            else if (problem.ReportedBy == ReporterType.ServiceProvider && 
+                    !string.IsNullOrEmpty(problem.ServiceProvider?.NotificationToken))
+            {
+                string title = "Admin Comment on Your Problem";
+                string body = "An administrator has added a comment to your reported problem";
+                await _pushNotificationService.SendNotificationAsync(title, body, problem.ServiceProvider.NotificationToken);
+            }
 
             return MapToProblemAdminDto(problem);
         }
@@ -272,11 +320,13 @@ namespace ClientNexus.Application.Services
         {
             if (clientId.HasValue)
             {
-                return _unitOfWork.Problems.CountAsync(p => p.ClientId == clientId.Value).Result;
+                return _unitOfWork.Problems.CountAsync(p => p.ClientId == clientId.Value && 
+                                                           p.ReportedBy == ReporterType.Client).Result;
             }
             else if (serviceProviderId.HasValue)
             {
-                return _unitOfWork.Problems.CountAsync(p => p.ServiceProviderId == serviceProviderId.Value).Result;
+                return _unitOfWork.Problems.CountAsync(p => p.ServiceProviderId == serviceProviderId.Value && 
+                                                           p.ReportedBy == ReporterType.ServiceProvider).Result;
             }
             
             return _unitOfWork.Problems.CountAsync().Result;
