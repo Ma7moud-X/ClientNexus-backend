@@ -13,13 +13,8 @@ using NetTopologySuite.Geometries;
 namespace ClientNexus.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417211753_dataSeeding.Designer.cs
-    [Migration("20250417211753_dataSeeding")]
-    partial class dataSeeding
-========
-    [Migration("20250416151432_ProblemComment")]
-    partial class ProblemComment
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416151432_ProblemComment.Designer.cs
+    [Migration("20250421222947_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -421,6 +416,12 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()

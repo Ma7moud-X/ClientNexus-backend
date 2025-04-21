@@ -9,11 +9,7 @@ using NetTopologySuite.Geometries;
 namespace ClientNexus.Infrastructure.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417183001_InitialCreate2.cs
-    public partial class InitialCreate2 : Migration
-========
     public partial class InitialCreate : Migration
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416123230_InitialCreate.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -619,20 +615,12 @@ namespace ClientNexus.Infrastructure.Migrations
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     Rate = table.Column<float>(type: "real", nullable: false),
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417183001_InitialCreate2.cs
-                    Feedback = table.Column<string>(type: "nvarchar(1000)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ClientServiceProviderFeedbacks", x => new { x.ServiceProviderId, x.ClientId });
-========
                     Feedback = table.Column<string>(type: "nvarchar(1000)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ClientServiceProviderFeedbacks", x => x.Id);
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416123230_InitialCreate.cs
                     table.ForeignKey(
                         name: "FK_ClientServiceProviderFeedbacks_Clients_ClientId",
                         column: x => x.ClientId,
@@ -708,10 +696,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Status = table.Column<string>(type: "char(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417183001_InitialCreate2.cs
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-========
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416123230_InitialCreate.cs
                     ServiceType = table.Column<string>(type: "char(1)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ClientId = table.Column<int>(type: "int", nullable: false),
@@ -836,12 +821,15 @@ namespace ClientNexus.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Description = table.Column<string>(type: "nvarchar(1000)", nullable: false),
+                    AdminComment = table.Column<string>(type: "nvarchar(1000)", nullable: true),
                     Status = table.Column<string>(type: "char(1)", nullable: false),
                     ReportedBy = table.Column<string>(type: "char(1)", nullable: false),
                     ClientId = table.Column<int>(type: "int", nullable: false),
                     ServiceProviderId = table.Column<int>(type: "int", nullable: false),
                     SolvingAdminId = table.Column<int>(type: "int", nullable: true),
-                    ServiceId = table.Column<int>(type: "int", nullable: false)
+                    ServiceId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ClosedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -882,15 +870,11 @@ namespace ClientNexus.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417183001_InitialCreate2.cs
                     QuestionBody = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
                     Visibility = table.Column<bool>(type: "bit", nullable: true, defaultValue: true),
                     AnswerBody = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     AnsweredAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsAnswerHelpful = table.Column<bool>(type: "bit", nullable: true)
-========
-                    Visibility = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416123230_InitialCreate.cs
                 },
                 constraints: table =>
                 {
@@ -998,6 +982,12 @@ namespace ClientNexus.Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 schema: "ClientNexusSchema",
+                table: "Countries",
+                columns: new[] { "Id", "Abbreviation", "Name" },
+                values: new object[] { 1, "EG", "مصر" });
+
+            migrationBuilder.InsertData(
+                schema: "ClientNexusSchema",
                 table: "DocumentTypes",
                 columns: new[] { "Id", "Name" },
                 values: new object[,]
@@ -1011,7 +1001,43 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "ServiceProviderTypes",
                 columns: new[] { "Id", "Name" },
-                values: new object[] { -1, "Lawyer" });
+                values: new object[,]
+                {
+                    { 1, "Lawyer" },
+                    { 2, "Doctor" }
+                });
+
+            migrationBuilder.InsertData(
+                schema: "ClientNexusSchema",
+                table: "Specializations",
+                columns: new[] { "Id", "Name", "ServiceProviderTypeId" },
+                values: new object[,]
+                {
+                    { 1, "جنائى", 1 },
+                    { 2, "مدنى", 1 },
+                    { 3, "اسرة", 1 }
+                });
+
+            migrationBuilder.InsertData(
+                schema: "ClientNexusSchema",
+                table: "States",
+                columns: new[] { "Id", "Abbreviation", "CountryId", "Name" },
+                values: new object[,]
+                {
+                    { 1, "CA", 1, "القاهرة" },
+                    { 2, "GZ", 1, "الجيزة" },
+                    { 3, "ALX", 1, "الاسكندرية" }
+                });
+
+            migrationBuilder.InsertData(
+                schema: "ClientNexusSchema",
+                table: "Cities",
+                columns: new[] { "Id", "Abbreviation", "CountryId", "Name", "StateId" },
+                values: new object[,]
+                {
+                    { 1, null, 1, "مدينة نصر", 1 },
+                    { 2, null, 1, "الهرم", 2 }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Addresses_CityId",
@@ -1112,15 +1138,12 @@ namespace ClientNexus.Infrastructure.Migrations
                 schema: "ClientNexusSchema",
                 table: "ClientServiceProviderFeedbacks",
                 column: "ClientId");
-<<<<<<<< HEAD:ClientNexus.Infrastructure/Migrations/20250417183001_InitialCreate2.cs
-========
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClientServiceProviderFeedbacks_ServiceProviderId",
                 schema: "ClientNexusSchema",
                 table: "ClientServiceProviderFeedbacks",
                 column: "ServiceProviderId");
->>>>>>>> Problems:ClientNexus.Infrastructure/Migrations/20250416123230_InitialCreate.cs
 
             migrationBuilder.CreateIndex(
                 name: "IX_DocumentCategories_DCategoryId",
