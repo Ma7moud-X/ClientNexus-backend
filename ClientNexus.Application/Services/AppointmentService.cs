@@ -21,12 +21,14 @@ namespace ClientNexus.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ISlotService _slotService;
+        private readonly IPushNotification _pushNotification;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService, IPushNotification pushNotification)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _slotService = slotService;
+            _pushNotification = pushNotification;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -178,7 +180,14 @@ namespace ClientNexus.Application.Services
                         {
                             await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Available,slot.ServiceProviderId);
                             //Notify the provider
-
+                            var providerToken = existingAppointment.ServiceProvider?.NotificationToken;
+                            if (!string.IsNullOrWhiteSpace(providerToken))
+                            {
+                                await _pushNotification.SendNotificationAsync(
+                                                                            title: "Appointment Cancelled",
+                                                                            body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
+                                                                            deviceToken: providerToken);
+                            }
                         }
                     }
                     else if (role == UserType.ServiceProvider)  //if appointment is cancelled by the provider
@@ -187,7 +196,14 @@ namespace ClientNexus.Application.Services
                         {
                             await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Deleted, slot.ServiceProviderId);
                             // Notify the client
-                            //await _notificationService.NotifyClientCancellation(existingAppointment.ClientId, existingAppointment.Id);
+                            var clientDeviceToken = existingAppointment.Client?.NotificationToken;
+                            if (!string.IsNullOrWhiteSpace(clientDeviceToken))
+                            {
+                                await _pushNotification.SendNotificationAsync(
+                                                                            title: "Appointment Cancelled",
+                                                                            body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
+                                                                            deviceToken: clientDeviceToken);
+                            }
                         }
                     }
                 }
