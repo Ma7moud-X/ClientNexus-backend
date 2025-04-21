@@ -22,23 +22,35 @@ namespace ClientNexus.Application.Services
             return MapToDto(feedback);
         }
         
-        public async Task<IEnumerable<FeedbackDTO>> GetAllForServiceProviderAsync(int serviceProviderId)
+        public async Task<IEnumerable<FeedbackDTO>> GetAllForServiceProviderAsync(int serviceProviderId, int pageNumber = 1, int pageSize = 10)
         {
             var providerExists = await _unitOfWork.ServiceProviders.GetByIdAsync(serviceProviderId) 
             ?? throw new KeyNotFoundException($"Service provider with ID {serviceProviderId} not found");
 
-            var feedbacks = await _unitOfWork.ClientServiceProviderFeedbacks.GetByConditionAsync(f => f.ServiceProviderId == serviceProviderId);
+            int skip = (pageNumber - 1) * pageSize;
+
+            var feedbacks = await _unitOfWork.ClientServiceProviderFeedbacks.GetByConditionAsync(
+                f => f.ServiceProviderId == serviceProviderId,
+                false,
+                skip,
+                pageSize);
                 
             return feedbacks.Select(MapToDto);
         }
         
-        public async Task<IEnumerable<FeedbackDTO>> GetAllByClientAsync(int clientId)
+        public async Task<IEnumerable<FeedbackDTO>> GetAllByClientAsync(int clientId, int pageNumber = 1, int pageSize = 10)
         {
             var clientExists = await _unitOfWork.Clients.GetByIdAsync(clientId) 
             ?? throw new KeyNotFoundException($"Client with ID {clientId} not found");
 
-            var feedbacks = await _unitOfWork.ClientServiceProviderFeedbacks.GetByConditionAsync(f => f.ClientId == clientId);
-                
+            int skip = (pageNumber - 1) * pageSize;
+
+            var feedbacks = await _unitOfWork.ClientServiceProviderFeedbacks.GetByConditionAsync(
+                f => f.ClientId == clientId,
+                false,
+                skip,
+                pageSize);
+
             return feedbacks.Select(MapToDto);
         }
         
@@ -142,6 +154,20 @@ namespace ClientNexus.Application.Services
                 Rate = feedback.Rate,
                 Feedback = feedback.Feedback
             };
+        }
+
+        public int GetTotalFeedbackCount(int? clientId = null, int? serviceProviderId = null)
+        {   
+            if (clientId.HasValue)
+            {
+                return _unitOfWork.ClientServiceProviderFeedbacks.CountAsync(f => f.ClientId == clientId.Value).Result;
+            }
+            else if (serviceProviderId.HasValue)
+            {
+                return _unitOfWork.ClientServiceProviderFeedbacks.CountAsync(f => f.ServiceProviderId == serviceProviderId.Value).Result;
+            }
+            
+            return _unitOfWork.ClientServiceProviderFeedbacks.CountAsync().Result;
         }
     }
 }

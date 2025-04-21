@@ -40,11 +40,29 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("provider/{serviceProviderId:int}")]
         [AllowAnonymous] // Anyone can view provider ratings
-        public async Task<IActionResult> GetProviderFeedback(int serviceProviderId)
+        public async Task<IActionResult> GetProviderFeedback(int serviceProviderId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
-                var feedbacks = await _feedbackService.GetAllForServiceProviderAsync(serviceProviderId);
+                // Enforce maximum page size
+                if (pageSize > 50) pageSize = 50;
+                
+                var feedbacks = await _feedbackService.GetAllForServiceProviderAsync(serviceProviderId, pageNumber, pageSize);
+                
+                // Add pagination headers
+                var totalCount = _feedbackService.GetTotalFeedbackCount(serviceProviderId: serviceProviderId);
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                Response.Headers.Append("X-Pagination", 
+                    System.Text.Json.JsonSerializer.Serialize(new {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = totalPages,
+                        HasNext = pageNumber < totalPages,
+                        HasPrevious = pageNumber > 1
+                    }));
+                    
                 return Ok(feedbacks);
             }
             catch (KeyNotFoundException ex)
@@ -60,7 +78,7 @@ namespace ClientNexus.API.Controllers
       
         [HttpGet("client/{clientId:int}")]
         [Authorize(Roles = "Admin,Client")] // Only admin or the client themselves
-        public async Task<IActionResult> GetClientFeedback(int clientId)
+        public async Task<IActionResult> GetClientFeedback(int clientId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -73,7 +91,25 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(403, "You can only view your own feedback");
                 }
 
-                var feedbacks = await _feedbackService.GetAllByClientAsync(clientId);
+                // Enforce maximum page size
+                if (pageSize > 50) pageSize = 50;
+                
+                var feedbacks = await _feedbackService.GetAllByClientAsync(clientId, pageNumber, pageSize);
+                
+                // Add pagination headers
+                var totalCount = _feedbackService.GetTotalFeedbackCount(clientId: clientId);
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                Response.Headers.Append("X-Pagination", 
+                    System.Text.Json.JsonSerializer.Serialize(new {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = totalPages,
+                        HasNext = pageNumber < totalPages,
+                        HasPrevious = pageNumber > 1
+                    }));
+                    
                 return Ok(feedbacks);
             }
             catch (KeyNotFoundException ex)
