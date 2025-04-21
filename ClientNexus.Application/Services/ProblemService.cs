@@ -118,23 +118,39 @@ namespace ClientNexus.Application.Services
             var problems = await _unitOfWork.Problems.GetAllQueryable(
                 p => p.Client,
                 p => p.ServiceProvider,
-                p => p.Service).ToListAsync();
+                p => p.Service).ToListAsync();            
                 
             return problems.Select(MapToProblemAdminDto);
         }
 
         public async Task<ProblemAdminDto> GetProblemAdminDetailsAsync(int id)
         {
-            var problem = await _unitOfWork.Problems.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Invalid Problem ID");
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                p => p.Id == id,
+                false,
+                0,
+                1,
+                ["Client", "ServiceProvider", "Service"]
+            );
+            
+            var problem = problems.FirstOrDefault() 
+                ?? throw new KeyNotFoundException("Invalid Problem ID");
 
             return MapToProblemAdminDto(problem);
         }
 
         public async Task<ProblemAdminDto> UpdateProblemStatusAsync(int id, UpdateProblemStatusDto statusDto, int adminId)
         {
-            var problem = await _unitOfWork.Problems.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Invalid Problem ID");
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                p => p.Id == id,
+                false,
+                0,
+                1,
+                ["Client", "ServiceProvider", "Service"]
+            );
+            
+            var problem = problems.FirstOrDefault() 
+                ?? throw new KeyNotFoundException("Invalid Problem ID");
 
             var admin = await _unitOfWork.Admins.GetByIdAsync(adminId) 
             ?? throw new KeyNotFoundException($"Admin with ID {adminId} not found");
@@ -158,8 +174,16 @@ namespace ClientNexus.Application.Services
 
         public async Task<ProblemAdminDto> AddAdminCommentAsync(int id, AdminCommentDto commentDto)
         {
-            var problem = await _unitOfWork.Problems.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Invalid Problem ID");
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                p => p.Id == id,
+                false,
+                0,
+                1,
+                ["Client", "ServiceProvider", "Service"]
+            );
+            
+            var problem = problems.FirstOrDefault() 
+                ?? throw new KeyNotFoundException("Invalid Problem ID");
 
             // Update comment
             problem.AdminComment = commentDto.AdminComment;
