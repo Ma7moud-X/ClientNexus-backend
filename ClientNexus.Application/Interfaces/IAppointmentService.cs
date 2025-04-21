@@ -14,9 +14,9 @@ namespace ClientNexus.Application.Interfaces
         Task<AppointmentDTO> GetByIdAsync(int id);
         Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit);
         Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit);
-        Task<AppointmentDTO> CreateAsync([FromBody] AppointmentCreateDTO appointmentDTO);
+        Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO);
         //Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);
-        Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason, string role);
+        Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, int userId, UserType role, string? reason);
         Task DeleteAsync(int id);
 
     }
