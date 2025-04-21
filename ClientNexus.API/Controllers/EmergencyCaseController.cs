@@ -472,9 +472,25 @@ namespace ClientNexus.API.Controllers
                 return BadRequest("Emergency case has expired.");
             }
 
-            return Ok(
-                await _offerService.AcceptOfferAsync(id, userId.Value, offerDTO.ServiceProviderId)
-            );
+            PhoneNumberDTO phoneNumberDTO;
+            try
+            {
+                phoneNumberDTO = await _offerService.AcceptOfferAsync(
+                    id,
+                    userId.Value,
+                    offerDTO.ServiceProviderId
+                );
+            }
+            catch (ServerException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            return Ok(phoneNumberDTO);
         }
 
         [HttpPut("available-lawyers")]
@@ -534,7 +550,7 @@ namespace ClientNexus.API.Controllers
                 if (
                     emergencyDetails.Status != ServiceStatus.InProgress
                     && emergencyDetails.Status != ServiceStatus.Done
-                )   // can't happen
+                ) // can't happen
                 {
                     return BadRequest(
                         "Emergency case can't be marked as done as it's still pending"

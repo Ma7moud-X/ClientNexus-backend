@@ -196,7 +196,7 @@ public class OfferService : IOfferService
 
         if (!assigned)
         {
-            throw new Exception("Failed to assign service provider to service");
+            throw new ServerException("Failed to assign service provider to service");
         }
 
         var cachedOffersRemoved = await _cache.RemoveKeyAsync(
@@ -212,7 +212,7 @@ public class OfferService : IOfferService
 
         if (providerDetails is null)
         {
-            throw new Exception("Service provider does not exist");
+            throw new ServerException("Service provider does not exist");
         }
 
         if (providerDetails.NotificationToken is null || providerDetails.PhoneNumber is null)
