@@ -15,12 +15,14 @@ namespace ClientNexus.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly Lazy<IAppointmentService> _appointService;
+        private readonly IPushNotification _pushNotification;
 
-        public SlotService(IUnitOfWork unitOfWork, IMapper mapper, Lazy<IAppointmentService> appointService)
+        public SlotService(IUnitOfWork unitOfWork, IMapper mapper, Lazy<IAppointmentService> appointService, IPushNotification pushNotification)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _appointService = appointService;
+            _pushNotification = pushNotification;
         }
 
         //pagination by date range for calendar display
@@ -39,8 +41,8 @@ namespace ClientNexus.Application.Services
             if (!Enum.IsDefined(status))
                 throw new ArgumentOutOfRangeException($"Invalid SlotStatus value: {status}");
 
-            if (startDate < DateTime.Now && status == SlotStatus.Available)
-                startDate = DateTime.Now;  //don't retrieve past avaliable slots
+            if (startDate < DateTime.UtcNow && status == SlotStatus.Available)
+                startDate = DateTime.UtcNow;  //don't retrieve past avaliable slots
 
             IEnumerable<Slot> slots = await _unitOfWork.Slots.GetByConditionAsync(s =>
                 s.ServiceProviderId == serviceProviderId &&
@@ -126,7 +128,7 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("Invalid slot ID");
 
             // Only allow deletion of future slots
-            if (slot.Date <= DateTime.Now)
+            if (slot.Date <= DateTime.UtcNow)
                 throw new InvalidOperationException("Cannot delete past or ongoing slots.");
             if (role == UserType.ServiceProvider && slot.ServiceProviderId != userId)
                 throw new UnauthorizedAccessException("Cannot delete other service providers slots!");
@@ -150,8 +152,16 @@ namespace ClientNexus.Application.Services
                     {
                         appoint.Status = ServiceStatus.Cancelled;
                         appoint.CancellationReason = "Service Provider cancelled this slot";
-                        appoint.CancellationTime = DateTime.Now;
+                        appoint.CancellationTime = DateTime.UtcNow;
                         //notify client
+                        var clientToken = appoint.Client?.NotificationToken;
+                        if (!string.IsNullOrWhiteSpace(clientToken))
+                        {
+                            await _pushNotification.SendNotificationAsync(
+                                                                        title: "Appointment Cancelled",
+                                                                        body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
+                                                                        deviceToken: clientToken);
+                        }
                     }
 
                     //mark the slot as deleted
