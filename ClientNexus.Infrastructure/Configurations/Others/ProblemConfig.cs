@@ -17,6 +17,7 @@ namespace ClientNexus.Infrastructure.Configurations
             // builder.Property(p => p.Id).UseIdentityColumn();
 
             builder.Property(p => p.Description).HasColumnType("nvarchar(1000)").IsRequired();
+            builder.Property(p => p.AdminComment).HasColumnType("nvarchar(1000)");
 
             builder
                 .Property(p => p.Status)

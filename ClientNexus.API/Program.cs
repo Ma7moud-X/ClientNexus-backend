@@ -57,6 +57,7 @@ builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IProblemService, ProblemService>();
 
 
 // NEW - Configure Identity with BaseUser
