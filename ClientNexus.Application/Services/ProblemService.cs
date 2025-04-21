@@ -50,22 +50,34 @@ namespace ClientNexus.Application.Services
             return MapToProblemListItemDto(problem);
         }
 
-        public async Task<IEnumerable<ProblemListItemDto>> GetClientProblemsAsync(int clientId)
+        public async Task<IEnumerable<ProblemListItemDto>> GetClientProblemsAsync(int clientId, int pageNumber = 1, int pageSize = 10)
         {
             var client = await _unitOfWork.Clients.GetByIdAsync(clientId) 
             ?? throw new KeyNotFoundException($"Client with ID {clientId} not found");
 
-            var problems = await _unitOfWork.Problems.GetByConditionAsync(f => f.ClientId == clientId);
+            int skip = (pageNumber - 1) * pageSize;
+
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                f => f.ClientId == clientId, 
+                false, 
+                skip, 
+                pageSize);
 
             return problems.Select(MapToProblemListItemDto);
         }
 
-        public async Task<IEnumerable<ProblemListItemDto>> GetServiceProviderProblemsAsync(int serviceProviderId)
+        public async Task<IEnumerable<ProblemListItemDto>> GetServiceProviderProblemsAsync(int serviceProviderId, int pageNumber = 1, int pageSize = 10)
         {
              var serviceProvider = await _unitOfWork.ServiceProviders.GetByIdAsync(serviceProviderId) 
             ?? throw new KeyNotFoundException($"Service provider with ID {serviceProviderId} not found");
 
-            var problems = await _unitOfWork.Problems.GetByConditionAsync(f => f.ServiceProviderId == serviceProviderId);
+            int skip = (pageNumber - 1) * pageSize;
+
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                f => f.ServiceProviderId == serviceProviderId, 
+                false, 
+                skip, 
+                pageSize);
 
             return problems.Select(MapToProblemListItemDto);
         }
@@ -113,13 +125,17 @@ namespace ClientNexus.Application.Services
             return true;
         }
 
-        public async Task<IEnumerable<ProblemAdminDto>> GetAllProblemsAsync()
+        public async Task<IEnumerable<ProblemAdminDto>> GetAllProblemsAsync(int pageNumber = 1, int pageSize = 10)
         {
-            var problems = await _unitOfWork.Problems.GetAllQueryable(
-                p => p.Client,
-                p => p.ServiceProvider,
-                p => p.Service).ToListAsync();            
-                
+            int skip = (pageNumber - 1) * pageSize;
+
+            var problems = await _unitOfWork.Problems.GetByConditionAsync(
+                p => true, // All records
+                false,
+                skip,
+                pageSize,
+                ["Client", "ServiceProvider", "Service"]);           
+                        
             return problems.Select(MapToProblemAdminDto);
         }
 
@@ -251,6 +267,19 @@ namespace ClientNexus.Application.Services
         }
         
         #endregion
-    
+
+        public int GetTotalProblemCount(int? clientId = null, int? serviceProviderId = null)
+        {
+            if (clientId.HasValue)
+            {
+                return _unitOfWork.Problems.CountAsync(p => p.ClientId == clientId.Value).Result;
+            }
+            else if (serviceProviderId.HasValue)
+            {
+                return _unitOfWork.Problems.CountAsync(p => p.ServiceProviderId == serviceProviderId.Value).Result;
+            }
+            
+            return _unitOfWork.Problems.CountAsync().Result;
+        }
     }
 }

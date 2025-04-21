@@ -61,7 +61,7 @@ namespace ClientNexus.API.Controllers
       
         [HttpGet("client/{clientId:int}")]
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> GetClientProblems(int clientId)
+        public async Task<IActionResult> GetClientProblems(int clientId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -72,7 +72,25 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(403, "You can only view your own problems");
                 }
 
-                var problems = await _problemService.GetClientProblemsAsync(clientId);
+                // Enforce maximum page size
+                if (pageSize > 50) pageSize = 50;
+                
+                var problems = await _problemService.GetClientProblemsAsync(clientId, pageNumber, pageSize);
+                
+                // Add pagination headers
+                var totalCount = _problemService.GetTotalProblemCount(clientId: clientId);
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                Response.Headers.Append("X-Pagination", 
+                    System.Text.Json.JsonSerializer.Serialize(new {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = totalPages,
+                        HasNext = pageNumber < totalPages,
+                        HasPrevious = pageNumber > 1
+                    }));
+                    
                 return Ok(problems);
             }
             catch (KeyNotFoundException ex)
@@ -87,7 +105,7 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("provider/{serviceProviderId:int}")]
         [Authorize(Roles = "ServiceProvider")]
-        public async Task<IActionResult> GetServiceProviderProblems(int serviceProviderId)
+        public async Task<IActionResult> GetServiceProviderProblems(int serviceProviderId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -99,7 +117,25 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(403, "You can only view your own problems");
                 }
 
-                var problems = await _problemService.GetServiceProviderProblemsAsync(serviceProviderId);
+                // Enforce maximum page size
+                if (pageSize > 50) pageSize = 50;
+                
+                var problems = await _problemService.GetServiceProviderProblemsAsync(serviceProviderId, pageNumber, pageSize);
+                
+                // Add pagination headers
+                var totalCount = _problemService.GetTotalProblemCount(serviceProviderId: serviceProviderId);
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                Response.Headers.Append("X-Pagination", 
+                    System.Text.Json.JsonSerializer.Serialize(new {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = totalPages,
+                        HasNext = pageNumber < totalPages,
+                        HasPrevious = pageNumber > 1
+                    }));
+
                 return Ok(problems);
             }
             catch (KeyNotFoundException ex)
@@ -114,11 +150,29 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllProblems()
+        public async Task<IActionResult> GetAllProblems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
-                var problems = await _problemService.GetAllProblemsAsync();
+                // Enforce maximum page size
+                if (pageSize > 50) pageSize = 50;
+                
+                var problems = await _problemService.GetAllProblemsAsync(pageNumber, pageSize);
+                
+                // Add pagination headers
+                var totalCount = _problemService.GetTotalProblemCount();
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                
+                Response.Headers.Append("X-Pagination", 
+                    System.Text.Json.JsonSerializer.Serialize(new {
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = totalPages,
+                        HasNext = pageNumber < totalPages,
+                        HasPrevious = pageNumber > 1
+                    }));
+                    
                 return Ok(problems);
             }
             catch (Exception ex)
