@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Concurrent;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 public class AuthService : IAuthService
 {
@@ -56,11 +57,11 @@ public class AuthService : IAuthService
             {
                 throw new ArgumentNullException(nameof(registerDto.SpecializationIDS), "Specialization IDs are required for ServiceProvider.");
             }
-            //if (registerDto.Addresses == null || !registerDto.Addresses.Any())
-            //{
+            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            {
 
-            //    throw new ArgumentNullException("Addresses are required for ServiceProvider.");
-            //}
+                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
+            }
 
 
             if (registerDto.MainImage == null)
@@ -181,8 +182,16 @@ public class AuthService : IAuthService
                 await _addressService.AddAddressAsync(serviceProvider.Id, addressDto);
             }
         }
-        await _unitOfWork.SaveChangesAsync();
-
+        //await _unitOfWork.SaveChangesAsync();
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.InnerException?.Message); // دي هتطبع السبب الحقيقي
+            throw;
+        }
         var token = GenerateJwtToken(user);
 
         return new AuthResponseDTO

@@ -21,9 +21,15 @@ namespace ClientNexus.Application.Services
         }
         public async Task AddSpecializationsToServiceProvider(ICollection<ServiceProviderSpecialization> ServiceProviderSpecializations, List<int> SpecializationIDs, int serviceProviderId)
         {
+            var serviceProviderExists = await unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == serviceProviderId);
+            if (serviceProviderExists == null)
+            {
+                throw new ArgumentException("Service provider not found.");
+            }
+
             if (SpecializationIDs == null || !SpecializationIDs.Any())
             {
-                throw new ArgumentNullException(nameof(SpecializationIDs), "Specialization IDs are required for ServiceProvider.");
+                return;
             }
             //  Validate specialization IDs exist in the database
             var validSpecializationIds = (unitOfWork.Specializations.GetAllQueryable()).Select(s => s.Id).ToList();

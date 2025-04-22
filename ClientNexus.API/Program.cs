@@ -13,9 +13,6 @@ using ClientNexus.Domain.Entities.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Google.Apis.Services;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
-using StackExchange.Redis;
-using Microsoft.EntityFrameworkCore;
-
 
 using Amazon.S3;
 using Microsoft.OpenApi.Models;
@@ -29,7 +26,7 @@ DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 
-DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "ClientNexus.Infrastructure", ".env"));
+//DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "ClientNexus.Infrastructure", ".env"));
 
 // Read the connection string from the environment
 string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STR");
@@ -73,11 +70,7 @@ builder.Services.AddScoped<IClientService, ClientService>();  // Optionally, you
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 652dfac (Add Document service)
+
 builder.Services.AddScoped<IcountryService, CountryService>();
 builder.Services.AddScoped<IStateService, StateService>();
 builder.Services.AddScoped<ICityServicecs, CityService>();
@@ -85,30 +78,19 @@ builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeServi
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
+
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddScoped<ServiceProviderService>();  // FIX: Register ServiceProviderService
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddSingleton<ICache, RedisCache>();
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
-
-=======
->>>>>>> 652dfac (Add Document service)
 
 
 
-
->>>>>>> 2c84f52d7eed6f3cc896034998e97f1f99fd78af
 
 // NEW - Configure Identity with BaseUser
 builder.Services.AddIdentity<BaseUser, IdentityRole<int>>()

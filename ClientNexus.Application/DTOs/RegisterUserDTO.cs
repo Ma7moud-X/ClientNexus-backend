@@ -28,13 +28,11 @@ namespace ClientNexus.Application.DTOs
         public IFormFile? MainImage { get; set; } // For ServiceProvider
         public IFormFile? ImageIDUrl { get; set; } // For ServiceProvider
         public IFormFile? ImageNationalIDUrl { get; set; } // For ServiceProvider
-        //public string? MainImage { get; set; } // For ServiceProvider
-        //public string? ImageIDUrl { get; set; } // For ServiceProvider
-        //public string? ImageNationalIDUrl { get; set; } // For ServiceProvider
+       
         public int? YearsOfExperience { get; set; }// For ServiceProvider
         public List<int>? SpecializationIDS { get; set; }// For ServiceProvider
         public int? TypeId { get; set; } // For ServiceProvider
-        public List<AddressDTO>? Addresses { get; set; }
+        public List<AddressDTO>? Addresses { get; set; } // For ServiceProvider
     }
 
 }
