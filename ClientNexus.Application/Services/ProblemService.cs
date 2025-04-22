@@ -106,7 +106,7 @@ namespace ClientNexus.Application.Services
             return MapToProblemListItemDto(problem);
         }
 
-        public async Task<ProblemListItemDto> UpdateProblemAsync(UpdateProblemDto updateProblemDto, int id)
+        public async Task<ProblemListItemDto> UpdateProblemAsync(UpdateProblemDto updateProblemDto, int id, int userId, string userRole)
         {
             var problem = await _unitOfWork.Problems.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Invalid Problem ID");
@@ -117,6 +117,16 @@ namespace ClientNexus.Application.Services
                 throw new InvalidOperationException("Cannot update problem as it's already being handled by an administrator");
             }
 
+            bool hasPermission = false;
+
+            if (userRole == "Client" && problem.ClientId == userId && problem.ReportedBy == ReporterType.Client)
+                hasPermission = true;
+            else if (userRole == "ServiceProvider" && problem.ServiceProviderId == userId && problem.ReportedBy == ReporterType.ServiceProvider)
+                hasPermission = true;
+            
+            if (!hasPermission)
+                throw new UnauthorizedAccessException("You don't have permission to Update this problem or you didn't create this problem");
+
             // Update allowed fields
             problem.Description = updateProblemDto.Description;
             
@@ -125,7 +135,7 @@ namespace ClientNexus.Application.Services
             return MapToProblemListItemDto(problem);
         }
 
-        public async Task<bool> DeleteProblemAsync(int id)
+        public async Task<bool> DeleteProblemAsync(int id, int userId, string userRole)
         {
             var problem = await _unitOfWork.Problems.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Invalid Problem ID");
@@ -135,6 +145,16 @@ namespace ClientNexus.Application.Services
             {
                 return false;
             }
+
+            bool hasPermission = false;
+
+            if (userRole == "Client" && problem.ClientId == userId && problem.ReportedBy == ReporterType.Client)
+                hasPermission = true;
+            else if (userRole == "ServiceProvider" && problem.ServiceProviderId == userId && problem.ReportedBy == ReporterType.ServiceProvider)
+                hasPermission = true;
+            
+            if (!hasPermission)
+                throw new UnauthorizedAccessException("You don't have permission to Delete this problem or you didn't create this problem");
 
             _unitOfWork.Problems.Delete(problem);
             await _unitOfWork.SaveChangesAsync();

@@ -7,6 +7,7 @@ using ClientNexus.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using ClientNexus.Domain.Enums;
 
 namespace ClientNexus.API.Controllers
 {
@@ -69,18 +70,20 @@ namespace ClientNexus.API.Controllers
             }
         }
       
-        [HttpGet("client/{clientId:int}")]
+        [HttpGet("client/mine")]
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> GetClientProblems(int clientId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetClientProblems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (userIdClaim != clientId.ToString())
+                if (userIdClaim == null)
                 {
-                    return StatusCode(403, "You can only view your own problems");
+                    return BadRequest("User ID not found in claims");
                 }
+
+                int clientId = int.Parse(userIdClaim);
 
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
@@ -113,19 +116,21 @@ namespace ClientNexus.API.Controllers
             }
         }
 
-        [HttpGet("provider/{serviceProviderId:int}")]
+        [HttpGet("provider/mine")]
         [Authorize(Roles = "ServiceProvider")]
-        public async Task<IActionResult> GetServiceProviderProblems(int serviceProviderId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetServiceProviderProblems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
                 // Check if user is requesting their own data or is an admin
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (userIdClaim != serviceProviderId.ToString())
+                if (userIdClaim == null)
                 {
-                    return StatusCode(403, "You can only view your own problems");
+                    return BadRequest("User ID not found in claims");
                 }
+                
+                int serviceProviderId = int.Parse(userIdClaim);
 
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
@@ -247,19 +252,14 @@ namespace ClientNexus.API.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-                if (userIdClaim == null)
+                   if (userIdClaim == null || userRoleClaim == null)
                 {
-                    return BadRequest("User ID not found in claims");
+                    return BadRequest("User ID or role not found in claims");
                 }
 
                 int userId = int.Parse(userIdClaim);
-                if ((userRoleClaim == "Client" && userId != problem.ClientId) ||
-                    (userRoleClaim == "ServiceProvider" && userId != problem.ServiceProviderId))
-                {
-                    return StatusCode(403, "You can only update your own problems");
-                }
 
-                var updatedProblem = await _problemService.UpdateProblemAsync(updateProblemDto, id);
+                var updatedProblem = await _problemService.UpdateProblemAsync(updateProblemDto, id, userId, userRoleClaim);
                 return Ok(updatedProblem);
             }
             catch (KeyNotFoundException ex)
@@ -287,19 +287,14 @@ namespace ClientNexus.API.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-                if (userIdClaim == null)
+                if (userIdClaim == null || userRoleClaim == null)
                 {
-                    return BadRequest("User ID not found in claims");
+                    return BadRequest("User ID or role not found in claims");
                 }
 
                 int userId = int.Parse(userIdClaim);
-                if ((userRoleClaim == "Client" && userId != problem.ClientId) ||
-                    (userRoleClaim == "ServiceProvider" && userId != problem.ServiceProviderId))
-                {
-                    return StatusCode(403, "You can only delete your own problems");
-                }
 
-                var result = await _problemService.DeleteProblemAsync(id);
+                var result = await _problemService.DeleteProblemAsync(id, userId, userRoleClaim);
                 if (result)
                     return NoContent();
                 else

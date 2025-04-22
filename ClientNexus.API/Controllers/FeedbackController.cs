@@ -21,6 +21,7 @@ namespace ClientNexus.API.Controllers
         
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetFeedback(int id)
         {
             try
