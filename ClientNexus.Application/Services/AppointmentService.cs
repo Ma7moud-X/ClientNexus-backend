@@ -1,19 +1,11 @@
 ﻿using AutoMapper;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Services;
-using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
-using FirebaseAdmin.Auth;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClientNexus.Application.Services
 {
@@ -102,7 +94,7 @@ namespace ClientNexus.Application.Services
                 await _unitOfWork.CommitTransactionAsync();
                 return _mapper.Map<AppointmentDTO>(createdAppoint);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 throw new Exception("Error occured while Creating the appointment" + ex.Message, ex);
@@ -183,15 +175,28 @@ namespace ClientNexus.Application.Services
                     {
                         if (slot != null && slot.Date > DateTime.UtcNow)
                         {
-                            await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Available,slot.ServiceProviderId);
+                            await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Available, slot.ServiceProviderId);
                             //Notify the provider
-                            var providerToken = existingAppointment.ServiceProvider?.NotificationToken;
-                            if (!string.IsNullOrWhiteSpace(providerToken))
+
+                            var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                                sp => sp.Id == existingAppointment.ServiceProviderId,
+                                sp => new NotificationToken { Token = sp.NotificationToken! }
+            );
+                            var providerToken = tokens.FirstOrDefault();
+                            if (providerToken is not null)
                             {
-                                await _pushNotification.SendNotificationAsync(
-                                                                            title: "Appointment Cancelled",
-                                                                            body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
-                                                                            deviceToken: providerToken);
+                                try
+                                {
+                                    await _pushNotification.SendNotificationAsync(
+                                                                                title: "Appointment Cancelled",
+                                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
+                                                                                providerToken.Token);
+                                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Failed to send reminder for appointment. {ex.Message}");
+                                }
                             }
                         }
                     }
@@ -201,13 +206,25 @@ namespace ClientNexus.Application.Services
                         {
                             await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Deleted, slot.ServiceProviderId);
                             // Notify the client
-                            var clientDeviceToken = existingAppointment.Client?.NotificationToken;
-                            if (!string.IsNullOrWhiteSpace(clientDeviceToken))
+                            var tokens = await _unitOfWork.Clients.GetByConditionAsync(
+                                    c => c.Id == existingAppointment.ClientId,
+                                    c => new NotificationToken { Token = c.NotificationToken! }
+                                );
+                            var clientToken = tokens.FirstOrDefault();
+                            if (clientToken is not null)
                             {
-                                await _pushNotification.SendNotificationAsync(
-                                                                            title: "Appointment Cancelled",
-                                                                            body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
-                                                                            deviceToken: clientDeviceToken);
+                                try
+                                {
+                                    await _pushNotification.SendNotificationAsync(
+                                                                                title: "Appointment Cancelled",
+                                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
+                                                                               clientToken.Token);
+                                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Failed to send notification for appointment. {ex.Message}");
+                                }
                             }
                         }
                     }
@@ -221,7 +238,7 @@ namespace ClientNexus.Application.Services
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw new Exception("Error occured while updating the appointment status!"+ex.Message, ex);
+                throw new Exception("Error occured while updating the appointment status!" + ex.Message, ex);
             }
         }
 
@@ -282,12 +299,16 @@ namespace ClientNexus.Application.Services
                      a.Slot.Date < endRange &&
                      a.Status == ServiceStatus.Pending &&
                      !a.ReminderSent,
-                     includes: new[] { "Slot", "Client" });
+                     includes: new[] {"Slot"});
 
             foreach (var appointment in upcomingAppointments)
             {
-                var clientToken = appointment.Client?.NotificationToken;
-                if (!string.IsNullOrWhiteSpace(clientToken))
+                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
+                                    c => c.Id == appointment.ClientId,
+                                    c => new NotificationToken { Token = c.NotificationToken! }
+                                );
+                var clientToken = tokens.FirstOrDefault();
+                if (clientToken is not null)
                 {
                     try
                     {
@@ -296,10 +317,10 @@ namespace ClientNexus.Application.Services
                         await _pushNotification.SendNotificationAsync(
                             title: "Appointment Reminder",
                             body: $"You have an appointment scheduled for tomorrow, {appointmentTimeString}.",
-                            deviceToken: clientToken);
+                            clientToken.Token);
 
                         _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
-                    
+
                         // Mark reminder as sent
                         await MarkReminderSentAsync(appointment.Id);
                     }
