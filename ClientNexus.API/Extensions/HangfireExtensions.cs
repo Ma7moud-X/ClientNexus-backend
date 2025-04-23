@@ -34,7 +34,7 @@ namespace ClientNexus.API.Extensions
             RecurringJob.AddOrUpdate<IAppointmentService>(
                 "appointment-reminders",
                 service => service.SendAppointmentReminderAsync(),
-                Cron.MinuteInterval(10));
+                Cron.Hourly);
 
             // more recurring jobs
         }

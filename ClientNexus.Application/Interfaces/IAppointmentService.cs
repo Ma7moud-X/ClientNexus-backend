@@ -18,6 +18,8 @@ namespace ClientNexus.Application.Interfaces
         //Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);
         Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, int userId, UserType role, string? reason);
         Task DeleteAsync(int id);
+        Task SendAppointmentReminderAsync();
+
 
     }
 }

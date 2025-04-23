@@ -8,6 +8,7 @@ using ClientNexus.Domain.Interfaces;
 using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,13 +23,15 @@ namespace ClientNexus.Application.Services
         private readonly IMapper _mapper;
         private readonly ISlotService _slotService;
         private readonly IPushNotification _pushNotification;
+        private readonly ILogger<AppointmentService> _logger;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService, IPushNotification pushNotification)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService, IPushNotification pushNotification, ILogger<AppointmentService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _slotService = slotService;
             _pushNotification = pushNotification;
+            _logger = logger;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -82,6 +85,8 @@ namespace ClientNexus.Application.Services
                 if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == slot.ServiceProviderId))
                     throw new KeyNotFoundException("Invalid Service Provider Id");
 
+                if (await HasConflictAsync(clientId, slot.Date))
+                    throw new InvalidOperationException("Client already has an appointment at this time.");
 
                 Appointment appoint = _mapper.Map<Appointment>(appointmentDTO);
                 appoint.ServiceType = ServiceType.Appointment;
@@ -248,6 +253,11 @@ namespace ClientNexus.Application.Services
             }
         }
 
+        private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate)
+        {
+            return await _unitOfWork.Appointments.CheckAnyExistsAsync(a => a.ClientId == clientId && a.Slot.Date == appointmentDate && a.Status != ServiceStatus.Cancelled);
+        }
+
         //for notifications
         private async Task<bool> MarkReminderSentAsync(int appointmentId)
         {
@@ -260,6 +270,45 @@ namespace ClientNexus.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+        public async Task SendAppointmentReminderAsync()
+        {
+            var targetTime = DateTime.UtcNow.AddHours(24);
+            var startRange = targetTime.AddMinutes(-25);
+            var endRange = targetTime.AddMinutes(25);
+
+            var upcomingAppointments = await _unitOfWork.Appointments.GetByConditionAsync(
+                a => a.Slot.Date > startRange &&
+                     a.Slot.Date < endRange &&
+                     a.Status == ServiceStatus.Pending &&
+                     !a.ReminderSent,
+                     includes: new[] { "Slot", "Client" });
+
+            foreach (var appointment in upcomingAppointments)
+            {
+                var clientToken = appointment.Client?.NotificationToken;
+                if (!string.IsNullOrWhiteSpace(clientToken))
+                {
+                    try
+                    {
+                        var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
+
+                        await _pushNotification.SendNotificationAsync(
+                            title: "Appointment Reminder",
+                            body: $"You have an appointment scheduled for tomorrow, {appointmentTimeString}.",
+                            deviceToken: clientToken);
+
+                        _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+                    
+                        // Mark reminder as sent
+                        await MarkReminderSentAsync(appointment.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
+                    }
+                }
+            }
         }
 
     }
