@@ -1,10 +1,8 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using ClientNexus.API.Utilities;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-
 namespace ClientNexus.API.Controllers
 {
     [Route("api/qa")]
@@ -18,12 +16,16 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpGet("{questionId:int}", Name = "GetQuestionById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetQuestionById(int questionId)
         {
             return Ok(await _questionService.GetQuestionByIdAsync(questionId));
         }
 
         [HttpGet("provider/{providerId:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetQuestionsAnsweredByProvider(int providerId, [FromQuery] int offset = 0, [FromQuery] int limit = 10)
         {
             return Ok(await _questionService.GetQuestionsAnsweredByProviderAsync(providerId, offset, limit));
@@ -31,18 +33,21 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("client")]
         [Authorize(Policy = "IsClient")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetQuestionsByClient(int offset = 0, int limit = 10, bool onlyUnanswered = false)
         {
-            var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(clientIdClaim) || !int.TryParse(clientIdClaim, out var clientId))
-                throw new UnauthorizedAccessException("Client ID not found in token.");
-
-            var result = await _questionService.GetQuestionsByClientAsync(clientId, offset, limit, onlyUnanswered);
+            var result = await _questionService.GetQuestionsByClientAsync(userId.Value, offset, limit, onlyUnanswered);
             return Ok(result);
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllQuestions(int offset = 0, int limit = 10, bool onlyUnanswered = false)
         {
             var result = await _questionService.GetAllQuestionsAsync(offset, limit, onlyUnanswered);
@@ -51,14 +56,17 @@ namespace ClientNexus.API.Controllers
 
         [HttpPost("question")]
         [Authorize(Policy = "IsClient")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDTO dto)
         {
-            var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(clientIdClaim) || !int.TryParse(clientIdClaim, out var clientId))
-                throw new UnauthorizedAccessException("Client ID not found in token.");
-            
-            var result = await _questionService.CreateQuestionAsync(clientId, dto);
+            var result = await _questionService.CreateQuestionAsync(userId.Value, dto);
             return CreatedAtRoute(nameof(GetQuestionById), new { questionId = result.Id }, result);
         }
 
@@ -67,52 +75,59 @@ namespace ClientNexus.API.Controllers
         [Authorize(Policy = "IsServiceProvider")]
         public async Task<IActionResult> CreateAnswer(int questionId, [FromBody] AnswerCreateDTO dto)
         {
-            var ProviderIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(ProviderIdClaim) || !int.TryParse(ProviderIdClaim, out var providerId))
-                throw new UnauthorizedAccessException("Provider ID not found in token.");
-
-            var result = await _questionService.CreateAnswerAsync(questionId, providerId, dto);
+            var result = await _questionService.CreateAnswerAsync(questionId, userId.Value, dto);
             return CreatedAtRoute(nameof(GetQuestionById), new { questionId = result.Id }, result);
         }
 
         [HttpDelete("{questionId}")]
         [Authorize(Policy = "IsClientOrAdmin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var role = User.GetRole();
+            var userId = User.GetId();
+            if (role is null || userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("User ID not found in token.");
-            
-            await _questionService.DeleteQuestionAsync(questionId, userId, role);
+            await _questionService.DeleteQuestionAsync(questionId, userId.Value, role.Value);
             return NoContent();
         }
 
         [HttpPatch("{questionId}")]
         [Authorize(Policy = "IsClient")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] string updatedBody)
         {
-            var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(clientIdClaim) || !int.TryParse(clientIdClaim, out var clientId))
-                throw new UnauthorizedAccessException("Client ID not found in token.");
-
-            await _questionService.UpdateQuestionAsync(questionId, clientId, updatedBody);
+            await _questionService.UpdateQuestionAsync(questionId, userId.Value, updatedBody);
             return NoContent();
         }
 
         [HttpPatch("{questionId}/mark")]
         [Authorize(Policy = "IsClient")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> MarkQuestionHelpful(int questionId, [FromQuery] bool isHelpful)
         {
-            var clientIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
 
-            if (string.IsNullOrEmpty(clientIdClaim) || !int.TryParse(clientIdClaim, out var clientId))
-                throw new UnauthorizedAccessException("Client ID not found in token.");
-
-            await _questionService.MarkQuestionHelpfulAsync(questionId, clientId, isHelpful);
+            await _questionService.MarkQuestionHelpfulAsync(questionId, userId.Value, isHelpful);
             return NoContent();
         }
 
