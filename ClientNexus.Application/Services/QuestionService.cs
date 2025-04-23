@@ -5,8 +5,6 @@ using ClientNexus.Application.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using ClientNexus.Domain.Entities.Roles;
 
 namespace ClientNexus.Application.Services
 {
@@ -14,11 +12,13 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPushNotification _pushNotification;
 
-        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper)
+        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _pushNotification = pushNotification;
         }
 
         //authorize client
@@ -68,7 +68,14 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             //notify the client that his question is answered
-
+            var clientToken = question.Client?.NotificationToken;
+            if (!string.IsNullOrWhiteSpace(clientToken))
+            {
+                await _pushNotification.SendNotificationAsync(
+                                                            title: "Question Answered",
+                                                            body: $"The question you asked at: {question.CreatedAt} has been answered.",
+                                                            deviceToken: clientToken);
+            }
 
             return _mapper.Map<QuestionResponseDTO>(question);
         }
@@ -121,7 +128,7 @@ namespace ClientNexus.Application.Services
             return _mapper.Map<List<QuestionResponseDTO>>(questions);
         }
 
-        public async Task DeleteQuestionAsync(int questionId, int currentClientId, string role)
+        public async Task DeleteQuestionAsync(int questionId, int currentClientId, UserType role)
         {
             var question = await _unitOfWork.Questions
                 .FirstOrDefaultAsync(q => q.Id == questionId);
@@ -130,11 +137,11 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("Invalid Question ID.");
 
          
-            if (question.ClientId != currentClientId && role != "A")
+            if (question.ClientId != currentClientId && role != UserType.Admin)
                 throw new UnauthorizedAccessException("You are not allowed to delete this question.");
 
-            if (question.AnswerBody != null)
-                throw new InvalidOperationException("Cannot delete a question that has already been answered.");
+            //if (question.AnswerBody != null)
+            //    throw new InvalidOperationException("Cannot delete a question that has already been answered.");
 
             _unitOfWork.Questions.Delete(question);
             await _unitOfWork.SaveChangesAsync();
