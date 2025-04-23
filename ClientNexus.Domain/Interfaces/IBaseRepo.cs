@@ -6,6 +6,8 @@ public interface IBaseRepo<EType>
     where EType : class
 {
     Task<EType?> GetByIdAsync(int id);
+    Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null);
+
     public IQueryable<EType> GetAllQueryable(params Expression<Func<EType, object>>[] includes);
 
     // Task<IEnumerable<EType>> GetByConditionAsync(IWhereCondition<EType> condition, IPaginate paginate);

@@ -18,10 +18,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
-using Microsoft.OpenApi.Models;
+using Amazon.S3;
+using StackExchange.Redis;
+using Microsoft.EntityFrameworkCore;
 
 DotNetEnv.Env.Load();
 
+
+
+
+DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDatabase(builder.Configuration);
@@ -59,6 +65,14 @@ builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IProblemService, ProblemService>();
+
+builder.Services.AddScoped<IcountryService, CountryService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityServicecs, CityService>();
+builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
 
 
 // NEW - Configure Identity with BaseUser
@@ -174,6 +188,7 @@ builder.Services.AddAuthorization(options =>
 
 });
 
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -259,4 +274,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+app.MapGet("/", () => Results.Redirect("/swagger"));
+
+
 app.Run();

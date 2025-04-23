@@ -15,6 +15,7 @@ using ClientNexus.Domain.Interfaces;
 
 public class AuthService : IAuthService
 {
+    private readonly IFileService fileService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<BaseUser> _userManager;
     private readonly SignInManager<BaseUser> _signInManager;
@@ -27,7 +28,7 @@ public class AuthService : IAuthService
 
 
 
-    public AuthService(UserManager<BaseUser> userManager, SignInManager<BaseUser> signInManager, IConfiguration configuration, IUnitOfWork unitOfWork, IAddressService addressService, IPhoneNumberService phoneNumberService, ISpecializationService specializationService)
+    public AuthService(UserManager<BaseUser> userManager, SignInManager<BaseUser> signInManager, IConfiguration configuration, IUnitOfWork unitOfWork, IAddressService addressService, IPhoneNumberService phoneNumberService, ISpecializationService specializationService, IFileService fileService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -36,6 +37,7 @@ public class AuthService : IAuthService
         _addressService = addressService;
         _phoneNumberService = phoneNumberService;
         _specializationService = specializationService;
+        this.fileService = fileService;
     }
 
     public async Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO registerDto)
@@ -44,6 +46,64 @@ public class AuthService : IAuthService
         {
             throw new ArgumentNullException(nameof(registerDto), "Registration data cannot be null.");
         }
+        var mainImageUrl = string.Empty;
+        var imageIDUrl = string.Empty;
+        var imageNationalIDUrl = string.Empty;
+
+        if (registerDto.UserType == UserType.ServiceProvider)
+        {
+            if ((registerDto.SpecializationIDS) == null || !registerDto.SpecializationIDS.Any())
+            {
+                throw new ArgumentNullException(nameof(registerDto.SpecializationIDS), "Specialization IDs are required for ServiceProvider.");
+            }
+            //if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            //{
+
+            //    throw new ArgumentNullException("Addresses are required for ServiceProvider.");
+            //}
+
+
+            if (registerDto.MainImage == null)
+            {
+                throw new ArgumentNullException(nameof(registerDto.MainImage), "MainImage is required for ServiceProvider.");
+            }
+            else
+            {
+                // Generate a custom key for the main image with Guid and extension
+                var mainImageExtension = Path.GetExtension(registerDto.MainImage.FileName).TrimStart('.');
+                var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
+                var mainImageType = GetFileType(registerDto.MainImage);
+                mainImageUrl = await fileService.UploadPublicFileAsync(registerDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
+            }
+
+            if (registerDto.ImageIDUrl == null)
+            {
+                throw new ArgumentNullException(nameof(registerDto.ImageIDUrl), "ImageIDUrl is required for ServiceProvider.");
+            }
+            else
+            {
+                // Generate a custom key for the ID image with Guid and extension
+                var imageIDExtension = Path.GetExtension(registerDto.ImageIDUrl.FileName).TrimStart('.');
+                var imageIDKey = $"{Guid.NewGuid()}.{imageIDExtension}";
+                var imageIDType = GetFileType(registerDto.ImageIDUrl);
+                imageIDUrl = await fileService.UploadPublicFileAsync(registerDto.ImageIDUrl.OpenReadStream(), imageIDType, imageIDKey);
+            }
+
+            if (registerDto.ImageNationalIDUrl == null)
+            {
+                throw new ArgumentNullException(nameof(registerDto.ImageNationalIDUrl), "ImageNationalIDUrl is required for ServiceProvider.");
+            }
+            else
+            {
+                // Generate a custom key for the National ID image with Guid and extension
+                var imageNationalIDExtension = Path.GetExtension(registerDto.ImageNationalIDUrl.FileName).TrimStart('.');
+                var imageNationalIDKey = $"{Guid.NewGuid()}.{imageNationalIDExtension}";
+                var imageNationalIDType = GetFileType(registerDto.ImageNationalIDUrl);
+                imageNationalIDUrl = await fileService.UploadPublicFileAsync(registerDto.ImageNationalIDUrl.OpenReadStream(), imageNationalIDType, imageNationalIDKey);
+            }
+
+        }
+
 
         BaseUser user = registerDto.UserType switch
         {
@@ -58,12 +118,13 @@ public class AuthService : IAuthService
 
             UserType.ServiceProvider => new ServiceProvider
             {
+
                 UserType = UserType.ServiceProvider,
                 BirthDate = registerDto.BirthDate,
                 Description = registerDto.Description ?? throw new ArgumentNullException(nameof(registerDto.Description), "Description is required for ServiceProvider"),
-                ImageIDUrl = registerDto.ImageIDUrl ?? throw new ArgumentNullException(nameof(registerDto.ImageIDUrl), "ImageIDUrl is required for ServiceProvider"),
-                ImageNationalIDUrl = registerDto.ImageNationalIDUrl ?? throw new ArgumentNullException(nameof(registerDto.ImageNationalIDUrl), "ImageNationalIDUrl is required for ServiceProvider"),
-                MainImage = registerDto.MainImage ?? throw new ArgumentNullException(nameof(registerDto.MainImage), "MainImage is required for ServiceProvider"),
+                ImageIDUrl = imageIDUrl,
+                ImageNationalIDUrl = imageNationalIDUrl,
+                MainImage = mainImageUrl,
                 TypeId = registerDto.TypeId ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "TypeId is required for ServiceProvider"),
                 FirstName = registerDto.FirstName,  // NEW
                 LastName = registerDto.LastName,    // NEW
@@ -113,11 +174,7 @@ public class AuthService : IAuthService
 
 
             // Add multiple addresses using AddressService
-            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
-            {
 
-                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
-            }
 
             foreach (var addressDto in registerDto.Addresses)
             {
@@ -200,5 +257,20 @@ public class AuthService : IAuthService
     public static bool IsTokenRevoked(string token)
     {
         return _revokedTokens.ContainsKey(token);
+    }
+    private FileType GetFileType(IFormFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        switch (extension)
+        {
+            case ".jpg":
+                return FileType.Jpg;
+            case ".jpeg":
+                return FileType.Jpeg;
+            case ".png":
+                return FileType.Png;
+            default:
+                throw new ArgumentException($"Unsupported file type: {extension}");
+        }
     }
 }

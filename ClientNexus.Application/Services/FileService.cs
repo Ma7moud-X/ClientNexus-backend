@@ -1,17 +1,34 @@
+using Amazon.S3;
+using Amazon.S3.Model;
 using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
+using System.Net;
 
 namespace ClientNexus.Application.Services;
 
 public class FileService : IFileService
 {
     private readonly IFileStorage _fileStorage;
-
-    public FileService(IFileStorage fileStorage)
+    private readonly IAmazonS3 _s3Client;
+    private readonly string _bucketName;
+    public FileService(IFileStorage fileStorage , IAmazonS3 s3Client, string bucketName)
     {
+        if (s3Client is null)
+        {
+            throw new ArgumentNullException(nameof(s3Client), "s3Client cannot be null");
+        }
+
+        if (string.IsNullOrWhiteSpace(bucketName))
+        {
+            throw new ArgumentNullException(nameof(bucketName), "bucketName cannot be null or empty");
+        }
         _fileStorage = fileStorage;
+        _bucketName = bucketName;
+        _s3Client = s3Client;
+
+
     }
 
     public async Task<string> UploadPublicFileAsync(
@@ -72,4 +89,17 @@ public class FileService : IFileService
             $"{fileType.ToString().ToLower()}s/{uploadedFor.ToString()}/{folderId}/"
         );
     }
+    public async Task DeleteFileAsync(string key)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        await _s3Client.DeleteObjectAsync(request);
+    }
+
+
+
 }

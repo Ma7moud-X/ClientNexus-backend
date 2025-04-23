@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ClientNexus.Domain.Entities;
+using ClientNexus.Domain.Entities.Others;
 
 
 namespace ClientNexus.Application.Services
@@ -30,14 +31,11 @@ namespace ClientNexus.Application.Services
             {
                 BaseUserId = serviceProviderId,
                 DetailedAddress = addressDto.DetailedAddress,
-                Neighborhood = addressDto.Neighborhood,
                 MapUrl = addressDto.MapUrl,
-                CityId = addressDto.CityId
+                CityId = addressDto.CityId,
+                StateId= addressDto.StateId,
             };
-            if (_unitOfWork.Addresses == null)
-            {
-                throw new InvalidOperationException("Address repository is not initialized.");
-            }
+            
 
             await _unitOfWork.Addresses.AddAsync(Address);
             await _unitOfWork.SaveChangesAsync();
