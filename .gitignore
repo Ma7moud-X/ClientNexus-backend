@@ -126,3 +126,9 @@ src/.vs/config/applicationhost.config
 
 # environment variables
 .env
+
+# Ignore migration files in ClientNexus.Infrastructure/Migrations/
+ClientNexus.Infrastructure/Migrations/*
+
+# Ignore environment-specific configuration
+appsettings.Development.json

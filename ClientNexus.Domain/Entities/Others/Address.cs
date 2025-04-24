@@ -9,11 +9,13 @@ namespace ClientNexus.Domain.Entities
         public int Id { get; set; }
 
         public string DetailedAddress { get; set; } = default!;
-        public string? Neighborhood { get; set; }
+        //public string? Neighborhood { get; set; }
         public string? MapUrl { get; set; }
 
         public int CityId { get; set; }
         public City? City { get; set; }
+        public int StateId { get; set; }
+        public State? State { get; set; }
 
         public BaseUser? BaseUser { get; set; }
     }

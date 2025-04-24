@@ -53,6 +53,33 @@ namespace ClientNexus.Infrastructure
             // Set default schema for the database
             modelBuilder.HasDefaultSchema("ClientNexusSchema");
 
+
+
+            // Payment configuration
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.CreatedAt)
+                .HasDefaultValueSql("getdate()");
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.IntentionId)
+                .IsRequired();
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.ClientSecret)
+                .IsRequired();
+
+            // ServicePayment configuration
+            modelBuilder.Entity<ServicePayment>()
+                .Property(sp => sp.ServiceName)
+                .IsRequired();
+
+            // SubscriptionPayment configuration
+            modelBuilder.Entity<SubscriptionPayment>()
+                .Property(sp => sp.SubscriptionTier)
+                .IsRequired();
+
+
+
             // Custom entity configurations
             new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
             new ClientConfig().Configure(modelBuilder.Entity<Client>());

@@ -13,10 +13,16 @@ using ClientNexus.Domain.Entities.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Google.Apis.Services;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
+
+using Amazon.S3;
+using Microsoft.OpenApi.Models;
+
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 
 
+
+//DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -64,11 +70,29 @@ builder.Services.AddScoped<IClientService, ClientService>();  // Optionally, you
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+
+builder.Services.AddScoped<IcountryService, CountryService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityServicecs, CityService>();
+builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
+
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddScoped<ServiceProviderService>();  // FIX: Register ServiceProviderService
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddSingleton<ICache, RedisCache>();
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddScoped<PaymentService>();
+
+
+builder.Services.AddScoped<PaymobPaymentService>(sp =>
+    new PaymobPaymentService(
+        secretKey: builder.Configuration["Paymob:SecretKey"],
+        publicKey: builder.Configuration["Paymob:PublicKey"],
+        paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>()
+    ));
 
 
 
@@ -123,7 +147,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // NEW - Swagger Configuration
 if (builder.Environment.IsDevelopment())
 {
+    builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+
 }
 
 var app = builder.Build();
@@ -145,7 +171,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-app.MapGet("/", () => "Hello World!"); // NEW - Restored test endpoint
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
 

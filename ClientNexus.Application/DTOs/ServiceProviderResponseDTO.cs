@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class ServiceProviderResponse
+    public class ServiceProviderResponseDTO
     {
         [Required]
         public string FirstName { get; set; }
@@ -19,6 +19,10 @@ namespace ClientNexus.Application.DTOs
         public string Description { get; set; }
         [Required]
         public string MainImage { get; set; }
+        [Required]
+        public string ImageIDUrl { get; set; }
+        [Required]
+        public string ImageNationalIDUrl { get; set; }
         [Required]
         public int YearsOfExperience { get; set; }
         [Required]

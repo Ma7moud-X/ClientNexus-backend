@@ -22,9 +22,9 @@ public class CountryConfig : IEntityTypeConfiguration<Country>
             .HasForeignKey(a => a.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(c => c.Cities)
-            .WithOne(a => a.Country)
-            .HasForeignKey(a => a.CountryId)
-            .OnDelete(DeleteBehavior.Restrict);
+        //builder.HasMany(c => c.Cities)
+        //    .WithOne(a => a.Country)
+        //    .HasForeignKey(a => a.CountryId)
+        //    .OnDelete(DeleteBehavior.Restrict);
     }
 }
