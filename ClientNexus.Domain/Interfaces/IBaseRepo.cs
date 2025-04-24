@@ -40,6 +40,8 @@ public interface IBaseRepo<EType>
     EType Update(EType oldEntity, EType updatedEntity);
     void Delete(EType entity);
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
+
+    Task<EType?> GetByIdWithLockAsync(int id);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
     // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }

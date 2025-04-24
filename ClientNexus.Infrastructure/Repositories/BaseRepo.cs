@@ -2,7 +2,9 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Interfaces;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using static Amazon.S3.Util.S3EventNotification;
 
 namespace ClientNexus.Infrastructure.Repositories;
 
@@ -181,11 +183,27 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
     public async Task<EType?> GetByIdWithLockAsync(int id)
     {
+        var entityType = _context.Model.FindEntityType(typeof(EType));
+        if (entityType == null)
+            throw new InvalidOperationException($"Entity type '{typeof(EType).Name}' is not part of the EF Core model. " +
+                "Ensure it is added as a DbSet or configured in OnModelCreating.");
+
+        var tableName = entityType.GetSchema() is string schema
+            ? $"[{schema}].[{entityType.GetTableName()}]"
+            : $"[{entityType.GetTableName()}]";
+
+        var sql = $"SELECT * FROM {tableName} WITH (UPDLOCK, ROWLOCK) WHERE Id = @id";
+
+        var param = new SqlParameter("@id", id);
+
+        // To suppress the SQL injection warning safely, use raw string, not interpolation
         return await _context
             .Set<EType>()
-            .FromSqlRaw("SELECT * FROM {typeof(T).Name} WITH (UPDLOCK, ROWLOCK) WHERE Id = {0}", id)
+            .FromSqlRaw(sql, param)
             .FirstOrDefaultAsync();
     }
+
+
 
     public EType Update(EType oldEntity, EType updatedEntity)
     {
