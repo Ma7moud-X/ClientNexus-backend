@@ -15,16 +15,18 @@ public interface IServiceProviderService
     Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId);
     Task<bool> CheckIfAllowedToBeAvailableForEmergencyAsync(int serviceProviderId);
     Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId);
-    public Task<List<ServiceProviderResponse>> SearchServiceProvidersAsync(string? searchQuery);
+    public Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(string? searchQuery);
     public Task UpdateServiceProviderAsync(
         int ServiceProviderId,
         UpdateServiceProviderDTO updateDto
     );
-    public Task<List<ServiceProviderResponse>> FilterServiceProviderResponses(
+    public Task<List<ServiceProviderResponseDTO>> FilterServiceProviderResponses(
         string searchQuery,
         float? minRate,
         string? state,
         string? city,
         string? specializationName
     );
+    public Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved);
+
 }

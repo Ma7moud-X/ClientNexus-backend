@@ -25,7 +25,7 @@ namespace ClientNexus.API.Controllers
             _documentService = documentService;
             this.unitOfWork = unitOfWork;
         }
-
+        [Authorize(Policy = "IsAdmin")]
         [HttpPost]
         public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> AddDocument([FromForm] DocumentDTO dto)
         {

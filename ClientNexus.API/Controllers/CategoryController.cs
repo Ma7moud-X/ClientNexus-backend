@@ -19,7 +19,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost]
-       // [Authorize(Policy= "IsAdmin")]
+       [Authorize(Policy= "IsAdmin")]
         public async Task<IActionResult> AddCategory([FromBody] string categoryName)
         {
             try

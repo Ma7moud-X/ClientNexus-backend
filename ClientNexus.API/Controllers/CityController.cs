@@ -25,7 +25,7 @@ namespace ClientNexus.API.Controllers
 
         // POST api/city
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<CityDTO>>> AddCity([FromBody] CityDTO cityDTO)
         {

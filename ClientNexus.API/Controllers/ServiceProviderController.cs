@@ -18,8 +18,8 @@ namespace ClientNexus.API.Controllers
                 this._serviceProviderIsService = serviceProviderIsService;
             }
 
-            [HttpGet]
-            public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
+        [HttpGet("Search")]
+        public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
             {
 
 
@@ -30,10 +30,10 @@ namespace ClientNexus.API.Controllers
 
                     if (!providers.Any())
                     {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponse>>.ErrorResponse("No matching service providers found."));
+                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
                     }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponse>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {
@@ -50,10 +50,10 @@ namespace ClientNexus.API.Controllers
 
                     if (!providers.Any())
                     {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponse>>.ErrorResponse("No matching service providers found."));
+                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
                     }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponse>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {
@@ -62,10 +62,33 @@ namespace ClientNexus.API.Controllers
 
 
             }
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
+        {
+            try
+            {
+                var result = await _serviceProviderIsService.GetAllServiceProvider(isApproved);
+
+                if (result == null || !result.Any())
+                {
+                    return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>
+                        .ErrorResponse("No matching service providers found."));
+                }
+
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>
+                    .SuccessResponse(result, "Service providers retrieved successfully."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>
+                    .ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
 
 
 
-            [HttpPut("{ServiceProviderId}")]
+
+        [HttpPut("{ServiceProviderId}")]
             public async Task<IActionResult> UpdateServiceProviderId(int ServiceProviderId, [FromBody] UpdateServiceProviderDTO updateDto)
             {
                 if (updateDto == null)
