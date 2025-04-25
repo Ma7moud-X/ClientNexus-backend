@@ -5,6 +5,8 @@ using ClientNexus.Application.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Models;
+using Microsoft.Extensions.Logging;
 
 namespace ClientNexus.Application.Services
 {
@@ -13,12 +15,14 @@ namespace ClientNexus.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IPushNotification _pushNotification;
+        private readonly ILogger<IQuestionService> _logger;
 
-        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification)
+        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification, ILogger<IQuestionService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _pushNotification = pushNotification;
+            _logger = logger;
         }
 
         //authorize client
@@ -68,13 +72,26 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             //notify the client that his question is answered
-            var clientToken = question.Client?.NotificationToken;
-            if (!string.IsNullOrWhiteSpace(clientToken))
+            try
             {
-                await _pushNotification.SendNotificationAsync(
-                                                            title: "Question Answered",
-                                                            body: $"The question you asked at: {question.CreatedAt} has been answered.",
-                                                            deviceToken: clientToken);
+                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
+                                 c => c.Id == question.ClientId,
+                                 c => new NotificationToken { Token = c.NotificationToken! }
+             );
+                var clientToken = tokens.FirstOrDefault();
+                if (clientToken is not null)
+                {
+
+                    await _pushNotification.SendNotificationAsync(
+                                                                title: "Question Answered",
+                                                                body: $"The question you asked at: {question.CreatedAt} has been answered.",
+                                                                clientToken.Token);
+                    _logger.LogInformation($"The question you asked at:  {question.CreatedAt}  has been answered.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"Failed to send notification for answered question,  {ex.Message}");
             }
 
             return _mapper.Map<QuestionResponseDTO>(question);
