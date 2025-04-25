@@ -101,7 +101,7 @@ namespace ClientNexus.API.Controllers
             if (role is null || userId is null)
                 return Unauthorized();
 
-            var updatedAppointment = await _appointmentService.UpdateStatusAsync(id, request.Status,userId.Value, role.Value, request.Reason);
+            await _appointmentService.UpdateStatusAsync(id, request.Status,userId.Value, role.Value, request.Reason);
             return NoContent();
         }
         /// <summary>
