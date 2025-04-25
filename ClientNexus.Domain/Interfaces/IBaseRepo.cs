@@ -38,6 +38,7 @@ public interface IBaseRepo<EType>
         Func<IQueryable<EType>, IQueryable<EType>>? include = null
     );
     EType Update(EType oldEntity, EType updatedEntity);
+    void Update(EType entity);
     void Delete(EType entity);
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
 

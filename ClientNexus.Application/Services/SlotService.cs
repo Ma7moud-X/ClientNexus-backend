@@ -2,11 +2,9 @@
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
-using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace ClientNexus.Application.Services
 {
@@ -14,10 +12,10 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly Lazy<IAppointmentService> _appointService;
+        private readonly IAppointmentService _appointService;
         private readonly IPushNotification _pushNotification;
 
-        public SlotService(IUnitOfWork unitOfWork, IMapper mapper, Lazy<IAppointmentService> appointService, IPushNotification pushNotification)
+        public SlotService(IUnitOfWork unitOfWork, IMapper mapper, IAppointmentService appointService, IPushNotification pushNotification)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -81,44 +79,68 @@ namespace ClientNexus.Application.Services
 
         }
 
-        public async Task<SlotDTO> Update(int id, SlotDTO slotDTO)
+        public async Task UpdateDateAsync(int slotId, DateTime date, int serviceProviderId)
         {
-            if (slotDTO == null || id != slotDTO.Id)
-                throw new ArgumentNullException("Invalid Data");
-            //check if foreign key is valid
-            var existingSlot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == id);
-            if (existingSlot == null)
-                throw new KeyNotFoundException("Invalid slot ID");
-            //check if updated foreign key is valid
-            if (await _unitOfWork.ServiceProviders.GetByIdAsync(slotDTO.ServiceProviderId) == null)
-                throw new KeyNotFoundException("Invalid Service Provider Id");
-
-            Slot updatedSlot = _mapper.Map<Slot>(slotDTO);
-
-            if (!Enum.IsDefined(updatedSlot.Status))
-                throw new ArgumentOutOfRangeException($"Invalid SlotStatus value");
-
-            updatedSlot = _unitOfWork.Slots.Update(existingSlot, updatedSlot);
-            await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<SlotDTO>(updatedSlot);
-
-        }
-
-        public async Task<SlotDTO> UpdateStatus(int id, SlotStatus status, int serviceProviderId)
-        {
-            var slot = await _unitOfWork.Slots.GetByIdAsync(id);
+            var slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
             if (slot == null)
                 throw new KeyNotFoundException("Invalid slot ID");
 
-            if (!Enum.IsDefined(status))
-                throw new ArgumentOutOfRangeException($"Invalid SlotStatus value: {status}");
-
-            if(slot.ServiceProviderId != serviceProviderId)
+            if (slot.ServiceProviderId != serviceProviderId)
                 throw new UnauthorizedAccessException("Cannot modify other service providers slots!");
 
-            slot.Status = status;
+            if (date < DateTime.UtcNow)
+                throw new ArgumentException("Cannot modify a slot in the past.");
+
+            if (slot.Status == SlotStatus.Deleted || slot.Status == SlotStatus.Booked)
+                throw new InvalidOperationException("Cannot change date of a deleted or booked slot.");
+
+            slot.Date = date;
             await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<SlotDTO>(slot);
+
+        }
+        public async Task UpdateTypeAsync(int slotId, SlotType type, int serviceProviderId)
+        {
+
+            var slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
+            if (slot == null)
+                throw new KeyNotFoundException("Invalid slot ID");
+
+            if (!Enum.IsDefined(type))
+                throw new ArgumentOutOfRangeException($"Invalid SlotType value: {type}");
+
+            if (slot.ServiceProviderId != serviceProviderId)
+                throw new UnauthorizedAccessException("Cannot modify other service providers slots!");
+
+            if (slot.Status == SlotStatus.Deleted || slot.Status == SlotStatus.Booked)
+                throw new InvalidOperationException("Cannot change type of a deleted or booked slot.");
+
+            slot.SlotType = type;
+            await _unitOfWork.SaveChangesAsync();
+
+        }
+
+        public async Task UpdateStatusAsync(int slotId, SlotStatus status, int serviceProviderId)
+        {
+            if (status == SlotStatus.Deleted)
+            {
+                await DeleteAsync(slotId, serviceProviderId, UserType.ServiceProvider);
+            }
+
+            else
+            {
+                var slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
+                if (slot == null)
+                    throw new KeyNotFoundException("Invalid slot ID");
+
+                if (!Enum.IsDefined(status))
+                    throw new ArgumentOutOfRangeException($"Invalid SlotStatus value: {status}");
+
+                if (slot.ServiceProviderId != serviceProviderId)
+                    throw new UnauthorizedAccessException("Cannot modify other service providers slots!");
+
+                slot.Status = status;
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
 
         public async Task DeleteAsync(int slotId, int userId, UserType role)
@@ -143,37 +165,25 @@ namespace ClientNexus.Application.Services
                 }
                 else if (slot.Status == SlotStatus.Pending || slot.Status == SlotStatus.Booked)
                 {
-                    // Cancel all appointments for this slot
+
+                    // Cancel appointment at this slot
                     var appointments = await _unitOfWork.Appointments.GetByConditionAsync(
                                                                 a => a.SlotId == slotId && a.Status != ServiceStatus.Cancelled);
                     //var appointmentIds = appointments.Cast<int>().ToList();
-
-                    foreach (var appoint in appointments)
+                    var appoint = appointments.FirstOrDefault();
+                    if (appoint is not null)
                     {
-                        appoint.Status = ServiceStatus.Cancelled;
-                        appoint.CancellationReason = "Service Provider cancelled this slot";
-                        appoint.CancellationTime = DateTime.UtcNow;
-                        //notify client
-                        var clientToken = appoint.Client?.NotificationToken;
-                        if (!string.IsNullOrWhiteSpace(clientToken))
-                        {
-                            await _pushNotification.SendNotificationAsync(
-                                                                        title: "Appointment Cancelled",
-                                                                        body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
-                                                                        deviceToken: clientToken);
-                        }
+                        await _appointService.HandleCancelledStatusAsync(appoint, slot, UserType.ServiceProvider, "Provider cancelled this slot");
+                        _unitOfWork.Appointments.Update(appoint);
                     }
-
-                    //mark the slot as deleted
-                    slot.Status = SlotStatus.Deleted;
                 }
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
             }
-            catch
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw new Exception("Error occured while deleting the slot");
+                throw new Exception("Error occured while deleting the slot, " + ex.Message, ex);
             }
         }
     }

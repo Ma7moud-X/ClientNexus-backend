@@ -216,7 +216,10 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         entry.State = EntityState.Modified;
         return updatedEntity;
     }
-
+    public void Update(EType entity)
+    {
+        _context.Entry(entity).State = EntityState.Modified;
+    }
     public async Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp)
     {
         return await _context.Set<EType>().AnyAsync(condExp);
