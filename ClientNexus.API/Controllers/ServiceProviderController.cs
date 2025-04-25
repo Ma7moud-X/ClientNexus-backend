@@ -1,5 +1,6 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -86,6 +87,22 @@ namespace ClientNexus.API.Controllers
         }
 
 
+                if (result == null || !result.Any())
+                {
+                    return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>
+                        .ErrorResponse("No matching service providers found."));
+                }
+
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>
+                    .SuccessResponse(result, "Service providers retrieved successfully."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>
+                    .ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
 
 
         [HttpPut("{ServiceProviderId}")]
@@ -99,7 +116,7 @@ namespace ClientNexus.API.Controllers
                 try
                 {
                     await _serviceProviderIsService.UpdateServiceProviderAsync(ServiceProviderId, updateDto);
-                    return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+                    return Ok(ApiResponseDTO<string>.SuccessResponse("Serviceprovider updated successfully."));
                 }
                 catch (KeyNotFoundException ex)
                 {
@@ -114,6 +131,7 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+        
         }
 
     }

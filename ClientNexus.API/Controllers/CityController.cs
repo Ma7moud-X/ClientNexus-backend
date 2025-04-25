@@ -21,7 +21,12 @@ namespace ClientNexus.API.Controllers
             this.unitOfWork = unitOfWork;
         }
 
-     
+        [HttpGet]
+
+        public IActionResult gat()
+        {
+            return Ok(unitOfWork.Cities.GetAllQueryable());
+        }
 
         // POST api/city
         [HttpPost]

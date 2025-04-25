@@ -18,19 +18,42 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
+
 using Amazon.S3;
+using Microsoft.OpenApi.Models;
+
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 
-DotNetEnv.Env.Load();
 
 
-
-
-DotNetEnv.Env.Load();
+//DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
+
+DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "ClientNexus.Infrastructure", ".env"));
+
+// Read the connection string from the environment
+string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STR");
+
+
+//if (string.IsNullOrEmpty(connectionString))
+//{
+//    Console.WriteLine("DB_CONNECTION_STR is not set.");
+//    throw new Exception("Database connection string not found in environment variables.");
+//}
+//else
+//{
+//    Console.WriteLine($"Connection string loaded: {connectionString}");
+//}
+
+// Add services to the container.
 builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));  // Use the connection string from the environment variable
+
+
+
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -57,11 +80,37 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
-builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IserviceProviderService, ServiceProviderService>();
+builder.Services.AddScoped<ClientService>();  // FIX: Register ClientService directly
+builder.Services.AddScoped<IClientService, ClientService>();  // Optionally, you can keep the interface binding
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+
+builder.Services.AddScoped<IcountryService, CountryService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityServicecs, CityService>();
+builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
+
 builder.Services.AddTransient<IOtpService, OtpService>();
+builder.Services.AddScoped<ServiceProviderService>();  // FIX: Register ServiceProviderService
+builder.Services.AddSingleton<ICache, RedisCache>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddScoped<PaymentService>();
+
+
+builder.Services.AddScoped<PaymobPaymentService>(sp =>
+    new PaymobPaymentService(
+        secretKey: builder.Configuration["Paymob:SecretKey"],
+        publicKey: builder.Configuration["Paymob:PublicKey"],
+        paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>()
+    ));
+
+
+
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IProblemService, ProblemService>();
@@ -225,6 +274,13 @@ builder.Services.AddSwaggerGen(option =>
             },
         }
     );
+// NEW - Swagger Configuration
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+}
 
     option.OperationFilter<AuthorizeOperationFilter>();
 });
@@ -278,5 +334,6 @@ app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();

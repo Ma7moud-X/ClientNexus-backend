@@ -34,7 +34,7 @@ namespace ClientNexus.Application.DTOs
         public int? YearsOfExperience { get; set; }// For ServiceProvider
         public List<int>? SpecializationIDS { get; set; }// For ServiceProvider
         public int? TypeId { get; set; } // For ServiceProvider
-        public List<AddressDTO>? Addresses { get; set; }
+        public List<AddressDTO>? Addresses { get; set; } // For ServiceProvider
     }
 
 }
