@@ -68,45 +68,45 @@ namespace ClientNexus.API.Controllers
         }
 
         // <summary>
-        /// Service Provider Updates a slot
+        /// Update specific slot date
         /// </summary>
-        [HttpPut("{id:int}")]
+        [HttpPatch("{id:int}/date")]
         [Authorize(Policy = "IsServiceProvider")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
-        {
-            var userId = User.GetId();
-            if ( userId is null || userId != slotDTO.ServiceProviderId) //check that a provider only updates his slots
-                return Unauthorized();
-
-            return Ok(await _slotService.Update(id, slotDTO));
-        }
-
-        // <summary>
-        /// Update specific slot status
-        /// </summary>
-        [HttpPatch("{id:int}/status")]
-        [Authorize(Policy = "IsServiceProvider")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateSlotStatus(int id, [FromBody] SlotStatus status)
+        public async Task<IActionResult> UpdateSlotDate(int id, [FromBody] DateTime date)
         {
             var userId = User.GetId();
             if (userId is null)
                 return Unauthorized();
 
-            return Ok( await _slotService.UpdateStatus(id, status, userId.Value));
+            await _slotService.UpdateDateAsync(id, date, userId.Value);
+            return NoContent();
+        }
+        // <summary>
+        /// Update specific slot type ()
+        /// </summary>
+        [HttpPatch("{id:int}/type")]
+        [Authorize(Policy = "IsServiceProvider")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateSlotType(int id, [FromBody] SlotType type)
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
+
+            await _slotService.UpdateTypeAsync(id, type, userId.Value);
+            return NoContent();
         }
 
         /// <summary>
         /// Service Provider deletes a slot
         /// </summary>
-        //authorize: provider, admin
         [HttpDelete("{id:int}", Name = "DeleteSlot")]
         [Authorize(Policy = "IsServiceProviderOrAdmin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
