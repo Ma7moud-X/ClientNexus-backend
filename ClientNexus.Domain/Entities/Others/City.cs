@@ -9,8 +9,8 @@ public class City
     public int? StateId { get; set; }
     public State? State { get; set; }
 
-    //public int CountryId { get; set; }
-    //public Country? Country { get; set; }
+    public int CountryId { get; set; }
+    public Country? Country { get; set; }
 
     public ICollection<Address>? Addresses { get; set; }
 }

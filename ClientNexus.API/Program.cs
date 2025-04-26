@@ -80,7 +80,7 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
-builder.Services.AddScoped<IserviceProviderService, ServiceProviderService>();
+builder.Services.AddScoped<IServiceProviderService, ServiceProviderService>();
 builder.Services.AddScoped<ClientService>();  // FIX: Register ClientService directly
 builder.Services.AddScoped<IClientService, ClientService>();  // Optionally, you can keep the interface binding
 builder.Services.AddScoped<IAddressService, AddressService>();
@@ -275,12 +275,12 @@ builder.Services.AddSwaggerGen(option =>
         }
     );
 // NEW - Swagger Configuration
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+//if (builder.Environment.IsDevelopment())
+//{
+//    builder.Services.AddEndpointsApiExplorer();
+//    builder.Services.AddSwaggerGen();
 
-}
+//}
 
     option.OperationFilter<AuthorizeOperationFilter>();
 });
@@ -334,6 +334,5 @@ app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();

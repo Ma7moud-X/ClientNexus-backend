@@ -87,51 +87,7 @@ namespace ClientNexus.API.Controllers
         }
 
 
-                if (result == null || !result.Any())
-                {
-                    return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>
-                        .ErrorResponse("No matching service providers found."));
-                }
-
-                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>
-                    .SuccessResponse(result, "Service providers retrieved successfully."));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponseDTO<string>
-                    .ErrorResponse($"An error occurred: {ex.Message}"));
-            }
-        }
-
-
-
-        [HttpPut("{ServiceProviderId}")]
-            public async Task<IActionResult> UpdateServiceProviderId(int ServiceProviderId, [FromBody] UpdateServiceProviderDTO updateDto)
-            {
-                if (updateDto == null)
-                {
-                    return BadRequest(ApiResponseDTO<string>.ErrorResponse("Invalid request data."));
-                }
-
-                try
-                {
-                    await _serviceProviderIsService.UpdateServiceProviderAsync(ServiceProviderId, updateDto);
-                    return Ok(ApiResponseDTO<string>.SuccessResponse("Serviceprovider updated successfully."));
-                }
-                catch (KeyNotFoundException ex)
-                {
-                    return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
-                }
-            }
-        
+            
         }
 
     }
