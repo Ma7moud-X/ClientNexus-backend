@@ -75,13 +75,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("MapUrl")
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Neighborhood")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("StateId")
+                        .HasColumnType("int");
 
                     b.HasKey("BaseUserId", "Id");
 
                     b.HasIndex("CityId");
+
+                    b.HasIndex("StateId");
 
                     b.ToTable("Addresses", "ClientNexusSchema");
                 });
@@ -118,16 +119,15 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("UploadedById")
+                    b.Property<int?>("UploadedById")
                         .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("varchar(500)");
 
                     b.HasKey("Id");
 
@@ -345,10 +345,20 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("ClientSecret")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("IntentionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PaymentGateway")
                         .IsRequired()
@@ -372,6 +382,11 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("char(1)");
+
+                    b.Property<string>("WebhookStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -408,8 +423,17 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AdminComment")
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -487,11 +511,17 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.ClientServiceProviderFeedback", b =>
                 {
-                    b.Property<int>("ServiceProviderId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Feedback")
                         .HasColumnType("nvarchar(1000)");
@@ -499,9 +529,14 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<float>("Rate")
                         .HasColumnType("real");
 
-                    b.HasKey("ServiceProviderId", "ClientId");
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("ServiceProviderId");
 
                     b.ToTable("ClientServiceProviderFeedbacks", "ClientNexusSchema");
                 });
@@ -936,6 +971,11 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasIndex("ServiceId")
                         .IsUnique()
                         .HasFilter("[ServiceId] IS NOT NULL");
@@ -949,6 +989,11 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SubscriptionTier")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("SubscriptionType")
                         .IsRequired()
@@ -1154,9 +1199,17 @@ namespace ClientNexus.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ClientNexus.Domain.Entities.Others.State", "State")
+                        .WithMany()
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BaseUser");
 
                     b.Navigation("City");
+
+                    b.Navigation("State");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Content.Document", b =>
@@ -1170,8 +1223,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasOne("ClientNexus.Domain.Entities.Users.Admin", "UploadedBy")
                         .WithMany("UploadedDocuments")
                         .HasForeignKey("UploadedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DocumentType");
 

@@ -67,6 +67,20 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return query;
     }
 
+    public async Task<IEnumerable<EType>> GetAllAsync(string[]? includes = null)
+    {
+        IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
+        if (includes is not null)
+        {
+            foreach (string inc in includes)
+            {
+                query = query.Include(inc);
+            }
+        }
+
+        return await query.ToListAsync();
+    }
+
     public async Task<IEnumerable<EType>> GetByConditionAsync(
         Expression<Func<EType, bool>> condExp,
         bool getAll = false,
@@ -204,6 +218,15 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     }
 
 
+    public async Task<int> CountAsync(Expression<Func<EType, bool>>? predicate = null)
+    {
+        if (predicate == null)
+        {
+            return await _context.Set<EType>().CountAsync();
+        }
+        
+        return await _context.Set<EType>().Where(predicate).CountAsync();
+    }
 
     public EType Update(EType oldEntity, EType updatedEntity)
     {

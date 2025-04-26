@@ -20,7 +20,7 @@ namespace ClientNexus.Application.Services
             _smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("client.nexus.2025@gmail.com", "Fady@123"),
+                Credentials = new NetworkCredential("client.nexus.2025@gmail.com", "klydjmvbhotndukg"),
                 EnableSsl = true
             };
         }

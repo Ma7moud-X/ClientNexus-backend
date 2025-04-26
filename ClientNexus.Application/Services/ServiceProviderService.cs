@@ -290,12 +290,12 @@ namespace ClientNexus.Application.Services
             return input;
         }
 
-        public async Task<List<ServiceProviderResponse>> SearchServiceProvidersAsync(
+        public async Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(
             string? searchQuery
         )
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
-                return new List<ServiceProviderResponse>();
+                return new List<ServiceProviderResponseDTO>();
 
             searchQuery = NormalizeSearchQuery(searchQuery);
             var serviceProviders = await _unitOfWork
@@ -318,7 +318,7 @@ namespace ClientNexus.Application.Services
                         )
                     )
                 )
-                .Select(sp => new ServiceProviderResponse
+                .Select(sp => new ServiceProviderResponseDTO
                 {
                     FirstName = sp.FirstName,
                     LastName = sp.LastName,
@@ -338,7 +338,7 @@ namespace ClientNexus.Application.Services
             return filteredProviders;
         }
 
-        public async Task<List<ServiceProviderResponse>> FilterServiceProviderResponses(
+        public async Task<List<ServiceProviderResponseDTO>> FilterServiceProviderResponses(
             string searchQuery,
             float? minRate,
             string? state,
@@ -386,5 +386,46 @@ namespace ClientNexus.Application.Services
 
             return filter;
         }
+        public async Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved)
+        {
+            if (IsApproved == null)
+            {
+                return new List<ServiceProviderResponseDTO>();
+            }
+
+            var serviceProviders = await _unitOfWork.ServiceProviders.GetAllQueryable()
+                   .AsNoTracking()
+                   .Include(sp => sp.Addresses!)
+                       .ThenInclude(a => a.City!)
+                           .ThenInclude(c => c.State!)
+                   .Include(sp => sp.Specializations!) // Include Specializations
+                   .ToListAsync();
+
+            var serviceProviderResponse = serviceProviders
+       .Where(sp =>
+           sp.IsApproved == IsApproved
+
+       ).Select(sp => new ServiceProviderResponseDTO
+       {
+           FirstName = sp.FirstName,
+           LastName = sp.LastName,
+           Rate = sp.Rate,
+           ImageIDUrl = sp.ImageIDUrl,
+           ImageNationalIDUrl = sp.ImageNationalIDUrl,
+           Description = sp.Description,
+           MainImage = sp.MainImage,
+           YearsOfExperience = sp.YearsOfExperience,
+           City = sp.Addresses?.FirstOrDefault()?.City?.Name,
+           State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+           SpecializationName = sp.Specializations != null
+              ? sp.Specializations.Select(s => s.Name).ToList()
+              : new List<string>()
+
+       }).ToList();
+
+
+            return serviceProviderResponse;
+        }
+
     }
 }

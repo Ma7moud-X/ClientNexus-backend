@@ -18,9 +18,9 @@ namespace ClientNexus.Infrastructure.Configurations
                 .IsRequired(true)
                 .HasMaxLength(200);
 
-            builder.Property(a => a.Neighborhood)
-                .IsRequired(false)
-                .HasMaxLength(100);
+            //builder.Property(a => a.Neighborhood)
+            //    .IsRequired(false)
+            //    .HasMaxLength(100);
 
             builder.Property(a => a.MapUrl)
                 .IsRequired(false)

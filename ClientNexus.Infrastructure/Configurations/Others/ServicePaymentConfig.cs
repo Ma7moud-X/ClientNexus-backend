@@ -6,14 +6,17 @@ namespace ClientNexus.Infrastructure.Configurations.Others;
 
 public class ServicePaymentConfig : IEntityTypeConfiguration<ServicePayment>
 {
-    public void Configure(EntityTypeBuilder<ServicePayment> builder)
-    {
-        builder.ToTable("ServicePayments");
+public void Configure(EntityTypeBuilder<ServicePayment> builder)
+        {
+            builder.ToTable("ServicePayments");
 
-        builder
-            .HasOne(sp => sp.Service)
-            .WithOne(s => s.ServicePayment)
-            .HasForeignKey<ServicePayment>(sp => sp.ServiceId)
-            .OnDelete(DeleteBehavior.Restrict);
-    }
+            builder.Property(sp => sp.ServiceName)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.HasOne(sp => sp.Service)
+                .WithOne(s => s.ServicePayment)
+                .HasForeignKey<ServicePayment>(sp => sp.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
 }

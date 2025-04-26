@@ -19,12 +19,12 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost("send-otp")]
-        public async Task<IActionResult> SendOtp([FromBody] string email)
+        public async Task<IActionResult> SendOtp([FromBody] SendOtpRequestDTO request)
         {
             try
             {
-                var otp = await _otpService.GenerateOtpAsync(email); // Call GenerateOtpAsync
-                await _otpService.SendOtpAsync(email, otp); // Send OTP via email
+                var otp = await _otpService.GenerateOtpAsync(request.Email); // Call GenerateOtpAsync
+                await _otpService.SendOtpAsync(request.Email, otp); // Send OTP via email
                 return Ok("OTP sent successfully.");
             }
             catch (Exception ex)

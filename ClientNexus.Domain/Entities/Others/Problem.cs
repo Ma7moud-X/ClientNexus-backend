@@ -9,6 +9,8 @@ namespace ClientNexus.Domain.Entities
         public int Id { get; set; }
 
         public string Description { get; set; } = default!;
+        public string? AdminComment { get; set; }
+
         public ProblemStatus Status { get; set; } = ProblemStatus.New;
 
         // Identify who reported the problem
@@ -29,5 +31,8 @@ namespace ClientNexus.Domain.Entities
         // Service relationship
         public int ServiceId { get; set; }
         public Service? Service { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ClosedAt { get; set; }
     }
 }

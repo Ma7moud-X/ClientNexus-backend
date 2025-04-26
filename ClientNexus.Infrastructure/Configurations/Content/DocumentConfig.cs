@@ -18,7 +18,7 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
 
         builder.Property(d => d.Title).HasColumnType("nvarchar(100)").IsRequired();
 
-        builder.Property(d => d.Url).HasColumnType("varchar(500)").IsRequired();
+        //builder.Property(d => d.Url).HasColumnType("varchar(500)").IsRequired();
 
         builder
             .HasMany(d => d.Categories)
