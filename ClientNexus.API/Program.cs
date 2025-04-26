@@ -31,29 +31,10 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 
-DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "ClientNexus.Infrastructure", ".env"));
-
-// Read the connection string from the environment
-string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STR");
-
-
-//if (string.IsNullOrEmpty(connectionString))
-//{
-//    Console.WriteLine("DB_CONNECTION_STR is not set.");
-//    throw new Exception("Database connection string not found in environment variables.");
-//}
-//else
-//{
-//    Console.WriteLine($"Connection string loaded: {connectionString}");
-//}
+DotNetEnv.Env.Load();
 
 // Add services to the container.
 builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));  // Use the connection string from the environment variable
-
-
-
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
 builder.Services.AddHangfireServices(builder.Configuration);
