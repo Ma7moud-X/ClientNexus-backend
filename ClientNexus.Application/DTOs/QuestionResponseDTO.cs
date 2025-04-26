@@ -1,4 +1,4 @@
-﻿using ClientNexus.Domain.Enums;
+﻿ using ClientNexus.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +16,8 @@ namespace ClientNexus.Application.DTOs
         public string? AnswerBody { get; set; }
         public DateTime? AnsweredAt { get; set; }
         public bool? IsAnswerHelpful { get; set; }
+        public int ClientId { get; set; }
+        public int ServiceProviderId { get; set; }
 
     }
 }
