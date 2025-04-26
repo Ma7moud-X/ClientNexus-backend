@@ -56,6 +56,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
+builder.Services.AddHangfireServices(builder.Configuration);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
@@ -328,6 +329,9 @@ app.UseCors("AllowAllOrigins");
 // NEW - Use Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add Hangfire dashboard and configure jobs
+app.UseHangfireConfiguration();
 
 app.MapControllers();
 

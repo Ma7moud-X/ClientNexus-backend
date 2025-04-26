@@ -10,8 +10,7 @@ namespace ClientNexus.Application.DTO
 {
     public class SlotCreateDTO
     {
-        [Required]
-        public int ServiceProviderId { get; set; }
+
         [Required]
         public DateTime Date { get; set; }
         [Required]

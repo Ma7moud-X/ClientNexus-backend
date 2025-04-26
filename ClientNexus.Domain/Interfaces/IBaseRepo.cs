@@ -41,8 +41,11 @@ public interface IBaseRepo<EType>
     );
     Task<int> CountAsync(Expression<Func<EType, bool>>? predicate = null);
     EType Update(EType oldEntity, EType updatedEntity);
+    void Update(EType entity);
     void Delete(EType entity);
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
+
+    Task<EType?> GetByIdWithLockAsync(int id);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
     // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }
