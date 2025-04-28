@@ -80,7 +80,7 @@ builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddScoped<ServiceProviderService>();  // FIX: Register ServiceProviderService
 builder.Services.AddSingleton<ICache, RedisCache>();
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddSingleton<IConnectionMultiplexer>( sp => ConnectionMultiplexer.Connect("localhost:6379"));
 builder.Services.AddScoped<PaymentService>();
 
 
@@ -294,14 +294,14 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v2/swagger.json", "ASP.NET Web API v2");
     });
-}
+//}
 
 app.UseHttpsRedirection();
 app.UseRouting();
