@@ -83,14 +83,16 @@ public class OfferService : IOfferService
         }
 
         TimeSpan requestTTL =
-            createdAt.Value.AddMinutes(GlobalConstants.EmergencyCaseTTL) - createdAt.Value;
+            createdAt.Value.AddMinutes(GlobalConstants.EmergencyCaseTTL) - DateTime.UtcNow;
 
         if (requestTTL.TotalMinutes <= 1)
         {
             throw new InvalidOperationException("Request is no longer accepting offers");
         }
 
-        var offerSet = await _cache.SetObjectAsync(
+        _cache.StartTransaction();
+
+        var offerSet = _cache.SetObjectAsync(
             string.Format(
                 CacheConstants.ServiceOfferPriceKeyTemplate,
                 serviceId,
@@ -101,7 +103,22 @@ public class OfferService : IOfferService
             @override: false
         );
 
-        if (!offerSet)
+        var activeOfferSet = _cache.SetStringAsync(
+            string.Format(
+                CacheConstants.ServiceProviderHasActiveOfferKeyTemplate,
+                serviceProvider.ServiceProviderId
+            ),
+            "1",
+            offerTTL
+        );
+
+        bool commited = await _cache.CommitTransactionAsync();
+        if (!commited)
+        {
+            throw new ServerException("Error creating an offer. Please try again later.");
+        }
+
+        if (!await offerSet)
         {
             throw new InvalidOperationException(
                 "Can't make another offer without waiting for previous offer to expire"
@@ -149,6 +166,18 @@ public class OfferService : IOfferService
         return await _cache.GetObjectAsync<decimal?>(
             string.Format(CacheConstants.ServiceOfferPriceKeyTemplate, serviceId, serviceProviderId)
         );
+    }
+
+    public async Task<bool> HasActiveOfferAsync(int serviceProviderId)
+    {
+        var res = await _cache.GetStringAsync(
+            string.Format(
+                CacheConstants.ServiceProviderHasActiveOfferKeyTemplate,
+                serviceProviderId
+            )
+        );
+
+        return res is not null;
     }
 
     public async Task<PhoneNumberDTO> AcceptOfferAsync(
