@@ -265,6 +265,29 @@ namespace ClientNexus.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BaseUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BaseUserId");
+
+                    b.ToTable("Notifications", "ClientNexusSchema");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
                 {
                     b.Property<int>("ServiceProviderId")
@@ -1267,6 +1290,17 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("State");
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Notification", b =>
+                {
+                    b.HasOne("ClientNexus.Domain.Entities.Users.BaseUser", "BaseUser")
+                        .WithMany("Notifications")
+                        .HasForeignKey("BaseUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BaseUser");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
                 {
                     b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProvider", "ServiceProvider")
@@ -1693,6 +1727,8 @@ namespace ClientNexus.Infrastructure.Migrations
             modelBuilder.Entity("ClientNexus.Domain.Entities.Users.BaseUser", b =>
                 {
                     b.Navigation("Addresses");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("PhoneNumbers");
                 });
