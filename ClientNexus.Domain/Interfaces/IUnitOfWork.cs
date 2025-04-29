@@ -80,6 +80,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<Slot> Slots { get; }
     IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
     IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks {get; }
+    IBaseRepo<Notification> Notifications {get; }
 
     // Functions
     Task<int> SaveChangesAsync();

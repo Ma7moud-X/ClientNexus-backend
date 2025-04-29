@@ -1,17 +1,17 @@
-using ClientNexus.Infrastructure.Configurations;
-using ClientNexus.Infrastructure.Configurations.Content;
-using ClientNexus.Infrastructure.Configurations.Others;
-using ClientNexus.Infrastructure.Configurations.Services;
-using ClientNexus.Infrastructure.Configurations.Users;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Entities.Content;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Infrastructure.Configurations;
+using ClientNexus.Infrastructure.Configurations.Content;
+using ClientNexus.Infrastructure.Configurations.Others;
+using ClientNexus.Infrastructure.Configurations.Services;
+using ClientNexus.Infrastructure.Configurations.Users;
+using DotNetEnv;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using DotNetEnv;
 
 namespace ClientNexus.Infrastructure
 {
@@ -22,9 +22,8 @@ namespace ClientNexus.Infrastructure
             : base(options) { }
 
         // Parameterless constructor for design-time (used by EF Core migrations)
-        public ApplicationDbContext() : this(GetDesignTimeOptions())
-        {
-        }
+        public ApplicationDbContext()
+            : this(GetDesignTimeOptions()) { }
 
         // Static method to create DbContextOptions for design-time
         private static DbContextOptions<ApplicationDbContext> GetDesignTimeOptions()
@@ -37,7 +36,9 @@ namespace ClientNexus.Infrastructure
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("Database connection string not found in environment variables. Ensure DB_CONNECTION_STR is set in the .env file.");
+                throw new InvalidOperationException(
+                    "Database connection string not found in environment variables. Ensure DB_CONNECTION_STR is set in the .env file."
+                );
             }
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
@@ -53,32 +54,24 @@ namespace ClientNexus.Infrastructure
             // Set default schema for the database
             modelBuilder.HasDefaultSchema("ClientNexusSchema");
 
-
-
             // Payment configuration
-            modelBuilder.Entity<Payment>()
+            modelBuilder
+                .Entity<Payment>()
                 .Property(p => p.CreatedAt)
                 .HasDefaultValueSql("getdate()");
 
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.IntentionId)
-                .IsRequired();
+            modelBuilder.Entity<Payment>().Property(p => p.IntentionId).IsRequired();
 
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.ClientSecret)
-                .IsRequired();
+            modelBuilder.Entity<Payment>().Property(p => p.ClientSecret).IsRequired();
 
             // ServicePayment configuration
-            modelBuilder.Entity<ServicePayment>()
-                .Property(sp => sp.ServiceName)
-                .IsRequired();
+            modelBuilder.Entity<ServicePayment>().Property(sp => sp.ServiceName).IsRequired();
 
             // SubscriptionPayment configuration
-            modelBuilder.Entity<SubscriptionPayment>()
+            modelBuilder
+                .Entity<SubscriptionPayment>()
                 .Property(sp => sp.SubscriptionTier)
                 .IsRequired();
-
-
 
             // Custom entity configurations
             new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
@@ -87,7 +80,9 @@ namespace ClientNexus.Infrastructure
             new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
             new ServiceProviderTypeConfig().Configure(modelBuilder.Entity<ServiceProviderType>());
             new SpecializationConfig().Configure(modelBuilder.Entity<Specialization>());
-            new ServiceProviderSpecializationConfig().Configure(modelBuilder.Entity<ServiceProviderSpecialization>());
+            new ServiceProviderSpecializationConfig().Configure(
+                modelBuilder.Entity<ServiceProviderSpecialization>()
+            );
 
             new ServiceConfig().Configure(modelBuilder.Entity<Service>());
             new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
@@ -118,7 +113,10 @@ namespace ClientNexus.Infrastructure
             new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
             new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
-            new ClientServiceProviderFeedbackConfig().Configure(modelBuilder.Entity<ClientServiceProviderFeedback>());
+            new ClientServiceProviderFeedbackConfig().Configure(
+                modelBuilder.Entity<ClientServiceProviderFeedback>()
+            );
+            new NotificationConfig().Configure(modelBuilder.Entity<Notification>());
         }
 
         // DbSets
@@ -160,5 +158,6 @@ namespace ClientNexus.Infrastructure
         public DbSet<OfficeImageUrl> OfficeImageUrls { get; set; }
 
         public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
     }
 }
