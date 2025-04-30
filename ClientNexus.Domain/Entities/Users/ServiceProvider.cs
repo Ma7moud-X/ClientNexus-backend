@@ -18,6 +18,9 @@ namespace ClientNexus.Domain.Entities.Users
         public int YearsOfExperience { get; set; }
         public string ImageIDUrl { get; set; } = default!;
         public string ImageNationalIDUrl { get; set; } = default!;
+        public int Office_consultation_price { get; set; }
+        public int Telephone_consultation_price { get; set; }
+        public int main_specializationID {  get; set; }
         public SubscriptionType SubType { get; set; }
         public SubscriptionStatus SubscriptionStatus { get; set; }
         public DateTime? SubscriptionExpiryDate { get; set; }

@@ -5,6 +5,7 @@ using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +15,13 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<BaseUser> _userManager;
+       private readonly IFileService _fileService;
 
-        public ServiceProviderService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager)
+        public ServiceProviderService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager, IFileService fileService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _fileService = fileService;
         }
 
         public async Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId)
@@ -234,8 +237,22 @@ namespace ClientNexus.Application.Services
                 serviceprovider.PhoneNumber = updateDto.PhoneNumber;
             if (updateDto.BirthDate != serviceprovider.BirthDate)
                 serviceprovider.BirthDate = updateDto.BirthDate;
-            if (updateDto.MainImage != serviceprovider.MainImage)
-                serviceprovider.MainImage = updateDto.MainImage;
+            if (updateDto.MainImage != null)
+            {
+                var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName).TrimStart('.');
+                var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
+                var mainImageType = GetFileType(updateDto.MainImage);
+                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
+
+            }
+            if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
+                serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
+            if (updateDto.Telephone_consultation_price != serviceprovider.Telephone_consultation_price)
+                serviceprovider.Telephone_consultation_price = updateDto.Telephone_consultation_price;
+            if (updateDto.YearsOfExperience != serviceprovider.YearsOfExperience)
+                serviceprovider.YearsOfExperience = updateDto.YearsOfExperience;
+            if (updateDto.Description != serviceprovider.Description)
+                serviceprovider.Description = updateDto.Description;
             if (updateDto.Email != serviceprovider.Email)
             {
                 serviceprovider.Email = updateDto.Email;
@@ -296,6 +313,10 @@ namespace ClientNexus.Application.Services
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
                 return new List<ServiceProviderResponseDTO>();
+            searchQuery = NormalizeSearchQuery(searchQuery);
+
+            var specialization = await _unitOfWork.Specializations
+                .FirstOrDefaultAsync(s => s.Name.ToLower().Contains(searchQuery.ToLower()));
 
             searchQuery = NormalizeSearchQuery(searchQuery);
             var serviceProviders = await _unitOfWork
@@ -311,21 +332,19 @@ namespace ClientNexus.Application.Services
                 .Where(sp =>
                     sp.FirstName.ToLower().StartsWith(searchQuery.ToLower())
                     || sp.LastName.ToLower().StartsWith(searchQuery.ToLower())
-                    || (
-                        sp.Specializations != null
-                        && sp.Specializations.Any(s =>
-                            NormalizeSearchQuery(s.Name).Contains(searchQuery)
-                        )
-                    )
+                    || (specialization != null && sp.main_specializationID == specialization.Id)
                 )
                 .Select(sp => new ServiceProviderResponseDTO
                 {
+                    Id = sp.Id,
                     FirstName = sp.FirstName,
                     LastName = sp.LastName,
                     Rate = sp.Rate,
                     Description = sp.Description,
                     MainImage = sp.MainImage,
                     YearsOfExperience = sp.YearsOfExperience,
+                    Office_consultation_price = sp.Office_consultation_price,
+                    Telephone_consultation_price = sp.Telephone_consultation_price,
                     City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                     State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
                     SpecializationName =
@@ -407,24 +426,82 @@ namespace ClientNexus.Application.Services
 
        ).Select(sp => new ServiceProviderResponseDTO
        {
+           Id = sp.Id,
            FirstName = sp.FirstName,
            LastName = sp.LastName,
            Rate = sp.Rate,
-           ImageIDUrl = sp.ImageIDUrl,
-           ImageNationalIDUrl = sp.ImageNationalIDUrl,
            Description = sp.Description,
            MainImage = sp.MainImage,
+           ImageIDUrl=sp.ImageIDUrl,
+           ImageNationalIDUrl=sp.ImageNationalIDUrl,
            YearsOfExperience = sp.YearsOfExperience,
+           Office_consultation_price = sp.Office_consultation_price,
+           Telephone_consultation_price = sp.Telephone_consultation_price,
            City = sp.Addresses?.FirstOrDefault()?.City?.Name,
            State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
-           SpecializationName = sp.Specializations != null
-              ? sp.Specializations.Select(s => s.Name).ToList()
-              : new List<string>()
+           SpecializationName =
+                        sp.Specializations != null
+                            ? sp.Specializations.Select(s => s.Name).ToList()
+                            : new List<string>(),
 
        }).ToList();
 
 
             return serviceProviderResponse;
+        }
+
+
+        public async Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId)
+        {
+
+            var sp = await _unitOfWork.ServiceProviders.GetAllQueryable()
+       .AsNoTracking()
+       .Include(s => s.Addresses!)
+           .ThenInclude(a => a.City!)
+               .ThenInclude(c => c.State!)
+       .FirstOrDefaultAsync(s => s.Id == ServiceProviderId);
+            if (sp == null)
+            {
+                throw new KeyNotFoundException("ServiceProviderId not found.");
+            }
+
+            return new ServiceProviderResponseDTO
+            {
+
+                FirstName = sp.FirstName,
+                LastName = sp.LastName,
+                Rate = sp.Rate,
+                Description = sp.Description,
+                MainImage = sp.MainImage,
+                ImageIDUrl=sp.ImageIDUrl,
+                ImageNationalIDUrl=sp.ImageNationalIDUrl,
+                YearsOfExperience = sp.YearsOfExperience,
+                Office_consultation_price = sp.Office_consultation_price,
+                Telephone_consultation_price = sp.Telephone_consultation_price,
+                City = sp.Addresses?.FirstOrDefault()?.City?.Name,
+                State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                SpecializationName =
+                        sp.Specializations != null
+                            ? sp.Specializations.Select(s => s.Name).ToList()
+                            : new List<string>(),
+
+            };
+        }
+
+        private FileType GetFileType(IFormFile file)
+        {
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            switch (extension)
+            {
+                case ".jpg":
+                    return FileType.Jpg;
+                case ".jpeg":
+                    return FileType.Jpeg;
+                case ".png":
+                    return FileType.Png;
+                default:
+                    throw new ArgumentException($"Unsupported file type: {extension}");
+            }
         }
 
     }

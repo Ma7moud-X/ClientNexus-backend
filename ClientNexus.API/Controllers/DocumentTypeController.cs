@@ -19,15 +19,15 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "IsAdmin")]
-        public async Task<IActionResult> AddDocumentTypeService([FromBody] string DocumentTypeName)
+        //[Authorize(Policy = "IsAdmin")]
+        public async Task<IActionResult> AddDocumentTypeService([FromBody] DocumentTypeDTO documentTypeDTO)
         {
             try
             {
-                await documentTypeService.AddDocumentTypeAsync(DocumentTypeName);
+                await documentTypeService.AddDocumentTypeAsync(documentTypeDTO);
 
 
-                return Ok(ApiResponseDTO<object>.SuccessResponse(null, $"Document Type '{DocumentTypeName}' added successfully."));
+                return Ok(ApiResponseDTO<object>.SuccessResponse(null, $"Document Type '{documentTypeDTO.Name}' added successfully."));
 
             }
             catch (ArgumentException ex)
@@ -49,7 +49,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteDocumentTypeAsyn(int id)
         {
             try

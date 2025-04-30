@@ -39,14 +39,7 @@ namespace ClientNexus.Application.Services
             await unitOfWork.SaveChangesAsync();
 
         }
-<<<<<<< HEAD
-=======
-       
-        
-       
-        
 
->>>>>>> 12773da70615c69fe4d982d33e31744d81d4dd33
 
 
     }

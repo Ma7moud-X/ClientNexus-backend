@@ -19,7 +19,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost]
-       [Authorize(Policy= "IsAdmin")]
+       //[Authorize(Policy= "IsAdmin")]
         public async Task<IActionResult> AddCategory([FromBody] string categoryName)
         {
             try
@@ -46,7 +46,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
 
         public async Task<IActionResult> DeleteCategory(int id)
@@ -66,6 +66,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse("An unexpected error occurred."));
             }
         }
+
 
 
     }

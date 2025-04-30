@@ -1,5 +1,7 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using ClientNexus.API.Utilities;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,18 +17,24 @@ namespace ClientNexus.API.Controllers
             this._clientService = clientService;
         }
 
-        [HttpPut("{ClientId}")]
-        public async Task<IActionResult> UpdateServiceProviderId(int ClientId, [FromBody] UpdateClientDTO updateDto)
+        [HttpPut]
+        [Authorize(Policy = "IsClientOrAdmin")]
+        public async Task<IActionResult> UpdateClient( [FromBody] UpdateClientDTO updateDto)
         {
-            if (updateDto == null)
-            {
-                return BadRequest(ApiResponseDTO<string>.ErrorResponse("Invalid request data."));
-            }
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
+
 
             try
             {
-                await _clientService.UpdateClientAsync(ClientId, updateDto);
+
+                await _clientService.UpdateClientAsync(userId.Value, updateDto);
                 return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
             }
             catch (KeyNotFoundException ex)
             {
@@ -41,5 +49,33 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
             }
         }
+        [HttpGet]
+        [Authorize(Policy = "IsClient")]
+        public async Task<IActionResult> GetById()
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+
+            try
+            {
+                var response = await _clientService.GetByIdAsync(userId.Value);
+
+                if (response == null)
+                    return NotFound(ApiResponseDTO<string>.ErrorResponse("Client not found."));
+
+                // Wrap the response data in ApiResponseDTO
+                return Ok(ApiResponseDTO<ClientResponseDTO>.SuccessResponse(response, "Client fetched successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
     }
 }

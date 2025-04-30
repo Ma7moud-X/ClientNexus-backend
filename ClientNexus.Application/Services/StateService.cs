@@ -65,6 +65,21 @@ namespace ClientNexus.Application.Services
             unitOfWork.States.Delete(state);
             await unitOfWork.SaveChangesAsync();
         }
+        public async Task<List<StateResponseDTO>> GetAllStatesAsync()
+        {
+            var states = await unitOfWork.States.GetAllAsync();
+
+            var stateDTOs = states.Select(state => new StateResponseDTO
+            {
+                Id = state.Id,
+                Name = state.Name,
+                Abbreviation = state.Abbreviation,
+                CountryId = state.CountryId
+            }).ToList();
+
+            return stateDTOs;
+        }
+
         private static string NormalizeArabicName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

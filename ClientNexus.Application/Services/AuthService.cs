@@ -52,15 +52,15 @@ public class AuthService : IAuthService
 
         if (registerDto.UserType == UserType.ServiceProvider)
         {
-            if ((registerDto.SpecializationIDS) == null || !registerDto.SpecializationIDS.Any())
-            {
-                throw new ArgumentNullException(nameof(registerDto.SpecializationIDS), "Specialization IDs are required for ServiceProvider.");
-            }
-            //if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            //if ((registerDto.SpecializationIDS) == null || !registerDto.SpecializationIDS.Any())
             //{
-
-            //    throw new ArgumentNullException("Addresses are required for ServiceProvider.");
+            //    throw new ArgumentNullException(nameof(registerDto.SpecializationIDS), "Specialization IDs are required for ServiceProvider.");
             //}
+            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            {
+
+                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
+            }
 
 
             if (registerDto.MainImage == null)
@@ -131,6 +131,9 @@ public class AuthService : IAuthService
                 Rate = 0,
                 IsApproved = false,
                 YearsOfExperience = registerDto.YearsOfExperience ?? throw new ArgumentNullException(nameof(registerDto.YearsOfExperience), "YearsOfExperience is required for ServiceProvider"),
+                Office_consultation_price= registerDto.Office_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Office consultation price is required for ServiceProvider"),
+                Telephone_consultation_price=registerDto.Telephone_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Telephone consultation price is required for ServiceProvider"),
+                main_specializationID=registerDto.main_specializationID ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "main_specialization consultation price is required for ServiceProvider")
             },
 
             UserType.Client => new Client
@@ -161,7 +164,7 @@ public class AuthService : IAuthService
             throw new InvalidOperationException($"User creation failed: {errors}");
         }
 
-        if (!(registerDto.PhoneNumbers == null || !registerDto.PhoneNumbers.Any()))
+        if (registerDto.PhoneNumbers != null && registerDto.PhoneNumbers.Any(x => !string.IsNullOrWhiteSpace(x)))
         {
             user.PhoneNumbers = new List<PhoneNumber>();
             await _phoneNumberService.AddCollectionOfPhoneNumer(user.PhoneNumbers, registerDto.PhoneNumbers);
@@ -169,8 +172,13 @@ public class AuthService : IAuthService
 
         if (user is ServiceProvider serviceProvider)
         {
-            serviceProvider.ServiceProviderSpecializations = new List<ServiceProviderSpecialization>();
-            await _specializationService.AddSpecializationsToServiceProvider(serviceProvider.ServiceProviderSpecializations, registerDto.SpecializationIDS, serviceProvider.Id);
+            if (!((registerDto.SpecializationIDS) == null || !registerDto.SpecializationIDS.Any()))
+            {
+                serviceProvider.ServiceProviderSpecializations = new List<ServiceProviderSpecialization>();
+                await _specializationService.AddSpecializationsToServiceProvider(serviceProvider.ServiceProviderSpecializations, registerDto.SpecializationIDS, serviceProvider.Id);
+
+            }
+
 
 
             // Add multiple addresses using AddressService

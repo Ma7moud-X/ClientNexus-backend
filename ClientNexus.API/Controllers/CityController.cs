@@ -81,5 +81,20 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
+        [HttpGet]
+        public async Task<ActionResult<ApiResponseDTO<List<CityResponseDTO>>>> GetAllCities()
+        {
+            try
+            {
+                var cities = await _cityService.GetAllCitiesAsync();
+
+                return Ok(ApiResponseDTO<List<CityResponseDTO>>.SuccessResponse(cities));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<List<CityResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
     }
 }

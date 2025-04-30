@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class StateDTO
+    public class StateResponseDTO
     {
-        
-        [Required]
-        public string Name { get; set; } 
+
+        public int Id { get; set; }
+       
+        public string Name { get; set; }
         public string? Abbreviation { get; set; }
+        public int CountryId { get; set; }
+
     }
 }

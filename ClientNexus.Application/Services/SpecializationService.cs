@@ -19,6 +19,7 @@ namespace ClientNexus.Application.Services
         {
             this.unitOfWork = unitOfWork;
         }
+
         public async Task AddSpecializationsToServiceProvider(ICollection<ServiceProviderSpecialization> ServiceProviderSpecializations, List<int> SpecializationIDs, int serviceProviderId)
         {
             if (SpecializationIDs == null || !SpecializationIDs.Any())
@@ -96,6 +97,20 @@ namespace ClientNexus.Application.Services
 
             unitOfWork.Specializations.Delete(Specializations);
             await unitOfWork.SaveChangesAsync();
+        }
+        public async Task<List<SpecializationResponseDTO>> GetAllSpecializationsAsync()
+        {
+            var specializations = await unitOfWork.Specializations.GetAllQueryable().ToListAsync();
+
+         
+            var SpecializationResponseDTOs = specializations.Select(s => new SpecializationResponseDTO
+            {
+                Id = s.Id,
+                Name = s.Name,
+                ServiceProviderTypeId = s.ServiceProviderTypeId
+            }).ToList();
+
+            return SpecializationResponseDTOs;
         }
         private static string NormalizeArabicName(string name)
         {

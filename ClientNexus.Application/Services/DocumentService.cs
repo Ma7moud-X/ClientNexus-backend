@@ -60,25 +60,25 @@ namespace ClientNexus.Application.Services
              
                 string extension = Path.GetExtension(dto.ImageFile.FileName).TrimStart('.').ToLower();
 
-                
-                //FileType fileType;
 
-                //switch (extension)
-                //{
-                //    case "jpg":
-                //    case "jpeg":
-                //        fileType = FileType.Jpeg;
-                //        break;
-                //    case "png":
-                //        fileType = FileType.Png;
-                //        break;
-                //    default:
-                //        throw new ArgumentException("Unsupported image type");
-                //}
+                FileType fileType;
+
+                switch (extension)
+                {
+                    case "jpg":
+                    case "jpeg":
+                        fileType = FileType.Jpeg;
+                        break;
+                    case "png":
+                        fileType = FileType.Png;
+                        break;
+                    default:
+                        throw new ArgumentException("Unsupported image type");
+                }
 
                 string key = $"{Guid.NewGuid()}.{extension}";
 
-                document.ImageUrl = await fileService.UploadPublicFileAsync(stream, FileType.Png,key);
+                document.ImageUrl = await fileService.UploadPublicFileAsync(stream, fileType,key);
             }
             _unitOfWork.Documents.AddAsync(document);
             try
@@ -145,6 +145,75 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
         }
+
+ public async Task<DocumentResponseDTO> GetDocumentByIdAsync(int documentId)
+{
+    // Fetch the document along with its associated categories and category details
+    var document = await _unitOfWork.Documents
+        .GetAllQueryable()
+        .Where(d => d.Id == documentId)
+        .Include(d => d.DocumentCategories)
+            .ThenInclude(dc => dc.Category) 
+        .FirstOrDefaultAsync();
+
+    if (document == null)
+    {
+        throw new KeyNotFoundException("Document not found.");
+    }
+
+    // Extract the category names directly
+    var categoryNames = document.DocumentCategories
+        .Select(dc => dc.Category.Name)
+        .ToList();
+
+    // Return the document response
+    return new DocumentResponseDTO
+    {
+        Id = document.Id,
+        Title = document.Title,
+        Content = document.Content,
+        ImageUrl = document.ImageUrl,
+        Categories = categoryNames
+    };
+}
+
+        public async Task<List<DocumentResponseDTO>> GetAllDocumentsAsync()
+        {
+            // Fetch all documents with their related document categories
+            var documents = await _unitOfWork.Documents
+                .GetAllQueryable()
+                .Include(d => d.DocumentCategories)
+                .ToListAsync();
+
+            // Fetch all categories once
+            var allCategories = await _unitOfWork.DCategories
+                .GetAllQueryable()
+                .ToListAsync();
+
+            // Map documents to response DTOs
+            var documentResponses = documents.Select(document =>
+            {
+                var categoryNames = document.DocumentCategories
+                    .Select(dc => allCategories.FirstOrDefault(c => c.Id == dc.DCategoryId)?.Name ?? "")
+                    .ToList();
+
+                return new DocumentResponseDTO
+                {
+                    Id = document.Id,
+                    Title = document.Title,
+                    Content = document.Content,
+                    ImageUrl = document.ImageUrl,
+                    Categories = categoryNames
+                };
+            }).ToList();
+
+            return documentResponses;
+        }
+
+
+
+
+
 
 
 

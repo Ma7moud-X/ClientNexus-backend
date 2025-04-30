@@ -1,5 +1,7 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using ClientNexus.API.Utilities;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +19,7 @@ namespace ClientNexus.API.Controllers
             {
                 this._serviceProviderIsService = serviceProviderIsService;
             }
+        //[Authorize(Policy = "IsClientOrAdmin")]
 
         [HttpGet("Search")]
         public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
@@ -40,8 +43,9 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+        [Authorize(Policy = "IsClientOrAdmin")]
 
-            [HttpGet("filter")]
+        [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
             {
                 try
@@ -62,7 +66,9 @@ namespace ClientNexus.API.Controllers
 
 
             }
-        [HttpGet]
+        [Authorize(Policy = "IsAdmin")]
+
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
         {
             try
@@ -87,18 +93,23 @@ namespace ClientNexus.API.Controllers
 
 
 
+        [Authorize(Policy = "IsServiceProviderOrAdmin")]
 
-        [HttpPut("{ServiceProviderId}")]
-            public async Task<IActionResult> UpdateServiceProviderId(int ServiceProviderId, [FromBody] UpdateServiceProviderDTO updateDto)
+        [HttpPut]
+            public async Task<IActionResult> UpdateServiceProviderId( [FromForm] UpdateServiceProviderDTO updateDto)
             {
-                if (updateDto == null)
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
+
+            if (updateDto == null)
                 {
                     return BadRequest(ApiResponseDTO<string>.ErrorResponse("Invalid request data."));
                 }
 
                 try
                 {
-                    await _serviceProviderIsService.UpdateServiceProviderAsync(ServiceProviderId, updateDto);
+                    await _serviceProviderIsService.UpdateServiceProviderAsync(userId.Value, updateDto);
                     return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
                 }
                 catch (KeyNotFoundException ex)
@@ -114,7 +125,35 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+        [Authorize(Policy = "IsServiceProviderOrAdmin")]
+
+        [HttpGet]
+        public async Task<IActionResult> GetById()
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+
+            try
+            {
+                var response = await _serviceProviderIsService.GetByIdAsync(userId.Value);
+
+                if (response == null)
+                    return NotFound(ApiResponseDTO<string>.ErrorResponse("ServiceProvider not found."));
+
+                // Wrap the response data in ApiResponseDTO
+                return Ok(ApiResponseDTO<ServiceProviderResponseDTO>.SuccessResponse(response, "ServiceProvider fetched successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
         }
+    }
 
     }
 

@@ -68,7 +68,22 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, new ApiResponseDTO<bool>(false, "An unexpected error occurred.", false));
             }
         }
-    }
+        [HttpGet("GetAllSpecializations")]
+        public async Task<ActionResult<ApiResponseDTO<List<SpecializationResponseDTO>>>> GetAllSpecializations()
+        {
+            try
+            {
+                var specializations = await specializationService.GetAllSpecializationsAsync();
+
+                return Ok(ApiResponseDTO<List<SpecializationResponseDTO>>.SuccessResponse(specializations));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<List<SpecializationResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
 
     }
+
+}
 

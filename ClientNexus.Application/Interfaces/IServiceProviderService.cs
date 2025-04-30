@@ -28,5 +28,7 @@ public interface IServiceProviderService
         string? specializationName
     );
     public Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved);
+    public Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId);
+
 
 }
