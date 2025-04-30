@@ -21,7 +21,7 @@ namespace ClientNexus.Application.Services
         )
         {
             int affectedCount = 0;
-            try
+            try // TODO: remove exception wrapping
             {
                 affectedCount = await _unitOfWork.SqlExecuteAsync(
                     @$"
@@ -45,7 +45,7 @@ namespace ClientNexus.Application.Services
         public async Task CancelAsync(int serviceId)
         {
             int affectedCount;
-            try
+            try // TODO: remove exception wrapping
             {
                 affectedCount = await _unitOfWork.SqlExecuteAsync(
                     @$"
@@ -59,7 +59,7 @@ namespace ClientNexus.Application.Services
                 throw new Exception("Can't cancel service", ex);
             }
 
-            if (affectedCount == 0)
+            if (affectedCount == 0) // TODO: throw NotAllowedException
             {
                 throw new InvalidOperationException(
                     "Invalid operation. Service does not exist or can't be cancelled."
@@ -70,7 +70,7 @@ namespace ClientNexus.Application.Services
         public async Task<bool> SetDoneAsync(int serviceId)
         {
             int affectedCount;
-            try
+            try // TODO: remove exception wrapping
             {
                 affectedCount = await _unitOfWork.SqlExecuteAsync(
                     @$"

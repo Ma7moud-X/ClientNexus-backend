@@ -44,7 +44,7 @@ public class RedisEventListener : IEventListener
 
         _channel = channel;
 
-        try
+        try // TODO: unwrap from try-catch
         {
             await _eventSubscriber.SubscribeAsync(
                 _channel,
@@ -105,7 +105,7 @@ public class RedisEventListener : IEventListener
                 continue;
             }
 
-            try
+            try // TODO: unwrap from try catch
             {
                 await _cache.AddToListStringAsync(saveToListAtKey!, message);
             }

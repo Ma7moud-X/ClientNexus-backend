@@ -38,7 +38,7 @@ namespace ClientNexus.Application.Services
                 )
             ).FirstOrDefault();
 
-            if (res is null)
+            if (res is null)    // TODO: throw NotFoundException
             {
                 throw new ArgumentException(
                     $"Service provider with ID {serviceProviderId} not found"
@@ -80,7 +80,7 @@ namespace ClientNexus.Application.Services
                 )
             ).FirstOrDefault();
 
-            if (res is null)
+            if (res is null)    // TODO: throw NotFoundException
             {
                 throw new ArgumentException(
                     $"Service provider with ID {serviceProviderId} not found"
@@ -134,7 +134,7 @@ namespace ClientNexus.Application.Services
                     && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
                         <= radiusInMeters
                     && sp.LastLocationUpdateTime != null
-                    && sp.LastLocationUpdateTime > DateTime.UtcNow.AddMinutes(-2)
+                    && sp.LastLocationUpdateTime > DateTime.UtcNow.AddMinutes(-2)   // TODO: make it an environment variable that set the expiry of location
                     && sp.NotificationToken != null,
                 sp => new NotificationToken { Token = sp.NotificationToken! }
             );
@@ -156,7 +156,7 @@ namespace ClientNexus.Application.Services
                 )
             ).FirstOrDefault();
 
-            if (res is null)
+            if (res is null)    // TODO: throw NotFoundException
             {
                 throw new ArgumentException(
                     $"Service provider with ID {serviceProviderId} not found"
@@ -196,7 +196,7 @@ namespace ClientNexus.Application.Services
                 new Parameter("@serviceProviderId", serviceProviderId)
             );
 
-            if (availability is null || availability.IsAvailableForEmergency == false)
+            if (availability is null || availability.IsAvailableForEmergency == false)  // TODO: throw NotFoundException
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 return false;

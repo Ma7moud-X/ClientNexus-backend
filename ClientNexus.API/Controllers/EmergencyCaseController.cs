@@ -14,7 +14,7 @@ namespace ClientNexus.API.Controllers
 {
     [Route("api/emergency-cases")]
     [ApiController]
-    public class EmergencyCaseController : ControllerBase
+    public class EmergencyCaseController : ControllerBase   // TODO: add route to get emergency cases within certain radius away from a point
     {
         private readonly IEmergencyCaseService _emergencyCaseService;
         private readonly IUnitOfWork _unitOfWork;
@@ -322,7 +322,7 @@ namespace ClientNexus.API.Controllers
                 return Unauthorized();
             }
 
-            if (emergencyDetails.Status != ServiceStatus.Pending)
+            if (emergencyDetails.Status != ServiceStatus.Pending)   // TODO: make it idempotent
             {
                 return BadRequest(
                     "Emergency case can't be cancelled as it's either in progress or completed."
