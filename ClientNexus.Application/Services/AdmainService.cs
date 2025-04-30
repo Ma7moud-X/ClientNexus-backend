@@ -41,6 +41,7 @@ namespace ClientNexus.Application.Services
         }
 
 
+    }
 
     }
-}
+

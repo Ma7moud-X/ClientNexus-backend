@@ -1,23 +1,51 @@
-using ClientNexus.Infrastructure.Configurations;
-using ClientNexus.Infrastructure.Configurations.Content;
-using ClientNexus.Infrastructure.Configurations.Others;
-using ClientNexus.Infrastructure.Configurations.Services;
-using ClientNexus.Infrastructure.Configurations.Users;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Entities.Content;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Infrastructure.Configurations;
+using ClientNexus.Infrastructure.Configurations.Content;
+using ClientNexus.Infrastructure.Configurations.Others;
+using ClientNexus.Infrastructure.Configurations.Services;
+using ClientNexus.Infrastructure.Configurations.Users;
+using DotNetEnv;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 
 namespace ClientNexus.Infrastructure
 {
-    public class ApplicationDbContext : IdentityDbContext<BaseUser, IdentityRole<int>, int>  // Use IdentityRole<int> here
+    public class ApplicationDbContext : IdentityDbContext<BaseUser, IdentityRole<int>, int>
     {
+        // Constructor for runtime (used by dependency injection)
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
+
+        // Parameterless constructor for design-time (used by EF Core migrations)
+        public ApplicationDbContext()
+            : this(GetDesignTimeOptions()) { }
+
+        // Static method to create DbContextOptions for design-time
+        private static DbContextOptions<ApplicationDbContext> GetDesignTimeOptions()
+        {
+            // Load the .env file
+            DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+
+            // Get the connection string from environment variables
+            string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STR");
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "Database connection string not found in environment variables. Ensure DB_CONNECTION_STR is set in the .env file."
+                );
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+
+            return optionsBuilder.Options;
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +54,25 @@ namespace ClientNexus.Infrastructure
             // Set default schema for the database
             modelBuilder.HasDefaultSchema("ClientNexusSchema");
 
+            // Payment configuration
+            modelBuilder
+                .Entity<Payment>()
+                .Property(p => p.CreatedAt)
+                .HasDefaultValueSql("getdate()");
+
+            modelBuilder.Entity<Payment>().Property(p => p.IntentionId).IsRequired();
+
+            modelBuilder.Entity<Payment>().Property(p => p.ClientSecret).IsRequired();
+
+            // ServicePayment configuration
+            modelBuilder.Entity<ServicePayment>().Property(sp => sp.ServiceName).IsRequired();
+
+            // SubscriptionPayment configuration
+            modelBuilder
+                .Entity<SubscriptionPayment>()
+                .Property(sp => sp.SubscriptionTier)
+                .IsRequired();
+
             // Custom entity configurations
             new BaseUserConfig().Configure(modelBuilder.Entity<BaseUser>());
             new ClientConfig().Configure(modelBuilder.Entity<Client>());
@@ -33,7 +80,9 @@ namespace ClientNexus.Infrastructure
             new ServiceProviderConfig().Configure(modelBuilder.Entity<ServiceProvider>());
             new ServiceProviderTypeConfig().Configure(modelBuilder.Entity<ServiceProviderType>());
             new SpecializationConfig().Configure(modelBuilder.Entity<Specialization>());
-            new ServiceProviderSpecializationConfig().Configure(modelBuilder.Entity<ServiceProviderSpecialization>());
+            new ServiceProviderSpecializationConfig().Configure(
+                modelBuilder.Entity<ServiceProviderSpecialization>()
+            );
 
             new ServiceConfig().Configure(modelBuilder.Entity<Service>());
             new EmergencyCaseConfig().Configure(modelBuilder.Entity<EmergencyCase>());
@@ -64,9 +113,10 @@ namespace ClientNexus.Infrastructure
             new DocumentCategoryConfig().Configure(modelBuilder.Entity<DocumentCategory>());
             new DocumentTypeConfig().Configure(modelBuilder.Entity<DocumentType>());
 
-            //new LicenseConfig().Configure(modelBuilder.Entity<License>());
-
-            new ClientServiceProviderFeedbackConfig().Configure(modelBuilder.Entity<ClientServiceProviderFeedback>());
+            new ClientServiceProviderFeedbackConfig().Configure(
+                modelBuilder.Entity<ClientServiceProviderFeedback>()
+            );
+            new NotificationConfig().Configure(modelBuilder.Entity<Notification>());
         }
 
         // DbSets
@@ -78,7 +128,6 @@ namespace ClientNexus.Infrastructure
         public DbSet<ServiceProviderType> ServiceProviderTypes { get; set; }
         public DbSet<Specialization> Specializations { get; set; }
 
-        // Service-related entities
         public DbSet<Service> Services { get; set; }
         public DbSet<EmergencyCase> EmergencyCases { get; set; }
         public DbSet<EmergencyCategory> EmergencyCategories { get; set; }
@@ -87,14 +136,12 @@ namespace ClientNexus.Infrastructure
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<AppointmentCost> AppointmentCosts { get; set; }
 
-        // Support entities
         public DbSet<Payment> Payments { get; set; }
         public DbSet<ServicePayment> ServicePayments { get; set; }
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
         public DbSet<Problem> Problems { get; set; }
         public DbSet<CaseFile> CaseFiles { get; set; }
 
-        // Configuration entities
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
         public DbSet<AccessLevel> AccessLevels { get; set; }
         public DbSet<Address> Addresses { get; set; }
@@ -102,19 +149,15 @@ namespace ClientNexus.Infrastructure
         public DbSet<State> States { get; set; }
         public DbSet<Country> Countries { get; set; }
 
-        // Scheduling entities
         public DbSet<Slot> Slots { get; set; }
 
-        // Content entities
         public DbSet<Document> Documents { get; set; }
         public DbSet<DCategory> DCategories { get; set; }
         public DbSet<DocumentCategory> DocumentCategories { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
         public DbSet<OfficeImageUrl> OfficeImageUrls { get; set; }
 
-        // Lawyer-specific entities
-
-        // Feedback entities
         public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
     }
 }

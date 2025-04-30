@@ -21,11 +21,6 @@ namespace ClientNexus.API.Controllers
             this.unitOfWork = unitOfWork;
         }
 
-<<<<<<< Updated upstream
-     
-=======
-
->>>>>>> Stashed changes
 
         // POST api/city
         [HttpPost]

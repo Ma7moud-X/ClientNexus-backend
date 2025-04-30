@@ -11,6 +11,10 @@ namespace ClientNexus.Domain.Entities.Services
         public bool ReminderSent { get; set; }  //for notifications
         public DateTime? ReminderSentTime { get; set; }
         public int SlotId { get; set; }
-        public Slot? Slot { get; set; }
+        public required Slot Slot { get; set; }
+        public Appointment()
+        {
+            ServiceType = ServiceType.Appointment;
+        }
     }
 }

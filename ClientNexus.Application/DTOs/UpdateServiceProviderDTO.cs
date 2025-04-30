@@ -14,6 +14,7 @@ namespace ClientNexus.Application.DTOs
         public string Email { get; set; }
         [Required]
 
+
         public string FirstName { get; set; }
         [Required]
 
@@ -42,6 +43,7 @@ namespace ClientNexus.Application.DTOs
         [Required]
 
         public string Description { get; set; } 
+
 
 
     }

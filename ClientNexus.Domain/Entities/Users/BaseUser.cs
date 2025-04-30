@@ -1,3 +1,4 @@
+using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
@@ -18,4 +19,5 @@ public class BaseUser : IdentityUser<int>
 
     public ICollection<PhoneNumber>? PhoneNumbers { get; set; }
     public ICollection<Address>? Addresses { get; set; }
+    public ICollection<Notification>? Notifications { get; set; }
 }

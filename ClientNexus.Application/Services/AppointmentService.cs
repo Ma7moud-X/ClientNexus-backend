@@ -1,16 +1,11 @@
 ﻿using AutoMapper;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Services;
-using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace ClientNexus.Application.Services
 {
@@ -18,13 +13,15 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly ISlotService _slotService;
+        private readonly IPushNotification _pushNotification;
+        private readonly ILogger<AppointmentService> _logger;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ISlotService slotService)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification, ILogger<AppointmentService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _slotService = slotService;
+            _pushNotification = pushNotification;
+            _logger = logger;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -35,23 +32,19 @@ namespace ClientNexus.Application.Services
         }
         public async Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit)
         {
-            // Validate input
-            if (providerId <= 0)
-                throw new ArgumentException("Invalid Provider ID");
+            // Check if the provider exists
+            if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == providerId))
+                throw new KeyNotFoundException("Invalid Service Provider Id");
 
-            // Check if the client exists
-            var providerExists = await _unitOfWork.ServiceProviders.GetByIdAsync(providerId);
-            if (providerExists == null)
-                throw new KeyNotFoundException("Provider not found");
-            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit, includes: new string[] { "Slot" });
+            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit); //, includes: new string[] { "Slot" }
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
         public async Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit)
         {
             // Check if the client exists
-            var clientExists = await _unitOfWork.Clients.GetByIdAsync(clientId);
-            if (clientExists == null)
-                throw new KeyNotFoundException("Invalid Client ID");
+            if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
+                throw new KeyNotFoundException("Invalid Client Id");
+
 
             // Fetch appointments
             var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.ClientId == clientId, offset: offset, limit: limit);
@@ -61,7 +54,7 @@ namespace ClientNexus.Application.Services
             */
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
-        public async Task<AppointmentDTO> CreateAsync(AppointmentCreateDTO appointmentDTO)
+        public async Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO)
         {
             if (appointmentDTO == null)
                 throw new ArgumentNullException("Appointment data cannot be null");
@@ -71,72 +64,51 @@ namespace ClientNexus.Application.Services
             try
             {
                 //check if foreign key is valid
-                var slot = await _unitOfWork.Slots.GetByIdAsync(appointmentDTO.SlotId);
+
+                var slot = await _unitOfWork.Slots.GetByIdWithLockAsync(appointmentDTO.SlotId );
                 if (slot == null)
                     throw new KeyNotFoundException("Invalid Slot Id");
-                if (slot.Status != SlotStatus.Available || slot.Date < DateTime.Now)
+                if (slot.Status != SlotStatus.Available || slot.Date < DateTime.UtcNow)
                     throw new InvalidOperationException("Slot not avaliable!");
-                if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
+                if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
                     throw new KeyNotFoundException("Invalid Client Id");
-                if (await _unitOfWork.ServiceProviders.GetByIdAsync(slot.ServiceProviderId) == null)
-                    throw new KeyNotFoundException("Invalid Provider Id");
+                if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == slot.ServiceProviderId))
+                    throw new KeyNotFoundException("Invalid Service Provider Id");
+
+                if (await HasConflictAsync(clientId, slot.Date))
+                    throw new InvalidOperationException("Client already has an appointment at this time.");
+                
+                //update slot status to be booked
+                slot.Status = SlotStatus.Booked;
+                await _unitOfWork.SaveChangesAsync();   
 
                 Appointment appoint = _mapper.Map<Appointment>(appointmentDTO);
                 appoint.ServiceType = ServiceType.Appointment;
                 appoint.Status = ServiceStatus.Pending;
+                appoint.ClientId = clientId;
+                appoint.ServiceProviderId = slot.ServiceProviderId;
 
                 var createdAppoint = await _unitOfWork.Appointments.AddAsync(appoint);
 
-                //update slot status to be booked
-                await _slotService.UpdateStatus(slot.Id, SlotStatus.Booked);
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
                 return _mapper.Map<AppointmentDTO>(createdAppoint);
             }
-            catch
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw new Exception("Error occured while Creating the appointment");
+                throw new Exception("Error occured while Creating the appointment, " + ex.Message, ex);
             }
-
-
         }
-        /*
-         public async Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO)
-         {
-             if (appointmentDTO == null || id != appointmentDTO.Id)
-                 throw new ArgumentNullException("Invalid Data");
 
-             Appointment? existingAppointment = await _unitOfWork.Appointments.GetByIdAsync(id);
-             if (existingAppointment == null)
-                 throw new KeyNotFoundException("Appointment not found");
-
-             // Validate foreign keys
-             var slot = await _unitOfWork.Slots.FirstOrDefaultAsync(s => s.Id == appointmentDTO.SlotId);
-             if (slot == null)
-                 throw new ArgumentException("Invalid Slot Id");
-             if (await _unitOfWork.Clients.GetByIdAsync(appointmentDTO.ClientId) == null)
-                 throw new ArgumentException("Invalid Client Id");
-             if (await _unitOfWork.ServiceProviders.GetByIdAsync(slot.ServiceProviderId) == null)
-                 throw new ArgumentException("Invalid Provider Id");
-
-             Appointment updatedAppointment = _mapper.Map<Appointment>(appointmentDTO);
-
-             updatedAppointment = _unitOfWork.Appointments.Update(existingAppointment, updatedAppointment);
-             await _unitOfWork.SaveChangesAsync();
-
-             return _mapper.Map<AppointmentDTO>(updatedAppointment);
-         }
-        */
-        public async Task<AppointmentDTO> UpdateStatusAsync(int id, ServiceStatus status, string? reason, string role)
+        public async Task UpdateStatusAsync(int id, ServiceStatus status, int userId, UserType role, string? cancellationReason)
         {
             Appointment? existingAppointment = await _unitOfWork.Appointments.GetByIdAsync(id);
             if (existingAppointment == null)
                 throw new KeyNotFoundException("Appointment not found");
 
             // Prevent invalid transitions
-            if (existingAppointment.Status == ServiceStatus.Done || existingAppointment.Status == ServiceStatus.Cancelled)
-                throw new InvalidOperationException("Cannot change status of a completed or cancelled appointment.");
+            await ValidateStatusTransition(existingAppointment, status);
 
             if (!Enum.IsDefined(status))
                 throw new ArgumentOutOfRangeException($"Invalid Appointment Status value: {status}");
@@ -145,60 +117,32 @@ namespace ClientNexus.Application.Services
             try
             {
                 var slot = await _unitOfWork.Slots.GetByIdAsync(existingAppointment.SlotId);
+                if (slot == null)
+                    throw new KeyNotFoundException($"Invalid slot ID");
 
-                existingAppointment.Status = status;
-
-                if (status == ServiceStatus.InProgress)
+                switch (status)
                 {
-                    if (slot?.Date < DateTime.Now)
-                        existingAppointment.CheckInTime = DateTime.Now;
-                    else
-                        throw new InvalidOperationException("Cannot mark appointment as In Progress before its slot time!");
+                    case ServiceStatus.InProgress:
+                        await HandleInProgressStatusAsync(existingAppointment, slot);
+                        break;
+
+                    case ServiceStatus.Done:
+                        await HandleDoneStatusAsync(existingAppointment, slot);
+                        break;
+
+                    case ServiceStatus.Cancelled:
+                        await HandleCancelledStatusAsync(existingAppointment, slot, role, cancellationReason);
+                        break;
                 }
-                if (status == ServiceStatus.Done)
-                {
-                    if (slot?.Date < DateTime.Now)
-                        existingAppointment.CompletionTime = DateTime.Now;
-                    else
-                        throw new InvalidOperationException("Cannot mark appointment as Done before its slot time!");
-                }
-                //return slot status to avaliable in case of cancelling
-                if (status == ServiceStatus.Cancelled)
-                {
-                    existingAppointment.CancellationReason = reason;
-                    existingAppointment.CancellationTime = DateTime.Now;
-
-
-                    //handle slot status depending on the role
-                    if (role == "Client")  //if appointment cancelled by the client
-                    {
-                        if (slot != null && slot.Date > DateTime.Now)
-                        {
-                            await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Available);
-                            //Notify the provider
-
-                        }
-                    }
-                    else if (role == "ServiceProvider")  //if appointment is cancelled by the provider
-                    {
-                        if (slot != null)
-                        {
-                            await _slotService.UpdateStatus(existingAppointment.SlotId, SlotStatus.Deleted);
-                            // Notify the client
-                            //await _notificationService.NotifyClientCancellation(existingAppointment.ClientId, existingAppointment.Id);
-                        }
-                    }
-                }
-
+              
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
-                return _mapper.Map<AppointmentDTO>(existingAppointment);
 
             }
-            catch
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw new Exception("Error occured while updating the appointment status!");
+                throw new Exception("Error occured while updating the appointment status!, " + ex.Message, ex);
             }
         }
 
@@ -209,15 +153,161 @@ namespace ClientNexus.Application.Services
             if (appointment == null)
                 throw new KeyNotFoundException("Invalid Appointment ID");
 
-            _unitOfWork.Appointments.Delete(appointment);
-
-            var slot = await _unitOfWork.Slots.GetByIdAsync(appointment.SlotId);
-            if (slot != null && slot.Date > DateTime.Now)
+            await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                await _slotService.UpdateStatus(appointment.SlotId, SlotStatus.Available);
+                _unitOfWork.Appointments.Delete(appointment);
+
+                var slot = await _unitOfWork.Slots.GetByIdAsync(appointment.SlotId);
+                if (slot != null)
+                {
+                    if(slot.Date > DateTime.UtcNow)
+                        slot.Status = SlotStatus.Available;
+                    else
+                        slot.Status = SlotStatus.Deleted;
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw new Exception("Error occured while deleting the appointment!, " + ex.Message, ex);
+            }
+        }
+
+        private Task ValidateStatusTransition(Appointment appointment, ServiceStatus newStatus)
+        {
+            if (appointment.Status == ServiceStatus.Done || appointment.Status == ServiceStatus.Cancelled)
+                throw new InvalidOperationException("Cannot change status of a completed or cancelled appointment.");
+            return Task.CompletedTask;
+
+        }
+        private Task HandleInProgressStatusAsync(Appointment appointment, Slot slot)
+        {
+            if (slot.Date > DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Cannot mark appointment as In Progress before its slot time");
             }
 
-            await _unitOfWork.SaveChangesAsync();
+            appointment.Status = ServiceStatus.InProgress;
+            appointment.CheckInTime = DateTime.UtcNow;
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            return Task.CompletedTask;
+        }
+        private Task HandleDoneStatusAsync(Appointment appointment, Slot slot)
+        {
+            if (slot.Date > DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Cannot mark appointment as Done before its slot time");
+            }
+
+            appointment.Status = ServiceStatus.Done;
+            appointment.CompletionTime = DateTime.UtcNow;
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            return Task.CompletedTask;
+        }
+        public async Task HandleCancelledStatusAsync(Appointment appointment, Slot slot, UserType role, string? cancellationReason)
+        {
+            appointment.Status = ServiceStatus.Cancelled;
+            appointment.CancellationReason = cancellationReason;
+            appointment.CancellationTime = DateTime.UtcNow;
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            // Handle slot and notifications based on who cancelled
+            if (role == UserType.Client)
+            {
+                await HandleClientCancellationAsync(appointment, slot);
+            }
+            else if (role == UserType.ServiceProvider)
+            {
+                await HandleProviderCancellationAsync(appointment, slot);
+            }
+            else
+            {
+                throw new ArgumentException($"Cancellation handling not implemented for role: {role}");
+            }
+        }
+        private async Task HandleClientCancellationAsync(Appointment appointment, Slot slot)
+        {
+            // Only return slot to available if appointment is in the future
+            if (slot.Date > DateTime.UtcNow)
+            {
+                slot.Status = SlotStatus.Available;
+
+                // Notify provider of cancellation
+                await NotifyProviderOfCancellation(appointment, slot);
+            }
+        }
+
+        private async Task HandleProviderCancellationAsync(Appointment appointment, Slot slot)
+        {
+            // Mark slot as deleted
+            slot.Status = SlotStatus.Deleted;
+
+            // Notify client of cancellation
+            await NotifyClientOfCancellation(appointment, slot);
+        }
+        private async Task NotifyProviderOfCancellation(Appointment appointment, Slot slot)
+        {
+            if (appointment == null) throw new ArgumentNullException(nameof(appointment));
+            if (slot == null) throw new ArgumentNullException(nameof(slot));
+
+            try
+            {
+                var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                                 sp => sp.Id == appointment.ServiceProviderId,
+                                 sp => new NotificationToken { Token = sp.NotificationToken! }
+             );
+                var providerToken = tokens.FirstOrDefault();
+                if (providerToken is not null)
+                {
+
+                    await _pushNotification.SendNotificationAsync(
+                                                                title: "Appointment Cancelled",
+                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
+                                                                providerToken.Token);
+                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"Failed to send reminder for appointment,  {ex.Message}");
+            }
+        }
+
+        private async Task NotifyClientOfCancellation(Appointment appointment, Slot slot)
+        {
+            if (appointment == null) throw new ArgumentNullException(nameof(appointment));
+            if (slot == null) throw new ArgumentNullException(nameof(slot));
+
+            try
+            {
+                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
+                    c => c.Id == appointment.ClientId,
+                    c => new NotificationToken { Token = c.NotificationToken! }
+                );
+                var clientToken = tokens.FirstOrDefault();
+                if (clientToken is not null)
+                {
+                    await _pushNotification.SendNotificationAsync(
+                                                                title: "Appointment Cancelled",
+                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
+                                                               clientToken.Token);
+                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"Failed to send notification for appointment. {ex.Message}");
+            }
+        }
+        private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate)
+        {
+            return await _unitOfWork.Appointments.CheckAnyExistsAsync(a => a.ClientId == clientId && a.Slot.Date == appointmentDate && a.Status != ServiceStatus.Cancelled);
         }
 
         //for notifications
@@ -228,10 +318,53 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("Appointment not found.");
 
             appointment.ReminderSent = true;
-            appointment.ReminderSentTime = DateTime.Now;
+            appointment.ReminderSentTime = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+        public async Task SendAppointmentReminderAsync()
+        {
+            var targetTime = DateTime.UtcNow.AddHours(24);
+            var startRange = targetTime.AddMinutes(-25);
+            var endRange = targetTime.AddMinutes(25);
+
+            var upcomingAppointments = await _unitOfWork.Appointments.GetByConditionAsync(
+                a => a.Slot.Date > startRange &&
+                     a.Slot.Date < endRange &&
+                     a.Status == ServiceStatus.Pending &&
+                     !a.ReminderSent,
+                     includes: new[] { "Slot" });
+
+            foreach (var appointment in upcomingAppointments)
+            {
+                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
+                                    c => c.Id == appointment.ClientId,
+                                    c => new NotificationToken { Token = c.NotificationToken! }
+                                );
+                var clientToken = tokens.FirstOrDefault();
+                if (clientToken is not null)
+                {
+                    try
+                    {
+                        var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
+
+                        await _pushNotification.SendNotificationAsync(
+                            title: "Appointment Reminder",
+                            body: $"You have an appointment scheduled for tomorrow, {appointmentTimeString}.",
+                            clientToken.Token);
+
+                        _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+
+                        // Mark reminder as sent
+                        await MarkReminderSentAsync(appointment.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
+                    }
+                }
+            }
         }
 
     }

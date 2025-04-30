@@ -495,12 +495,27 @@ namespace ClientNexus.API.Controllers
 
         [HttpPut("available-lawyers")]
         [Authorize(Policy = "IsServiceProvider")]
-        public async Task<IActionResult> SetAvailableForEmergency()
+        public async Task<IActionResult> SetAvailablilityForEmergency(
+            [FromBody] AvailabilityDTO availability
+        )
         {
             int? userId = User.GetId();
             if (userId is null)
             {
                 return Unauthorized();
+            }
+
+            if (availability.status == false)
+            {
+                if (await _offerService.HasActiveOfferAsync(userId.Value))
+                {
+                    return BadRequest(
+                        new { Error = "Can't be unavailable after you have just made an offer" }
+                    );
+                }
+
+                await _serviceProviderService.SetUnvavailableForEmergencyAsync(userId.Value);
+                return NoContent();
             }
 
             if (

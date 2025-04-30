@@ -74,7 +74,11 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; private set; }
 
     public IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; private set; }
-    public IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; private set; }
+    public IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks
+    {
+        get;
+        private set;
+    }
     public IBaseRepo<EmergencyCategory> EmergencyCategories { get; private set; }
 
     public IBaseRepo<AppointmentCost> AppointmentCosts { get; private set; }
@@ -84,6 +88,8 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<State> States { get; private set; }
 
     public IBaseRepo<Country> Countries { get; private set; }
+
+    public IBaseRepo<Notification> Notifications { get; private set; }
 
     public readonly ApplicationDbContext _context;
 
@@ -138,6 +144,7 @@ public class UnitOfWork : IUnitOfWork
         SubscriptionPayments = new BaseRepo<SubscriptionPayment>(context);
 
         ClientServiceProviderFeedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
+        Notifications = new BaseRepo<Notification>(context);
     }
 
     public void Dispose()
@@ -148,7 +155,8 @@ public class UnitOfWork : IUnitOfWork
     public async Task<IEnumerable<T>> SqlGetListAsync<T>(
         string query,
         params Parameter[] parameters
-    ) where T : class
+    )
+        where T : class
     {
         return await _context
             .Database.SqlQueryRaw<T>(
@@ -158,8 +166,8 @@ public class UnitOfWork : IUnitOfWork
             .ToListAsync();
     }
 
-
-    public async Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters) where T : class
+    public async Task<T?> SqlGetSingleAsync<T>(string query, params Parameter[] parameters)
+        where T : class
     {
         return await _context
             .Database.SqlQueryRaw<T>(

@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using ClientNexus.Application.Services;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using ClientNexus.API.Utilities;
 
 namespace ClientNexus.API.Controllers
 {
@@ -28,12 +26,12 @@ namespace ClientNexus.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<IEnumerable<SlotDTO>>> GetSlots(
+        public async Task<IActionResult> GetSlots(
             int serviceProviderId,
             DateTime startDate,
             DateTime endDate,
             SlotType type,
-            SlotStatus? status)
+            SlotStatus status = SlotStatus.Available)
         {
 
             return Ok(await _slotService.GetSlotsAsync(serviceProviderId, startDate, endDate, type, status));
@@ -45,7 +43,7 @@ namespace ClientNexus.API.Controllers
         [HttpGet("{id:int}", Name = "GetSlotById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<SlotDTO>> GetSlotById(int id)
+        public async Task<IActionResult> GetSlotById(int id)
         {
             return Ok(await _slotService.GetSlotByIdAsync(id));
         }
@@ -53,60 +51,76 @@ namespace ClientNexus.API.Controllers
         // <summary>
         /// Service Provider Creates a new slot
         /// </summary>
-        /// 
-        //authorize: admin , provider
         [HttpPost]
+        [Authorize(Policy = "IsServiceProvider")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<SlotDTO>> CreateSlot([FromBody] SlotCreateDTO slotDTO)
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> CreateSlot([FromBody] SlotCreateDTO slotDTO)
         {
-            var slot = await _slotService.CreateAsync(slotDTO);
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
+
+            var slot = await _slotService.CreateAsync(slotDTO, userId.Value);
             return CreatedAtRoute("GetSlotById", new { id = slot.Id }, slot);
         }
 
         // <summary>
-        /// Service Provider Updates a slot
+        /// Update specific slot date
         /// </summary>
-        /// 
-        //authorize: admin, provider
-        [HttpPut("{id:int}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateSlot(int id, [FromBody] SlotDTO slotDTO)
-        {
-            return Ok(await _slotService.Update(id, slotDTO));
-        }
-
-        // <summary>
-        /// Update specific slot status
-        /// </summary>
-        
-        //authorize: admin, provider, client 'to cancel'
-        [HttpPatch("{id:int}/status")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateSlotStatus(int id, [FromBody] SlotStatus status)
-        {
-            return Ok( await _slotService.UpdateStatus(id, status));
-        }
-        /// <summary>
-        /// Service Provider deletes a slot
-        /// </summary>
-         
-        //authorize: provider, admin
-        [HttpDelete("{id:int}", Name = "DeleteSlot")]
+        [HttpPatch("{id:int}/date")]
+        [Authorize(Policy = "IsServiceProvider")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateSlotDate(int id, [FromBody] DateTime date)
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
+
+            await _slotService.UpdateDateAsync(id, date, userId.Value);
+            return NoContent();
+        }
+        // <summary>
+        /// Update specific slot type ()
+        /// </summary>
+        [HttpPatch("{id:int}/type")]
+        [Authorize(Policy = "IsServiceProvider")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateSlotType(int id, [FromBody] SlotType type)
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
+
+            await _slotService.UpdateTypeAsync(id, type, userId.Value);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Service Provider deletes a slot
+        /// </summary>
+        [HttpDelete("{id:int}", Name = "DeleteSlot")]
+        [Authorize(Policy = "IsServiceProviderOrAdmin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteSlot(int id)
         {
-            // Get the user's role from the claims
-            var role = User.FindFirstValue(ClaimTypes.Role);
+            var role = User.GetRole();
+            var userId = User.GetId();
+            if (role is null || userId is null)
+                return Unauthorized();
 
-            await _slotService.DeleteAsync(id, role);
+            await _slotService.DeleteAsync(id, userId.Value, role.Value);
             return NoContent();
         }
 

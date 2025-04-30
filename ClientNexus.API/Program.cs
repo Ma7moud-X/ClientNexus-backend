@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Amazon.S3;
 using ClientNexus.API.Extensions;
 using ClientNexus.API.Utilities.SwaggerUtilities;
 using ClientNexus.Application.Interfaces;
@@ -15,24 +16,23 @@ using ClientNexus.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using IClientService = ClientNexus.Application.Interfaces.IClientService;
-using Amazon.S3;
+using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
-using Microsoft.EntityFrameworkCore;
+using IClientService = ClientNexus.Application.Interfaces.IClientService;
 
-DotNetEnv.Env.Load();
-
-
-
-
-DotNetEnv.Env.Load();
+//DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
+DotNetEnv.Env.Load();
+
+// Add services to the container.
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
+builder.Services.AddHangfireServices(builder.Configuration);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
@@ -57,11 +57,42 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
-builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IServiceProviderService, ServiceProviderService>();
+builder.Services.AddScoped<ClientService>(); // FIX: Register ClientService directly
+builder.Services.AddScoped<IClientService, ClientService>(); // Optionally, you can keep the interface binding
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAdmainService, AdmainService>();
 builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+
+builder.Services.AddScoped<IcountryService, CountryService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityServicecs, CityService>();
+builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
+
 builder.Services.AddTransient<IOtpService, OtpService>();
+builder.Services.AddScoped<ServiceProviderService>(); // FIX: Register ServiceProviderService
+
+var cacheConnOptions = ConfigurationOptions.Parse(Environment.GetEnvironmentVariable("REDIS_CONNECTION_STR")!);
+cacheConnOptions.Password = Environment.GetEnvironmentVariable("REDIS_PASS")!;
+cacheConnOptions.User = Environment.GetEnvironmentVariable("REDIS_USER");
+cacheConnOptions.Ssl = true;
+cacheConnOptions.AllowAdmin = false;
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(cacheConnOptions)
+);
+builder.Services.AddSingleton<ICache, RedisCache>();
+builder.Services.AddScoped<PaymentService>();
+
+builder.Services.AddScoped<PaymobPaymentService>(sp => new PaymobPaymentService(
+    secretKey: builder.Configuration["Paymob:SecretKey"],
+    publicKey: builder.Configuration["Paymob:PublicKey"],
+    paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>()
+));
+
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IProblemService, ProblemService>();
@@ -72,8 +103,7 @@ builder.Services.AddScoped<ICityServicecs, CityService>();
 builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();    
-
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 
 // NEW - Configure Identity with BaseUser
 builder
@@ -162,32 +192,36 @@ builder.Services.AddAuthorization(options =>
         }
     );
     options.AddPolicy(
-       "IsClientOrAdmin",
-       policy =>
-       {
-           policy.RequireAssertion(context =>
-               context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString()) ||
-               context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString()));
-       });
+        "IsClientOrAdmin",
+        policy =>
+        {
+            policy.RequireAssertion(context =>
+                context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString())
+                || context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString())
+            );
+        }
+    );
     options.AddPolicy(
-       "IsServiceProviderOrAdmin",
-       policy =>
-       {
-           policy.RequireAssertion(context =>
-               context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString()) ||
-               context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString()));
-       });
+        "IsServiceProviderOrAdmin",
+        policy =>
+        {
+            policy.RequireAssertion(context =>
+                context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString())
+                || context.User.HasClaim(ClaimTypes.Role, UserType.Admin.ToString())
+            );
+        }
+    );
     options.AddPolicy(
-       "IsServiceProviderOrClient",
-       policy =>
-       {
-           policy.RequireAssertion(context =>
-               context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString()) ||
-               context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString()));
-       });
-
+        "IsServiceProviderOrClient",
+        policy =>
+        {
+            policy.RequireAssertion(context =>
+                context.User.HasClaim(ClaimTypes.Role, UserType.ServiceProvider.ToString())
+                || context.User.HasClaim(ClaimTypes.Role, UserType.Client.ToString())
+            );
+        }
+    );
 });
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -225,6 +259,13 @@ builder.Services.AddSwaggerGen(option =>
             },
         }
     );
+    // NEW - Swagger Configuration
+    //if (builder.Environment.IsDevelopment())
+    //{
+    //    builder.Services.AddEndpointsApiExplorer();
+    //    builder.Services.AddSwaggerGen();
+
+    //}
 
     option.OperationFilter<AuthorizeOperationFilter>();
 });
@@ -256,14 +297,15 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v2/swagger.json", "ASP.NET Web API v2");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v2/swagger.json", "ASP.NET Web API v2");
+});
+
+//}
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -273,10 +315,11 @@ app.UseCors("AllowAllOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add Hangfire dashboard and configure jobs
+app.UseHangfireConfiguration();
+
 app.MapControllers();
 
-
 app.MapGet("/", () => Results.Redirect("/swagger"));
-
 
 app.Run();

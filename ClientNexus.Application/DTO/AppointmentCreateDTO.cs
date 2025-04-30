@@ -2,7 +2,7 @@
 
 namespace ClientNexus.Application.DTO
 {
-    public class AppointmentCreateDTO : ServiceCreateDTO
+    public class AppointmentCreateDTO
     {
         [Required]
         public int SlotId { get; set; }

@@ -265,6 +265,29 @@ namespace ClientNexus.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BaseUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BaseUserId");
+
+                    b.ToTable("Notifications", "ClientNexusSchema");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
                 {
                     b.Property<int>("ServiceProviderId")
@@ -345,10 +368,20 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("ClientSecret")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("IntentionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PaymentGateway")
                         .IsRequired()
@@ -372,6 +405,11 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("char(1)");
+
+                    b.Property<string>("WebhookStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -625,7 +663,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceProviderId", "Date")
+                    b.HasIndex("ServiceProviderId", "Date", "SlotType")
                         .IsUnique();
 
                     b.ToTable("Slots", "ClientNexusSchema");
@@ -956,6 +994,11 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasIndex("ServiceId")
                         .IsUnique()
                         .HasFilter("[ServiceId] IS NOT NULL");
@@ -969,6 +1012,11 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SubscriptionTier")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("SubscriptionType")
                         .IsRequired()
@@ -1249,7 +1297,20 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Navigation("Country");
 
+                    b.Navigation("Country");
+
                     b.Navigation("State");
+                });
+
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Notification", b =>
+                {
+                    b.HasOne("ClientNexus.Domain.Entities.Users.BaseUser", "BaseUser")
+                        .WithMany("Notifications")
+                        .HasForeignKey("BaseUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BaseUser");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.OfficeImageUrl", b =>
@@ -1678,6 +1739,8 @@ namespace ClientNexus.Infrastructure.Migrations
             modelBuilder.Entity("ClientNexus.Domain.Entities.Users.BaseUser", b =>
                 {
                     b.Navigation("Addresses");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("PhoneNumbers");
                 });

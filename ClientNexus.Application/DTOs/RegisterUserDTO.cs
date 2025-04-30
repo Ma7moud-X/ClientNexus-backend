@@ -39,6 +39,7 @@ namespace ClientNexus.Application.DTOs
         public int? Telephone_consultation_price { get; set; } // For ServiceProvider
         public int? main_specializationID { get; set; }// For ServiceProvider
 
+
     }
 
 }
