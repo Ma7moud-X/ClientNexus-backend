@@ -98,53 +98,90 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
 
         // Document Entities
-        DCategories = new BaseRepo<DCategory>(context);
-        Documents = new BaseRepo<Document>(context);
-        DocumentCategories = new BaseRepo<DocumentCategory>(context);
+        DCategories = DbTryCatchDecorator<IBaseRepo<DCategory>>.Create(
+            new BaseRepo<DCategory>(context)
+        );
+        Documents = DbTryCatchDecorator<IBaseRepo<Document>>.Create(new BaseRepo<Document>(context));
+        DocumentCategories = DbTryCatchDecorator<IBaseRepo<DocumentCategory>>.Create(
+            new BaseRepo<DocumentCategory>(context)
+        );
 
         // User Entities
-        BaseUsers = new BaseRepo<BaseUser>(context);
-        Roles = new BaseRepo<Role>(context);
-        Clients = new BaseRepo<Client>(context);
-        ServiceProviders = new BaseRepo<ServiceProvider>(context);
+        BaseUsers = DbTryCatchDecorator<IBaseRepo<BaseUser>>.Create(new BaseRepo<BaseUser>(context));
+        Roles = DbTryCatchDecorator<IBaseRepo<Role>>.Create(new BaseRepo<Role>(context));
+        Clients = DbTryCatchDecorator<IBaseRepo<Client>>.Create(new BaseRepo<Client>(context));
+        ServiceProviders = DbTryCatchDecorator<IBaseRepo<ServiceProvider>>.Create(
+            new BaseRepo<ServiceProvider>(context)
+        );
 
-        Admins = new BaseRepo<Admin>(context);
-        AccessLevels = new BaseRepo<AccessLevel>(context);
+        Admins = DbTryCatchDecorator<IBaseRepo<Admin>>.Create(new BaseRepo<Admin>(context));
+        AccessLevels = DbTryCatchDecorator<IBaseRepo<AccessLevel>>.Create(
+            new BaseRepo<AccessLevel>(context)
+        );
 
         //Licenses = new BaseRepo<License>(context);
-        Addresses = new BaseRepo<Address>(context);
-        Cities = new BaseRepo<City>(context);
-        States = new BaseRepo<State>(context);
-        Countries = new BaseRepo<Country>(context);
-        Feedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
-        PhoneNumbers = new BaseRepo<PhoneNumber>(context);
+        Addresses = DbTryCatchDecorator<IBaseRepo<Address>>.Create(new BaseRepo<Address>(context));
+        Cities = DbTryCatchDecorator<IBaseRepo<City>>.Create(new BaseRepo<City>(context));
+        States = DbTryCatchDecorator<IBaseRepo<State>>.Create(new BaseRepo<State>(context));
+        Countries = DbTryCatchDecorator<IBaseRepo<Country>>.Create(new BaseRepo<Country>(context));
+        Feedbacks = DbTryCatchDecorator<IBaseRepo<ClientServiceProviderFeedback>>.Create(
+            new BaseRepo<ClientServiceProviderFeedback>(context)
+        );
+        PhoneNumbers = DbTryCatchDecorator<IBaseRepo<PhoneNumber>>.Create(
+            new BaseRepo<PhoneNumber>(context)
+        );
 
         // Services
-        Services = new BaseRepo<Service>(context);
-        Questions = new BaseRepo<Question>(context);
-        EmergencyCases = new BaseRepo<EmergencyCase>(context);
-        EmergencyCategories = new BaseRepo<EmergencyCategory>(context);
-        ConsultationCases = new BaseRepo<ConsultationCase>(context);
-        Appointments = new BaseRepo<Appointment>(context);
-        AppointmentCosts = new BaseRepo<AppointmentCost>(context);
-        CaseFiles = new BaseRepo<CaseFile>(context);
+        Services = DbTryCatchDecorator<IBaseRepo<Service>>.Create(new BaseRepo<Service>(context));
+        Questions = DbTryCatchDecorator<IBaseRepo<Question>>.Create(new BaseRepo<Question>(context));
+        EmergencyCases = DbTryCatchDecorator<IBaseRepo<EmergencyCase>>.Create(
+            new BaseRepo<EmergencyCase>(context)
+        );
+        EmergencyCategories = DbTryCatchDecorator<IBaseRepo<EmergencyCategory>>.Create(
+            new BaseRepo<EmergencyCategory>(context)
+        );
+        ConsultationCases = DbTryCatchDecorator<IBaseRepo<ConsultationCase>>.Create(
+            new BaseRepo<ConsultationCase>(context)
+        );
+        Appointments = DbTryCatchDecorator<IBaseRepo<Appointment>>.Create(
+            new BaseRepo<Appointment>(context)
+        );
+        AppointmentCosts = DbTryCatchDecorator<IBaseRepo<AppointmentCost>>.Create(
+            new BaseRepo<AppointmentCost>(context)
+        );
+        CaseFiles = DbTryCatchDecorator<IBaseRepo<CaseFile>>.Create(new BaseRepo<CaseFile>(context));
 
         // Others
-        Payments = new BaseRepo<Payment>(context);
-        Problems = new BaseRepo<Problem>(context);
-        Slots = new BaseRepo<Slot>(context);
-        OfficeImageUrls = new BaseRepo<OfficeImageUrl>(context);
+        Payments = DbTryCatchDecorator<IBaseRepo<Payment>>.Create(new BaseRepo<Payment>(context));
+        Problems = DbTryCatchDecorator<IBaseRepo<Problem>>.Create(new BaseRepo<Problem>(context));
+        Slots = DbTryCatchDecorator<IBaseRepo<Slot>>.Create(new BaseRepo<Slot>(context));
+        OfficeImageUrls = DbTryCatchDecorator<IBaseRepo<OfficeImageUrl>>.Create(
+            new BaseRepo<OfficeImageUrl>(context)
+        );
 
-        DocumentTypes = new BaseRepo<DocumentType>(context);
-        ServiceProviderTypes = new BaseRepo<ServiceProviderType>(context);
-        ServiceProviderSpecializations = new BaseRepo<ServiceProviderSpecialization>(context);
-        Specializations = new BaseRepo<Specialization>(context);
+        DocumentTypes = DbTryCatchDecorator<IBaseRepo<DocumentType>>.Create(
+            new BaseRepo<DocumentType>(context)
+        );
+        ServiceProviderTypes = DbTryCatchDecorator<IBaseRepo<ServiceProviderType>>.Create(
+            new BaseRepo<ServiceProviderType>(context)
+        );
+        ServiceProviderSpecializations = DbTryCatchDecorator<IBaseRepo<ServiceProviderSpecialization>
+        >.Create(new BaseRepo<ServiceProviderSpecialization>(context));
+        Specializations = DbTryCatchDecorator<IBaseRepo<Specialization>>.Create(
+            new BaseRepo<Specialization>(context)
+        );
 
-        ServicePayments = new BaseRepo<ServicePayment>(context);
-        SubscriptionPayments = new BaseRepo<SubscriptionPayment>(context);
-
-        ClientServiceProviderFeedbacks = new BaseRepo<ClientServiceProviderFeedback>(context);
-        Notifications = new BaseRepo<Notification>(context);
+        ServicePayments = DbTryCatchDecorator<IBaseRepo<ServicePayment>>.Create(
+            new BaseRepo<ServicePayment>(context)
+        );
+        SubscriptionPayments = DbTryCatchDecorator<IBaseRepo<SubscriptionPayment>>.Create(
+            new BaseRepo<SubscriptionPayment>(context)
+        );
+        ClientServiceProviderFeedbacks = DbTryCatchDecorator<IBaseRepo<ClientServiceProviderFeedback>
+        >.Create(new BaseRepo<ClientServiceProviderFeedback>(context));
+        Notifications = DbTryCatchDecorator<IBaseRepo<Notification>>.Create(
+            new BaseRepo<Notification>(context)
+        );
     }
 
     public void Dispose()
