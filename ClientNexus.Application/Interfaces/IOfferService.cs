@@ -17,4 +17,5 @@ public interface IOfferService
     Task<decimal?> GetOfferPriceAsync(int serviceId, int ServiceProviderId);
 
     Task<PhoneNumberDTO> AcceptOfferAsync(int serviceId, int clientId, int serviceProviderId);
+    Task<bool> HasActiveOfferAsync(int serviceProviderId);
 }

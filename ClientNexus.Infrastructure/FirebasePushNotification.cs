@@ -12,16 +12,41 @@ public class FirebasePushNotification : IPushNotification
 
     public FirebasePushNotification()
     {
-        string? googleAppCredententials = Environment.GetEnvironmentVariable(
+        string? googleCredentialsPath = Environment.GetEnvironmentVariable(
             "GOOGLE_APPLICATION_CREDENTIALS"
         );
         string? projectId = Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
 
-        if (string.IsNullOrWhiteSpace(googleAppCredententials))
+        if (string.IsNullOrEmpty(googleCredentialsPath))
         {
+            googleCredentialsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clientnexus-791b7-firebase-adminsdk-fbsvc-0ff0233d14.json");
+
+            // If that doesn't exist, try with wwwroot
+            if (!File.Exists(googleCredentialsPath))
+            {
+                googleCredentialsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                    "wwwroot", "clientnexus-791b7-firebase-adminsdk-fbsvc-0ff0233d14.json");
+            }
+            // One more fallback - sometimes the base directory itself is wwwroot
+            if (!File.Exists(googleCredentialsPath))
+            {
+                googleCredentialsPath = Path.Combine(
+                    Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName,
+                    "clientnexus-791b7-firebase-adminsdk-fbsvc-0ff0233d14.json");
+            }
+        }
+
+        // Log the path we're trying to use (helpful for debugging)
+        Console.WriteLine($"Attempting to use Firebase credentials at: {googleCredentialsPath}");
+
+
+        if (string.IsNullOrWhiteSpace(googleCredentialsPath))
+        {
+            Console.WriteLine($"failed to use Firebase credentials at: {googleCredentialsPath}");
+
             throw new ArgumentException(
-                "GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.",
-                nameof(googleAppCredententials)
+                "GOOGLE_APPLICATION_CREDENTIALS environment variable is not set, , and fallback path is also invalid.",
+                nameof(googleCredentialsPath)
             );
         }
 
@@ -36,7 +61,7 @@ public class FirebasePushNotification : IPushNotification
         _firebaseApp = FirebaseApp.Create(
             new AppOptions()
             {
-                Credential = GoogleCredential.FromFile(googleAppCredententials),
+                Credential = GoogleCredential.FromFile(googleCredentialsPath),
                 ProjectId = projectId,
             }
         );

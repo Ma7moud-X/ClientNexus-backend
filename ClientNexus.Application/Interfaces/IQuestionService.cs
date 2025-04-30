@@ -1,4 +1,5 @@
 ﻿using ClientNexus.Application.DTOs;
+using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace ClientNexus.Application.Interfaces
         Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit, bool onlyUnanswered = false);
         Task<List<QuestionResponseDTO>> GetQuestionsAnsweredByProviderAsync(int providerId, int offset, int limit);
         Task<List<QuestionResponseDTO>> GetAllQuestionsAsync(int offset, int limit, bool onlyUnanswered = false);
-        Task DeleteQuestionAsync(int questionId, int clientId, string role);
+        Task DeleteQuestionAsync(int questionId, int clientId, UserType role);
         Task UpdateQuestionAsync(int questionId, int clientId, string updatedBody);
         Task MarkQuestionHelpfulAsync(int questionId, int clientId, bool isHelpful);
     }
