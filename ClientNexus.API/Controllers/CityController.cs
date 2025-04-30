@@ -21,20 +21,24 @@ namespace ClientNexus.API.Controllers
             this.unitOfWork = unitOfWork;
         }
 
+<<<<<<< Updated upstream
      
+=======
+
+>>>>>>> Stashed changes
 
         // POST api/city
         [HttpPost]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<CityDTO>>> AddCity([FromBody] CityDTO cityDTO)
         {
             try
             {
-               
+
 
                 // Call the AddCityAsync method from the CityService to add the city
-                await _cityService.AddCityAsync (cityDTO);
+                await _cityService.AddCityAsync(cityDTO);
 
                 // Return a success response
                 return Ok(ApiResponseDTO<CityDTO>.SuccessResponse(cityDTO, "City added successfully."));
@@ -58,7 +62,7 @@ namespace ClientNexus.API.Controllers
 
         // DELETE api/city/{id}
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteCity(int id)
         {
@@ -82,6 +86,8 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet]
+        //[Authorize(Policy = "IsAdmin")]
+
         public async Task<ActionResult<ApiResponseDTO<List<CityResponseDTO>>>> GetAllCities()
         {
             try

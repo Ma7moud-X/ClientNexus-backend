@@ -37,5 +37,7 @@ namespace ClientNexus.Application.DTOs
         public int Office_consultation_price { get; set; }
       
         public int Telephone_consultation_price { get; set; } 
+
+        public string main_Specialization { get; set; }
     }
 }

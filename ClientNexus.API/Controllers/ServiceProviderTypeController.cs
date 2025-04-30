@@ -19,13 +19,13 @@ namespace ClientNexus.API.Controllers
             this.serviceProviderTypeService = serviceProviderTypeService;
         }
         [HttpPost]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> AddServiceProviderType([FromBody] string name)
         {
             try
             {
-                
+
 
                 await serviceProviderTypeService.AddServiceProviderTypeAsyn(name);
                 return Ok(ApiResponseDTO<object>.SuccessResponse(null, $"ServiceProviderType '{name}' added successfully."));
@@ -39,9 +39,9 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"Unexpected error: {ex.Message}"));
             }
         }
-        
+
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteServiceProviderTypeAsyn(int id)
         {

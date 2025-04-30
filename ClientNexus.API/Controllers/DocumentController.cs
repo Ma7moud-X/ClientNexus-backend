@@ -78,8 +78,7 @@ namespace ClientNexus.API.Controllers
             }
         }
 
-        //[Authorize(Policy = "IsAdmin")]
-        //[Authorize(Policy = "IsClient")]
+        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> GetDocument(int id)
         {
@@ -101,8 +100,8 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<DocumentResponseDTO>.ErrorResponse($"An error occurred: {ex.Message}"));
             }
         }
-        //[Authorize(Policy = "IsAdmin")]
-        //[Authorize(Policy = "IsClient")]
+        [Authorize(Policy = "IsClientOrAdmin")]
+
         [HttpGet]
         public async Task<ActionResult<ApiResponseDTO<List<DocumentResponseDTO>>>> GetAllDocuments()
         {

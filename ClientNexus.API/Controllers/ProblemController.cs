@@ -37,7 +37,7 @@ namespace ClientNexus.API.Controllers
                 }
 
                 int userId = int.Parse(userIdClaim);
-                
+
                 var problem = await _problemService.GetProblemByIdAsync(id, userId, userRoleClaim);
                 return Ok(problem);
             }
@@ -50,7 +50,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-      
+
         [HttpGet("admin/{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetProblemAdminDetails(int id)
@@ -69,7 +69,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-      
+
         [HttpGet("client/mine")]
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> GetClientProblems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
@@ -87,15 +87,16 @@ namespace ClientNexus.API.Controllers
 
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
-                
+
                 var problems = await _problemService.GetClientProblemsAsync(clientId, pageNumber, pageSize);
-                
+
                 // Add pagination headers
                 var totalCount = _problemService.GetTotalProblemCount(clientId: clientId);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                Response.Headers.Append("X-Pagination", 
-                    System.Text.Json.JsonSerializer.Serialize(new {
+
+                Response.Headers.Append("X-Pagination",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
                         CurrentPage = pageNumber,
                         PageSize = pageSize,
                         TotalCount = totalCount,
@@ -103,7 +104,7 @@ namespace ClientNexus.API.Controllers
                         HasNext = pageNumber < totalPages,
                         HasPrevious = pageNumber > 1
                     }));
-                    
+
                 return Ok(problems);
             }
             catch (KeyNotFoundException ex)
@@ -129,20 +130,21 @@ namespace ClientNexus.API.Controllers
                 {
                     return BadRequest("User ID not found in claims");
                 }
-                
+
                 int serviceProviderId = int.Parse(userIdClaim);
 
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
-                
+
                 var problems = await _problemService.GetServiceProviderProblemsAsync(serviceProviderId, pageNumber, pageSize);
-                
+
                 // Add pagination headers
                 var totalCount = _problemService.GetTotalProblemCount(serviceProviderId: serviceProviderId);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                Response.Headers.Append("X-Pagination", 
-                    System.Text.Json.JsonSerializer.Serialize(new {
+
+                Response.Headers.Append("X-Pagination",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
                         CurrentPage = pageNumber,
                         PageSize = pageSize,
                         TotalCount = totalCount,
@@ -171,15 +173,16 @@ namespace ClientNexus.API.Controllers
             {
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
-                
+
                 var problems = await _problemService.GetAllProblemsAsync(pageNumber, pageSize);
-                
+
                 // Add pagination headers
                 var totalCount = _problemService.GetTotalProblemCount();
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                Response.Headers.Append("X-Pagination", 
-                    System.Text.Json.JsonSerializer.Serialize(new {
+
+                Response.Headers.Append("X-Pagination",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
                         CurrentPage = pageNumber,
                         PageSize = pageSize,
                         TotalCount = totalCount,
@@ -187,7 +190,7 @@ namespace ClientNexus.API.Controllers
                         HasNext = pageNumber < totalPages,
                         HasPrevious = pageNumber > 1
                     }));
-                    
+
                 return Ok(problems);
             }
             catch (Exception ex)
@@ -252,7 +255,7 @@ namespace ClientNexus.API.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-                   if (userIdClaim == null || userRoleClaim == null)
+                if (userIdClaim == null || userRoleClaim == null)
                 {
                     return BadRequest("User ID or role not found in claims");
                 }
