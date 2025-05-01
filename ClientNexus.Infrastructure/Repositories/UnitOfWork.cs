@@ -4,6 +4,7 @@ using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Roles;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -101,13 +102,17 @@ public class UnitOfWork : IUnitOfWork
         DCategories = DbTryCatchDecorator<IBaseRepo<DCategory>>.Create(
             new BaseRepo<DCategory>(context)
         );
-        Documents = DbTryCatchDecorator<IBaseRepo<Document>>.Create(new BaseRepo<Document>(context));
+        Documents = DbTryCatchDecorator<IBaseRepo<Document>>.Create(
+            new BaseRepo<Document>(context)
+        );
         DocumentCategories = DbTryCatchDecorator<IBaseRepo<DocumentCategory>>.Create(
             new BaseRepo<DocumentCategory>(context)
         );
 
         // User Entities
-        BaseUsers = DbTryCatchDecorator<IBaseRepo<BaseUser>>.Create(new BaseRepo<BaseUser>(context));
+        BaseUsers = DbTryCatchDecorator<IBaseRepo<BaseUser>>.Create(
+            new BaseRepo<BaseUser>(context)
+        );
         Roles = DbTryCatchDecorator<IBaseRepo<Role>>.Create(new BaseRepo<Role>(context));
         Clients = DbTryCatchDecorator<IBaseRepo<Client>>.Create(new BaseRepo<Client>(context));
         ServiceProviders = DbTryCatchDecorator<IBaseRepo<ServiceProvider>>.Create(
@@ -133,7 +138,9 @@ public class UnitOfWork : IUnitOfWork
 
         // Services
         Services = DbTryCatchDecorator<IBaseRepo<Service>>.Create(new BaseRepo<Service>(context));
-        Questions = DbTryCatchDecorator<IBaseRepo<Question>>.Create(new BaseRepo<Question>(context));
+        Questions = DbTryCatchDecorator<IBaseRepo<Question>>.Create(
+            new BaseRepo<Question>(context)
+        );
         EmergencyCases = DbTryCatchDecorator<IBaseRepo<EmergencyCase>>.Create(
             new BaseRepo<EmergencyCase>(context)
         );
@@ -149,7 +156,9 @@ public class UnitOfWork : IUnitOfWork
         AppointmentCosts = DbTryCatchDecorator<IBaseRepo<AppointmentCost>>.Create(
             new BaseRepo<AppointmentCost>(context)
         );
-        CaseFiles = DbTryCatchDecorator<IBaseRepo<CaseFile>>.Create(new BaseRepo<CaseFile>(context));
+        CaseFiles = DbTryCatchDecorator<IBaseRepo<CaseFile>>.Create(
+            new BaseRepo<CaseFile>(context)
+        );
 
         // Others
         Payments = DbTryCatchDecorator<IBaseRepo<Payment>>.Create(new BaseRepo<Payment>(context));
@@ -165,7 +174,8 @@ public class UnitOfWork : IUnitOfWork
         ServiceProviderTypes = DbTryCatchDecorator<IBaseRepo<ServiceProviderType>>.Create(
             new BaseRepo<ServiceProviderType>(context)
         );
-        ServiceProviderSpecializations = DbTryCatchDecorator<IBaseRepo<ServiceProviderSpecialization>
+        ServiceProviderSpecializations = DbTryCatchDecorator<
+            IBaseRepo<ServiceProviderSpecialization>
         >.Create(new BaseRepo<ServiceProviderSpecialization>(context));
         Specializations = DbTryCatchDecorator<IBaseRepo<Specialization>>.Create(
             new BaseRepo<Specialization>(context)
@@ -177,7 +187,8 @@ public class UnitOfWork : IUnitOfWork
         SubscriptionPayments = DbTryCatchDecorator<IBaseRepo<SubscriptionPayment>>.Create(
             new BaseRepo<SubscriptionPayment>(context)
         );
-        ClientServiceProviderFeedbacks = DbTryCatchDecorator<IBaseRepo<ClientServiceProviderFeedback>
+        ClientServiceProviderFeedbacks = DbTryCatchDecorator<
+            IBaseRepo<ClientServiceProviderFeedback>
         >.Create(new BaseRepo<ClientServiceProviderFeedback>(context));
         Notifications = DbTryCatchDecorator<IBaseRepo<Notification>>.Create(
             new BaseRepo<Notification>(context)

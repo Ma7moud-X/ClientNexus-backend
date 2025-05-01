@@ -1,8 +1,7 @@
-using System;
 using System.Reflection;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
-using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClientNexus.Infrastructure.Repositories
 {
@@ -44,6 +43,18 @@ namespace ClientNexus.Infrastructure.Repositories
 
                 throw;
             }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException is SqlException sqlException)
+                {
+                    if (sqlException.Number == 515)
+                    {
+                        throw new InvalidInputException("Invalid data", sqlException);
+                    }
+                }
+
+                throw;
+            }
         }
 
         private async Task HandleAsync(Task task)
@@ -59,6 +70,18 @@ namespace ClientNexus.Infrastructure.Repositories
             catch (SqlException ex) when (ex.Number == 258)
             {
                 throw new TimeoutException("Database operation timed out.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException is SqlException sqlException)
+                {
+                    if (sqlException.Number == 515)
+                    {
+                        throw new InvalidInputException("Invalid data", sqlException);
+                    }
+                }
+
+                throw;
             }
         }
 
@@ -76,6 +99,18 @@ namespace ClientNexus.Infrastructure.Repositories
             catch (SqlException ex) when (ex.Number == 258)
             {
                 throw new TimeoutException("Database operation timed out.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException is SqlException sqlException)
+                {
+                    if (sqlException.Number == 515)
+                    {
+                        throw new InvalidInputException("Invalid data", sqlException);
+                    }
+                }
+
+                throw;
             }
         }
     }
