@@ -1,6 +1,5 @@
 using System.Text.Json;
 using ClientNexus.Domain.Enums;
-using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using StackExchange.Redis;
@@ -62,23 +61,11 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        int affectedCount;
-        try
-        {
-            affectedCount =
-                (int)
-                    await executor.ExecuteAsync(
-                        "GEOADD",
-                        new object[] { key, "CH", longitude, latitude, identifier }
-                    );
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error adding geo location: `${identifier}` to key: `{key}`",
-                ex
+        int affectedCount = (int)
+            await executor.ExecuteAsync(
+                "GEOADD",
+                new object[] { key, "CH", longitude, latitude, identifier }
             );
-        }
 
         return affectedCount;
     }
@@ -107,19 +94,11 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        long pushedCount;
-        try
-        {
-            pushedCount = await executor.ListRightPushAsync(
-                key,
-                value,
-                when: onlyIfExists ? When.Exists : When.Always
-            );
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error pushing value to list: `${value}`", ex);
-        }
+        long pushedCount = await executor.ListRightPushAsync(
+            key,
+            value,
+            when: onlyIfExists ? When.Exists : When.Always
+        );
 
         return pushedCount;
     }
@@ -131,15 +110,7 @@ public class RedisCache : ICache
             throw new InvalidOperationException("No transaction is currently active.");
         }
 
-        bool result;
-        try
-        {
-            result = await _transaction.ExecuteAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException("Error committing transaction", ex);
-        }
+        bool result = await _transaction.ExecuteAsync();
         _transaction = null;
 
         return result;
@@ -154,16 +125,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        RedisValue[] res;
-        try
-        {
-            res = await executor.ListRangeAsync(key);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error getting list from key: `${key}`", ex);
-        }
-
+        RedisValue[] res = await executor.ListRangeAsync(key);
         return res.Length == 0
             ? null
             : res.Select(v => JsonSerializer.Deserialize<T>(v.ToString()));
@@ -178,16 +140,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        RedisValue[] res;
-        try
-        {
-            res = await executor.ListRangeAsync(key);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error getting list from key: `${key}`", ex);
-        }
-
+        RedisValue[] res = await executor.ListRangeAsync(key);
         return res.Length == 0 ? null : res.Select(v => v.ToString());
     }
 
@@ -206,16 +159,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        RedisValue res;
-        try
-        {
-            res = await executor.StringGetAsync(key);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error getting string from key: `${key}`", ex);
-        }
-
+        RedisValue res = await executor.StringGetAsync(key);
         return res;
     }
 
@@ -236,19 +180,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool removed;
-        try
-        {
-            removed = await executor.GeoRemoveAsync(key, identifier);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error removing geo location: `${identifier}` from key: `${key}`",
-                ex
-            );
-        }
-
+        bool removed = await executor.GeoRemoveAsync(key, identifier);
         return removed;
     }
 
@@ -261,16 +193,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool keyRemoved;
-        try
-        {
-            keyRemoved = await executor.KeyDeleteAsync(key);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error removing key: `${key}`", ex);
-        }
-
+        bool keyRemoved = await executor.KeyDeleteAsync(key);
         return keyRemoved;
     }
 
@@ -283,19 +206,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        RedisValue res;
-        try
-        {
-            res = await executor.ListGetByIndexAsync(key, index);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error getting list item at index: `${index}` from key: `${key}`",
-                ex
-            );
-        }
-
+        RedisValue res = await executor.ListGetByIndexAsync(key, index);
         return res;
     }
 
@@ -322,16 +233,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool expirySet;
-        try
-        {
-            expirySet = await executor.KeyExpireAsync(key, expiration);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException($"Error setting expiry for key: `${key}`", ex);
-        }
-
+        bool expirySet = await executor.KeyExpireAsync(key, expiration);
         return expirySet;
     }
 
@@ -370,23 +272,12 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool isSet;
-        try
-        {
-            isSet = await executor.StringSetAsync(
-                key,
-                value,
-                expiration,
-                @override ? When.Always : When.NotExists
-            );
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error setting string value: `${value}` to key: `${key}`",
-                ex
-            );
-        }
+        bool isSet = await executor.StringSetAsync(
+            key,
+            value,
+            expiration,
+            @override ? When.Always : When.NotExists
+        );
 
         return isSet;
     }
@@ -416,19 +307,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool added;
-        try
-        {
-            added = await executor.SetAddAsync(key, value);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error adding value: `${value}` to set with key: `${key}`",
-                ex
-            );
-        }
-
+        bool added = await executor.SetAddAsync(key, value);
         return added;
     }
 
@@ -446,19 +325,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool removed;
-        try
-        {
-            removed = await executor.SetRemoveAsync(key, value);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error removing value: `${value}` from set with key: `${key}`",
-                ex
-            );
-        }
-
+        bool removed = await executor.SetRemoveAsync(key, value);
         return removed;
     }
 
@@ -476,19 +343,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        bool exists;
-        try
-        {
-            exists = await executor.SetContainsAsync(key, value);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error checking existence of value: `${value}` in set with key: `${key}`",
-                ex
-            );
-        }
-
+        bool exists = await executor.SetContainsAsync(key, value);
         return exists;
     }
 
@@ -533,25 +388,14 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        GeoRadiusResult[] res;
-        try
-        {
-            res = await executor.GeoRadiusAsync(
-                key,
-                longitude,
-                latitude,
-                radius,
-                geoUnit,
-                options: GeoRadiusOptions.WithCoordinates | GeoRadiusOptions.WithDistance
-            );
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error getting geolocation within radius: `${radius}` from (longitude: `${longitude}`, latitude: `${latitude}`) from key: `${key}`",
-                ex
-            );
-        }
+        GeoRadiusResult[] res = await executor.GeoRadiusAsync(
+            key,
+            longitude,
+            latitude,
+            radius,
+            geoUnit,
+            options: GeoRadiusOptions.WithCoordinates | GeoRadiusOptions.WithDistance
+        );
 
         if (res.Length == 0)
         {
@@ -602,24 +446,13 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        GeoRadiusResult[] res;
-        try
-        {
-            res = await executor.GeoRadiusAsync(
-                key,
-                identifier,
-                radius,
-                geoUnit,
-                options: GeoRadiusOptions.WithCoordinates | GeoRadiusOptions.WithDistance
-            );
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error getting geolocation within radius: `${radius}` from identifier: `${identifier}` from key: `${key}`",
-                ex
-            );
-        }
+        GeoRadiusResult[] res = await executor.GeoRadiusAsync(
+            key,
+            identifier,
+            radius,
+            geoUnit,
+            options: GeoRadiusOptions.WithCoordinates | GeoRadiusOptions.WithDistance
+        );
 
         if (res.Length == 0)
         {
@@ -652,19 +485,7 @@ public class RedisCache : ICache
 
         IDatabaseAsync executor = _transaction is not null ? _transaction : _database;
 
-        GeoPosition? res;
-        try
-        {
-            res = await executor.GeoPositionAsync(key, identifier);
-        }
-        catch (Exception ex)
-        {
-            throw new CacheException(
-                $"Error getting geolocation with identifier: `${identifier}` from key: `${key}`",
-                ex
-            );
-        }
-
+        GeoPosition? res = await executor.GeoPositionAsync(key, identifier);
         return res is null
             ? null
             : new Location
