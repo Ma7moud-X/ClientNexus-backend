@@ -21,25 +21,19 @@ namespace ClientNexus.API.Controllers
             this.unitOfWork = unitOfWork;
         }
 
-        [HttpGet]
-
-        public IActionResult gat()
-        {
-            return Ok(unitOfWork.Cities.GetAllQueryable());
-        }
 
         // POST api/city
         [HttpPost]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<CityDTO>>> AddCity([FromBody] CityDTO cityDTO)
         {
             try
             {
-               
+
 
                 // Call the AddCityAsync method from the CityService to add the city
-                await _cityService.AddCityAsync (cityDTO);
+                await _cityService.AddCityAsync(cityDTO);
 
                 // Return a success response
                 return Ok(ApiResponseDTO<CityDTO>.SuccessResponse(cityDTO, "City added successfully."));
@@ -63,7 +57,7 @@ namespace ClientNexus.API.Controllers
 
         // DELETE api/city/{id}
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteCity(int id)
         {
@@ -86,5 +80,22 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
+        [HttpGet]
+        //[Authorize(Policy = "IsAdmin")]
+
+        public async Task<ActionResult<ApiResponseDTO<List<CityResponseDTO>>>> GetAllCities()
+        {
+            try
+            {
+                var cities = await _cityService.GetAllCitiesAsync();
+
+                return Ok(ApiResponseDTO<List<CityResponseDTO>>.SuccessResponse(cities));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<List<CityResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
     }
 }

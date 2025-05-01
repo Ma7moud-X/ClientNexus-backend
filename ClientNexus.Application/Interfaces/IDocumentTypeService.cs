@@ -9,7 +9,7 @@ namespace ClientNexus.Application.Interfaces
 {
     public interface IDocumentTypeService
     {
-        public  Task AddDocumentTypeAsync(string DocumentTypeName);
+        public  Task AddDocumentTypeAsync(DocumentTypeDTO dto);
         public Task DeleteDocumentTypeAsync(int DocumentTypeId);
     }
 }

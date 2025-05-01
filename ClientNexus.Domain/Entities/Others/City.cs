@@ -6,7 +6,7 @@ public class City
     public string Name { get; set; } = default!;
     public string? Abbreviation { get; set; }
 
-    public int? StateId { get; set; }
+    public int StateId { get; set; }
     public State? State { get; set; }
 
     public int CountryId { get; set; }

@@ -18,15 +18,15 @@ namespace ClientNexus.Application.Services
         {
             this._unitOfWork = unitOfWork;
         }
-        public async Task AddDocumentTypeAsync(string DocumentTypeName)
+        public async Task AddDocumentTypeAsync(DocumentTypeDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(DocumentTypeName))
+            if (string.IsNullOrWhiteSpace(dto.Name))
             {
                 throw new ArgumentException("Document Type name cannot be empty.");
             }
 
             var existingDocumentType = await _unitOfWork.DocumentTypes
-                     .FirstOrDefaultAsync(c => c.Name.ToLower() == DocumentTypeName.ToLower());
+                     .FirstOrDefaultAsync(c => c.Name.ToLower() == dto.Name.ToLower());
 
 
             if (existingDocumentType != null)
@@ -36,7 +36,7 @@ namespace ClientNexus.Application.Services
 
             var DocumentType = new DocumentType
             {
-                Name = DocumentTypeName
+                Name = dto.Name
             };
 
             await _unitOfWork.DocumentTypes.AddAsync(DocumentType);

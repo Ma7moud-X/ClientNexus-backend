@@ -78,6 +78,22 @@ namespace ClientNexus.Application.Services
             unitOfWork.Cities.Delete(city);
             await unitOfWork.SaveChangesAsync();
         }
+        public async Task<List<CityResponseDTO>> GetAllCitiesAsync()
+        {
+
+
+            var cities = await unitOfWork.Cities.GetAllAsync();
+
+            var cityDTOs = cities.Select(city => new CityResponseDTO
+            {
+                Id = city.Id,
+                Name = city.Name,
+                Abbreviation = city.Abbreviation,
+                StateId = city.StateId,
+                CountryId = city.CountryId
+            }).ToList();
+            return cityDTOs;
+        }
         private static string NormalizeArabicName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

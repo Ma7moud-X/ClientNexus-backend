@@ -23,6 +23,10 @@ namespace ClientNexus.Application.Services
         }
         public async Task UpdateClientAsync(int ClientId, UpdateClientDTO updateDto)
         {
+            if (updateDto == null)
+            {
+                throw new ArgumentNullException(nameof(updateDto), "Invalid request data.");
+            }
 
             var client = await _userManager.FindByIdAsync(ClientId.ToString()) as Client;
             if (client == null)
@@ -70,6 +74,24 @@ namespace ClientNexus.Application.Services
 
 
 
+        }
+        public async Task<ClientResponseDTO> GetByIdAsync(int clientId)
+        {
+
+            var client = await _userManager.FindByIdAsync(clientId.ToString()) as Client;
+            if (client == null)
+            {
+                throw new KeyNotFoundException("Client not found.");
+            }
+
+            return new ClientResponseDTO
+            {
+               
+                FirstName = client.FirstName,
+                LastName = client.LastName,
+                PhoneNumber = client.PhoneNumber,
+                BirthDate = client.BirthDate
+            };
         }
     }
 }

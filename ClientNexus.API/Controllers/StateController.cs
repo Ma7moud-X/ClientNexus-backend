@@ -17,9 +17,8 @@ namespace ClientNexus.API.Controllers
             _stateService = stateService;
         }
 
-
+        //[Authorize(Policy = "IsAdmin")]
         [HttpPost]
-        [Authorize(Policy = "IsAdmin")]
         public async Task<ActionResult<ApiResponseDTO<StateDTO>>> AddState([FromBody] StateDTO stateDTO)
         {
             try
@@ -45,7 +44,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteState(int id)
         {
@@ -63,5 +62,21 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
+        //[Authorize(Policy = "IsAdmin")]
+        [HttpGet]
+        public async Task<ActionResult<ApiResponseDTO<List<StateResponseDTO>>>> GetAllStates()
+        {
+            try
+            {
+                var states = await _stateService.GetAllStatesAsync();
+
+                return Ok(ApiResponseDTO<List<StateResponseDTO>>.SuccessResponse(states));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<List<StateResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
     }
 }

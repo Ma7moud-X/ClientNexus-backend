@@ -14,6 +14,8 @@ namespace ClientNexus.Application.Interfaces
         public Task AddSpecializationsToServiceProvider(ICollection<ServiceProviderSpecialization> ServiceProviderSpecializations, List<int> SpecializationIDs, int serviceProviderId);
         public Task AddNewSpecializationAsync(SpecializationDTO specializationDTO);
         public  Task DeleteSpecializationAsync(int id);
+        public Task<List<SpecializationResponseDTO>> GetAllSpecializationsAsync();
+
 
 
     }

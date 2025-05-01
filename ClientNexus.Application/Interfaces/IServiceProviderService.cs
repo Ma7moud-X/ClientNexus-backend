@@ -4,6 +4,7 @@ using ClientNexus.Application.Models;
 namespace ClientNexus.Application.Interfaces
 {
 
+
     public interface IServiceProviderService
     {
         Task<IEnumerable<NotificationToken>> GetTokensOfServiceProvidersNearLocationAsync(
@@ -30,6 +31,8 @@ namespace ClientNexus.Application.Interfaces
             string? specializationName
         );
         public Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved);
+        public Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId);
+
 
     }
 }

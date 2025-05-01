@@ -11,6 +11,9 @@ namespace ClientNexus.Application.Interfaces
     {
         public Task<DocumentResponseDTO> AddDocumentAsync(DocumentDTO dto);
         public Task DeleteDocumentAsync(int documentId);
+        public Task<DocumentResponseDTO> GetDocumentByIdAsync(int documentId);
+        public Task<List<DocumentResponseDTO>> GetAllDocumentsAsync();
+
 
     }
 }
