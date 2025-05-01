@@ -1,3 +1,4 @@
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using StackExchange.Redis;
@@ -16,19 +17,31 @@ public static class CacheExtensions
             );
         }
 
+        var cacheConnOptions = ConfigurationOptions.Parse(
+            Environment.GetEnvironmentVariable("REDIS_CONNECTION_STR")!
+        );
+        cacheConnOptions.Password = Environment.GetEnvironmentVariable("REDIS_PASS")!;
+        cacheConnOptions.User = Environment.GetEnvironmentVariable("REDIS_USER");
+        cacheConnOptions.Ssl = true;
+        cacheConnOptions.AllowAdmin = false;
+
         try
         {
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                return ConnectionMultiplexer.Connect(redisConnectionString);
+                return ConnectionMultiplexer.Connect(cacheConnOptions);
             });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to connect to Redis.");
+            throw new ConnectionEstablishmentException("Failed to connect to Redis.", ex);
         }
 
-        services.AddTransient<ICache, RedisCache>();
+        services.AddTransient<ICache>(sp =>
+        {
+            var connection = sp.GetRequiredService<IConnectionMultiplexer>();
+            return CacheTryCatchDecorator<ICache>.Create(new RedisCache(connection));
+        });
         services.AddSingleton<IEventPublisher, RedisEventPublisher>();
         services.AddTransient<IEventSubscriber, RedisEventSubscriber>();
         services.AddTransient<IEventListener, RedisEventListener>();

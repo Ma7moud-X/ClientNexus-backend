@@ -157,7 +157,7 @@ public class EmergencyCaseService : IEmergencyCaseService
 
         if (res is null)
         {
-            throw new ArgumentException($"Client with {clientId} does not exist");
+            throw new ArgumentException($"Client with {clientId} does not exist");  // TODO: throw NotFoundException
         }
 
         return !res.IsBlocked
