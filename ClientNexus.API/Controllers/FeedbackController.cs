@@ -156,14 +156,13 @@ namespace ClientNexus.API.Controllers
 
             try
             {
-                // Verify the client ID matches the authenticated user
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userIdClaim == null || int.Parse(userIdClaim) != feedbackDto.ClientId)
+                if (userIdClaim == null)
                 {
                     return BadRequest($"You can only submit feedback as yourself");
                 }
 
-                var createdFeedback = await _feedbackService.CreateClientToProviderFeedbackAsync(feedbackDto);
+                var createdFeedback = await _feedbackService.CreateClientToProviderFeedbackAsync(feedbackDto, int.Parse(userIdClaim));
                 return CreatedAtAction(nameof(GetFeedback), new { id = createdFeedback.Id }, createdFeedback);
             }
             catch (KeyNotFoundException ex)
