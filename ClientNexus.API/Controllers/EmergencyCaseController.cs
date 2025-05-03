@@ -582,5 +582,22 @@ namespace ClientNexus.API.Controllers
             await _baseServiceService.SetDoneAsync(id);
             return NoContent();
         }
+
+        [HttpGet("available-emergencies")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> GetAvailabeEmergencies(
+            [FromQuery] double longitude,
+            [FromQuery] double latitude,
+            [FromQuery] int radiusInMeters
+        )
+        {
+            return Ok(
+                await _emergencyCaseService.GetAvailableEmergenciesAsync(
+                    longitude,
+                    latitude,
+                    radiusInMeters
+                )
+            );
+        }
     }
 }
