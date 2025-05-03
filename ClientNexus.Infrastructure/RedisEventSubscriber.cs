@@ -51,7 +51,7 @@ public class RedisEventSubscriber : IEventSubscriber
 
         if (_subscriptionHandler is null)
         {
-            throw new Exception("Not subscribed to any channel.");  // TODO: throw InvalidOperationException
+            throw new InvalidOperationException("Not subscribed to any channel.");
         }
 
         var subscriber = _redis.GetSubscriber();

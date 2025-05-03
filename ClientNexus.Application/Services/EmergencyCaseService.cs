@@ -4,6 +4,7 @@ using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using NetTopologySuite.Geometries;
@@ -157,7 +158,7 @@ public class EmergencyCaseService : IEmergencyCaseService
 
         if (res is null)
         {
-            throw new ArgumentException($"Client with {clientId} does not exist");  // TODO: throw NotFoundException
+            throw new NotFoundException($"Client is not found");
         }
 
         return !res.IsBlocked
