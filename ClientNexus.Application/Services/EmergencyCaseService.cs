@@ -4,6 +4,7 @@ using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using NetTopologySuite.Geometries;
@@ -157,7 +158,7 @@ public class EmergencyCaseService : IEmergencyCaseService
 
         if (res is null)
         {
-            throw new ArgumentException($"Client with {clientId} does not exist");  // TODO: throw NotFoundException
+            throw new NotFoundException($"Client is not found");
         }
 
         return !res.IsBlocked
@@ -238,16 +239,27 @@ public class EmergencyCaseService : IEmergencyCaseService
         );
     }
 
-    // public async Task<bool> CancelEmergencyCaseAsync(int id)
-    // {
-    //     int affectedCount = await _unitOfWork.SqlExecuteAsync(
-    //         @$"
-    //         UPDATE ClientNexusSchema.Services SET Status = '{(char)ServiceStatus.Cancelled}'
-    //         WHERE Id in (
-    //             SELECT Id FROM ClientNexusSchema.EmergencyCases WHERE Id = @id
-    //         )
-    //     ",
-    //         new Parameter("@id", id)
-    //     );
-    // }
+    public async Task<IEnumerable<ServiceProviderEmergencyDTO>> GetAvailableEmergenciesAsync(
+        double longitude,
+        double latitude,
+        int radiusInMeters
+    )
+    {
+        return await _unitOfWork.EmergencyCases.GetByConditionAsync(
+            ec =>
+                ec.MeetingLocation != null
+                && ec.MeetingLocation.Distance(new MapPoint(longitude, latitude)) <= radiusInMeters
+                && ec.Status == ServiceStatus.Pending
+                && DateTime.UtcNow
+                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes),
+            ec => new ServiceProviderEmergencyDTO
+            {
+                ClientFirstName = ec.Client!.FirstName,
+                ClientLastName = ec.Client.LastName,
+                Name = ec.Name!,
+                Description = ec.Description!,
+                ServiceId = ec.Id,
+            }
+        );
+    }
 }

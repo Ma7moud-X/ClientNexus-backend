@@ -279,6 +279,10 @@ app.UseExceptionHandler(errorApp =>
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             KeyNotFoundException => StatusCodes.Status404NotFound,
             ServerException => StatusCodes.Status500InternalServerError,
+            NotFoundException => StatusCodes.Status404NotFound,
+            NotAllowedException => StatusCodes.Status400BadRequest,
+            ExpiredException => StatusCodes.Status400BadRequest,
+            InvalidInputException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError,
         };
 

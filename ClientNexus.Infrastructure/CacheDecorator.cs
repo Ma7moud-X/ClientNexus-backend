@@ -22,9 +22,43 @@ namespace ClientNexus.Infrastructure
             try
             {
                 var result = targetMethod?.Invoke(_decorated, args);
-                if (result is Task task)
+
+                // Handle different types of Task returns properly
+                if (result == null)
+                    return null;
+
+                Type resultType = result.GetType();
+
+                // Is it a Task?
+                if (resultType == typeof(Task))
                 {
-                    return HandleAsync((dynamic)task);
+                    return HandleAsyncVoid((Task)result);
+                }
+                // Is it a generic Task<T>?
+                else if (
+                    resultType.IsGenericType
+                    && resultType.GetGenericTypeDefinition() == typeof(Task<>)
+                )
+                {
+                    // Get the T in Task<T>
+                    Type taskResultType = resultType.GetGenericArguments()[0];
+
+                    // Use reflection to call the correct HandleAsync<T> method
+                    MethodInfo? handleMethod = typeof(CacheTryCatchDecorator<T>).GetMethod(
+                        nameof(HandleAsyncWithResult),
+                        BindingFlags.NonPublic | BindingFlags.Instance
+                    );
+
+                    if (handleMethod is null)
+                    {
+                        throw new InvalidOperationException(
+                            "Failed to find HandleAsyncWithResult method"
+                        );
+                    }
+
+                    MethodInfo genericMethod = handleMethod.MakeGenericMethod(taskResultType);
+
+                    return genericMethod.Invoke(this, [result]);
                 }
 
                 return result;
@@ -37,9 +71,13 @@ namespace ClientNexus.Infrastructure
             {
                 throw new TimeoutException("Cache operation timed out.", ex);
             }
+            catch (TargetInvocationException ex)
+            {
+                throw ex.InnerException ?? ex;
+            }
         }
 
-        private async Task HandleAsync(Task task)
+        private async Task HandleAsyncVoid(Task task)
         {
             try
             {
@@ -56,7 +94,7 @@ namespace ClientNexus.Infrastructure
         }
 
         // Handle generic Task<T>
-        private async Task<T1> HandleAsync<T1>(Task<T1> task)
+        private async Task<T1> HandleAsyncWithResult<T1>(Task<T1> task)
         {
             try
             {

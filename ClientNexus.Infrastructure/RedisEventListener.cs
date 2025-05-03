@@ -44,24 +44,13 @@ public class RedisEventListener : IEventListener
 
         _channel = channel;
 
-        try // TODO: unwrap from try-catch
-        {
-            await _eventSubscriber.SubscribeAsync(
-                _channel,
-                async (message) =>
-                {
-                    await _messageQueue.Writer.WriteAsync(message);
-                }
-            );
-        }
-        catch (Exception ex)
-        {
-            // Handle exceptions related to subscription
-            throw new InvalidOperationException(
-                $"Failed to subscribe to channel '{_channel}'.",
-                ex
-            );
-        }
+        await _eventSubscriber.SubscribeAsync(
+            _channel,
+            async (message) =>
+            {
+                await _messageQueue.Writer.WriteAsync(message);
+            }
+        );
     }
 
     public async Task CloseAsync(bool save = false, string? saveToListAtKey = null)
@@ -105,19 +94,7 @@ public class RedisEventListener : IEventListener
                 continue;
             }
 
-            try // TODO: unwrap from try catch
-            {
-                await _cache.AddToListStringAsync(saveToListAtKey!, message);
-            }
-            catch (Exception ex)
-            {
-                ex.Data["unsaved"] = _messageQueue;
-                // Handle exceptions related to saving messages
-                throw new InvalidOperationException(
-                    $"Failed to save message to list '{saveToListAtKey}'.",
-                    ex
-                );
-            }
+            await _cache.AddToListStringAsync(saveToListAtKey!, message);
         }
 
         _closed = true;

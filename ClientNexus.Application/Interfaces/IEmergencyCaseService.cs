@@ -29,4 +29,9 @@ public interface IEmergencyCaseService
     Task<bool> HasActiveEmergencyForServiceProviderAsync(int serviceProviderId);
     Task<bool> IsClientAllowedToCreateEmergencyAsync(int clientId);
     Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id);
+    Task<IEnumerable<ServiceProviderEmergencyDTO>> GetAvailableEmergenciesAsync(
+        double longitude,
+        double latitude,
+        int radiusInMeters
+    );
 }
