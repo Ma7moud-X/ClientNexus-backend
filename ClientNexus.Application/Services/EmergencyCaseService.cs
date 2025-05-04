@@ -43,6 +43,7 @@ public class EmergencyCaseService : IEmergencyCaseService
             ),
             ClientId = clientId,
             Status = ServiceStatus.Pending,
+            MeetingTextAddress = emergencyDTO.MeetingTextAddress,
         };
 
         await _unitOfWork.EmergencyCases.AddAsync(emergencyCase);
@@ -230,13 +231,25 @@ public class EmergencyCaseService : IEmergencyCaseService
 
     public async Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id)
     {
-        return await _unitOfWork.SqlGetSingleAsync<EmergencyCaseOverviewDTO>(
-            @"SELECT EmergencyCases.Id, Name AS Title, Description, Status, CreatedAt, Price, MeetingLongitude, MeetingLatitude, ClientId, ServiceProviderId
-            FROM ClientNexusSchema.EmergencyCases
-            JOIN ClientNexusSchema.Services ON EmergencyCases.Id = Services.Id
-            WHERE EmergencyCases.Id = @id",
-            new Parameter("@id", id)
-        );
+        return (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                condExp: ec => ec.Id == id,
+                selectExp: ec => new EmergencyCaseOverviewDTO
+                {
+                    Id = ec.Id,
+                    Title = ec.Name!,
+                    Description = ec.Description!,
+                    MeetingLongitude = ec.MeetingLocation!.X,
+                    MeetingLatitude = ec.MeetingLocation!.Y,
+                    CreatedAt = ec.CreatedAt,
+                    Status = (char)ec.Status,
+                    ServiceProviderId = ec.ServiceProviderId,
+                    ClientId = ec.ClientId,
+                    Price = ec.Price,
+                },
+                limit: 1
+            )
+        ).FirstOrDefault();
     }
 
     public async Task<IEnumerable<ServiceProviderEmergencyDTO>> GetAvailableEmergenciesAsync(
@@ -259,6 +272,7 @@ public class EmergencyCaseService : IEmergencyCaseService
                 Name = ec.Name!,
                 Description = ec.Description!,
                 ServiceId = ec.Id,
+                MeetingTextAddress = ec.MeetingTextAddress,
             }
         );
     }
