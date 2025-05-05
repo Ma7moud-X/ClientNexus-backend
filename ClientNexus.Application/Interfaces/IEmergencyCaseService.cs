@@ -36,4 +36,5 @@ public interface IEmergencyCaseService
         double? latitude = null,
         double? radiusInMeters = null
     );
+    Task<ServiceProviderEmergencyDTO?> GetAvailableEmegencyByIdAsync(int id);
 }

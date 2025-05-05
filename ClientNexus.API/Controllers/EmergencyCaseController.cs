@@ -16,7 +16,7 @@ namespace ClientNexus.API.Controllers
 {
     [Route("api/emergency-cases")]
     [ApiController]
-    public class EmergencyCaseController : ControllerBase // TODO: add route to get emergency cases within certain radius away from a point
+    public class EmergencyCaseController : ControllerBase
     {
         private readonly IEmergencyCaseService _emergencyCaseService;
         private readonly IUnitOfWork _unitOfWork;
@@ -590,7 +590,7 @@ namespace ClientNexus.API.Controllers
 
         [HttpGet("available-emergencies")]
         [Authorize(Policy = "IsServiceProvider")]
-        public async Task<IActionResult> GetAvailabeEmergencies(
+        public async Task<IActionResult> GetAvailableEmergencies(
             [FromQuery] double? longitude,
             [FromQuery] double? latitude,
             [FromQuery] double? radiusInMeters,
@@ -607,6 +607,13 @@ namespace ClientNexus.API.Controllers
                     radiusInMeters: radiusInMeters
                 )
             );
+        }
+
+        [HttpGet("available-emergencies/{id:int}")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> GetAvailableEmergencyById([FromRoute] int id)
+        {
+            return Ok(await _emergencyCaseService.GetAvailableEmegencyByIdAsync(id));
         }
     }
 }

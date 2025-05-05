@@ -297,4 +297,27 @@ public class EmergencyCaseService : IEmergencyCaseService
             limit: limit
         );
     }
+
+    public async Task<ServiceProviderEmergencyDTO?> GetAvailableEmegencyByIdAsync(int id)
+    {
+        return (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                condExp: ec =>
+                    ec.Status == ServiceStatus.Pending
+                    && DateTime.UtcNow
+                        < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                    && ec.Id == id,
+                selectExp: ec => new ServiceProviderEmergencyDTO
+                {
+                    ClientFirstName = ec.Client!.FirstName,
+                    ClientLastName = ec.Client.LastName,
+                    Name = ec.Name!,
+                    Description = ec.Description!,
+                    ServiceId = ec.Id,
+                    MeetingTextAddress = ec.MeetingTextAddress,
+                },
+                limit: 1
+            )
+        ).FirstOrDefault();
+    }
 }
