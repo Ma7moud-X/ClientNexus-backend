@@ -117,18 +117,32 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         Expression<Func<EType, T>> selectExp,
         bool getAll = false,
         int offset = 0,
-        int limit = 20
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
     )
     {
+        if (selectExp is null)
+        {
+            throw new Exception("Select expression can't be null");
+        }
+
         var q = _context.Set<EType>().AsNoTracking();
         if (condExp is not null)
         {
             q = q.Where(condExp);
         }
 
-        if (selectExp is null)
+        if (orderByExp is not null)
         {
-            throw new Exception("Select expression can't be null");
+            if (descendingOrdering)
+            {
+                q = q.OrderByDescending(orderByExp);
+            }
+            else
+            {
+                q = q.OrderBy(orderByExp);
+            }
         }
 
         IQueryable<T> query = q.Select(selectExp);
@@ -145,7 +159,9 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         Expression<Func<EType, T>> selectExp,
         bool getAll = false,
         int offset = 0,
-        int limit = 20
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
     )
     {
         ArgumentNullException.ThrowIfNull(conditions);
@@ -154,11 +170,24 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         var q = _context.Set<EType>().AsNoTracking();
         foreach (var condition in conditions)
         {
-            if (string.IsNullOrEmpty(condition.conditionString) || condition.conditionValue is null) {
+            if (string.IsNullOrEmpty(condition.conditionString) || condition.conditionValue is null)
+            {
                 continue;
             }
-            
+
             q = q.Where(condition.conditionString, condition.conditionValue);
+        }
+
+        if (orderByExp is not null)
+        {
+            if (descendingOrdering)
+            {
+                q = q.OrderByDescending(orderByExp);
+            }
+            else
+            {
+                q = q.OrderBy(orderByExp);
+            }
         }
 
         if (selectExp is null)
@@ -199,8 +228,10 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     {
         var entityType = _context.Model.FindEntityType(typeof(EType));
         if (entityType == null)
-            throw new InvalidOperationException($"Entity type '{typeof(EType).Name}' is not part of the EF Core model. " +
-                "Ensure it is added as a DbSet or configured in OnModelCreating.");
+            throw new InvalidOperationException(
+                $"Entity type '{typeof(EType).Name}' is not part of the EF Core model. "
+                    + "Ensure it is added as a DbSet or configured in OnModelCreating."
+            );
 
         var tableName = entityType.GetSchema() is string schema
             ? $"[{schema}].[{entityType.GetTableName()}]"
@@ -211,12 +242,8 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         var param = new SqlParameter("@id", id);
 
         // To suppress the SQL injection warning safely, use raw string, not interpolation
-        return await _context
-            .Set<EType>()
-            .FromSqlRaw(sql, param)
-            .FirstOrDefaultAsync();
+        return await _context.Set<EType>().FromSqlRaw(sql, param).FirstOrDefaultAsync();
     }
-
 
     public async Task<int> CountAsync(Expression<Func<EType, bool>>? predicate = null)
     {
@@ -224,7 +251,7 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         {
             return await _context.Set<EType>().CountAsync();
         }
-        
+
         return await _context.Set<EType>().Where(predicate).CountAsync();
     }
 
@@ -239,10 +266,12 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         entry.State = EntityState.Modified;
         return updatedEntity;
     }
+
     public void Update(EType entity)
     {
         _context.Entry(entity).State = EntityState.Modified;
     }
+
     public async Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp)
     {
         return await _context.Set<EType>().AnyAsync(condExp);

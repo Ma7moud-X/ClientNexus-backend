@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.DTOs;
@@ -253,18 +254,36 @@ public class EmergencyCaseService : IEmergencyCaseService
     }
 
     public async Task<IEnumerable<ServiceProviderEmergencyDTO>> GetAvailableEmergenciesAsync(
-        double longitude,
-        double latitude,
-        int radiusInMeters
+        int offsetId = -1,
+        int limit = 10,
+        double? longitude = null,
+        double? latitude = null,
+        double? radiusInMeters = null
     )
     {
-        return await _unitOfWork.EmergencyCases.GetByConditionAsync(
-            ec =>
+        Expression<Func<EmergencyCase, bool>> condition;
+        if (longitude is not null && latitude is not null && radiusInMeters is not null)
+        {
+            condition = ec =>
                 ec.MeetingLocation != null
-                && ec.MeetingLocation.Distance(new MapPoint(longitude, latitude)) <= radiusInMeters
+                && ec.MeetingLocation.Distance(new MapPoint(longitude.Value, latitude.Value))
+                    <= radiusInMeters
                 && ec.Status == ServiceStatus.Pending
                 && DateTime.UtcNow
-                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes),
+                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                && ec.Id > offsetId;
+        }
+        else
+        {
+            condition = ec =>
+                ec.Status == ServiceStatus.Pending
+                && DateTime.UtcNow
+                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                && ec.Id > offsetId;
+        }
+
+        return await _unitOfWork.EmergencyCases.GetByConditionAsync(
+            condExp: condition,
             ec => new ServiceProviderEmergencyDTO
             {
                 ClientFirstName = ec.Client!.FirstName,
@@ -273,7 +292,9 @@ public class EmergencyCaseService : IEmergencyCaseService
                 Description = ec.Description!,
                 ServiceId = ec.Id,
                 MeetingTextAddress = ec.MeetingTextAddress,
-            }
+            },
+            orderByExp: ec => ec.Id,
+            limit: limit
         );
     }
 }

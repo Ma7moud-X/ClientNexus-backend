@@ -3,6 +3,7 @@ using System.Text.Json;
 using ClientNexus.API.Utilities;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
@@ -183,19 +184,23 @@ namespace ClientNexus.API.Controllers
             return Ok(
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     conditions,
-                    ec => new
+                    ec => new EmergencyCaseOverviewDTO
                     {
                         Id = ec.Id,
-                        Title = ec.Name,
-                        Description = ec.Description,
-                        Status = ec.Status,
+                        Title = ec.Name!,
+                        Description = ec.Description!,
+                        Status = (char)ec.Status,
                         CreatedAt = ec.CreatedAt,
                         Price = ec.Price ?? 0,
                         MeetingLongitude = ec.MeetingLocation!.X,
                         MeetingLatitude = ec.MeetingLocation!.Y,
+                        ClientId = ec.ClientId,
+                        ServiceProviderId = ec.ServiceProviderId,
                     },
                     offset: offset,
-                    limit: limit
+                    limit: limit,
+                    orderByExp: ec => ec.Id,
+                    descendingOrdering: true
                 )
             );
         }
@@ -586,16 +591,20 @@ namespace ClientNexus.API.Controllers
         [HttpGet("available-emergencies")]
         [Authorize(Policy = "IsServiceProvider")]
         public async Task<IActionResult> GetAvailabeEmergencies(
-            [FromQuery] double longitude,
-            [FromQuery] double latitude,
-            [FromQuery] int radiusInMeters
+            [FromQuery] double? longitude,
+            [FromQuery] double? latitude,
+            [FromQuery] double? radiusInMeters,
+            [FromQuery] int offsetId = -1,
+            [FromQuery] int limit = 10
         )
         {
             return Ok(
                 await _emergencyCaseService.GetAvailableEmergenciesAsync(
-                    longitude,
-                    latitude,
-                    radiusInMeters
+                    offsetId: offsetId,
+                    limit: limit,
+                    longitude: longitude,
+                    latitude: latitude,
+                    radiusInMeters: radiusInMeters
                 )
             );
         }
