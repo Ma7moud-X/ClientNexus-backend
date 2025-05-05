@@ -4,7 +4,7 @@ namespace ClientNexus.Domain.Entities.Users
 {
     public class Client : BaseUser
     {
-        public float Rate { get; set; }
+       
 
         public ICollection<Problem>? Problems { get; set; }
         public ICollection<Service>? RequestedServices { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -21,5 +22,6 @@ namespace ClientNexus.Application.DTOs
         public string PhoneNumber { get; set; }
         [Required]
         public string NewPassword { get; set; }
+        public IFormFile? MainImage { get; set; }
     }
 }

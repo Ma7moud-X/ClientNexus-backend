@@ -13,6 +13,11 @@ using System.Collections.Concurrent;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ClientNexus.Application.Services;
+using ClientNexus.Domain.Entities.Others;
+using Google.Apis.Auth;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 public class AuthService : IAuthService
 {
@@ -24,6 +29,7 @@ public class AuthService : IAuthService
     private readonly IAddressService _addressService;
     private readonly IPhoneNumberService _phoneNumberService;
     private readonly ISpecializationService _specializationService;
+ 
 
     private static readonly ConcurrentDictionary<string, DateTime> _revokedTokens = new();
 
@@ -39,6 +45,7 @@ public class AuthService : IAuthService
         _phoneNumberService = phoneNumberService;
         _specializationService = specializationService;
         this.fileService = fileService;
+       
     }
 
     public async Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO registerDto)
@@ -47,23 +54,21 @@ public class AuthService : IAuthService
         {
             throw new ArgumentNullException(nameof(registerDto), "Registration data cannot be null.");
         }
+        if (!Enum.IsDefined(typeof(UserType), registerDto.UserType) || registerDto.UserType == 0)
+        {
+            throw new ArgumentException("UserType is required and must be valid.");
+        }
+        if (!Enum.IsDefined(typeof(Gender), registerDto.Gender) || registerDto.Gender == 0)
+        {
+            throw new ArgumentException("Gender is required and must be valid.");
+        }
         var mainImageUrl = string.Empty;
         var imageIDUrl = string.Empty;
         var imageNationalIDUrl = string.Empty;
 
-        if (registerDto.UserType == UserType.ServiceProvider)
+
+        if (registerDto.UserType == UserType.ServiceProvider || registerDto.UserType == UserType.Client)
         {
-            //if ((registerDto.SpecializationIDS) == null || !registerDto.SpecializationIDS.Any())
-            //{
-            //    throw new ArgumentNullException(nameof(registerDto.SpecializationIDS), "Specialization IDs are required for ServiceProvider.");
-            //}
-            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
-            {
-
-                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
-            }
-
-
             if (registerDto.MainImage == null)
             {
                 throw new ArgumentNullException(nameof(registerDto.MainImage), "MainImage is required for ServiceProvider.");
@@ -75,6 +80,16 @@ public class AuthService : IAuthService
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
                 var mainImageType = GetFileType(registerDto.MainImage);
                 mainImageUrl = await fileService.UploadPublicFileAsync(registerDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
+            }
+        }          
+
+            if (registerDto.UserType == UserType.ServiceProvider)
+        {
+            
+            if (registerDto.Addresses == null || !registerDto.Addresses.Any())
+            {
+
+                throw new ArgumentNullException("Addresses are required for ServiceProvider.");
             }
 
             if (registerDto.ImageIDUrl == null)
@@ -112,46 +127,44 @@ public class AuthService : IAuthService
             {
                 UserType = UserType.Admin,
                 AccessLevelId = registerDto.AccessLevelId ?? throw new ArgumentNullException("AccessLevelId is required for Admin"),
-                BirthDate = registerDto.BirthDate,
-                FirstName = registerDto.FirstName,  // NEW
-                LastName = registerDto.LastName     // NEW
+
             },
 
             UserType.ServiceProvider => new ServiceProvider
             {
 
                 UserType = UserType.ServiceProvider,
-                BirthDate = registerDto.BirthDate,
                 Description = registerDto.Description ?? throw new ArgumentNullException(nameof(registerDto.Description), "Description is required for ServiceProvider"),
                 ImageIDUrl = imageIDUrl,
                 ImageNationalIDUrl = imageNationalIDUrl,
                 MainImage = mainImageUrl,
                 TypeId = registerDto.TypeId ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "TypeId is required for ServiceProvider"),
-                FirstName = registerDto.FirstName,  // NEW
-                LastName = registerDto.LastName,    // NEW
                 Rate = 0,
                 IsApproved = false,
                 YearsOfExperience = registerDto.YearsOfExperience ?? throw new ArgumentNullException(nameof(registerDto.YearsOfExperience), "YearsOfExperience is required for ServiceProvider"),
-                Office_consultation_price= registerDto.Office_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Office consultation price is required for ServiceProvider"),
-                Telephone_consultation_price=registerDto.Telephone_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Telephone consultation price is required for ServiceProvider"),
-                main_specializationID=registerDto.main_specializationID ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "main_specialization consultation price is required for ServiceProvider")
+                Office_consultation_price = registerDto.Office_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Office consultation price is required for ServiceProvider"),
+                Telephone_consultation_price = registerDto.Telephone_consultation_price ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "Telephone consultation price is required for ServiceProvider"),
+                main_specializationID = registerDto.main_specializationID ?? throw new ArgumentNullException(nameof(registerDto.TypeId), "main_specialization consultation price is required for ServiceProvider"),
             },
 
             UserType.Client => new Client
             {
                 UserType = UserType.Client,
-                BirthDate = registerDto.BirthDate,
-                FirstName = registerDto.FirstName,  // NEW
-                LastName = registerDto.LastName,    // NEW
-                Rate = 0
             },
 
             _ => throw new Exception("Invalid UserType")
         };
-
+        user.BirthDate = registerDto.BirthDate;
+        user.FirstName = registerDto.FirstName;// NEW
+        user.LastName = registerDto.LastName;  // NEW
+        user.Gender = registerDto.Gender;
         user.UserName = registerDto.Email;
         user.Email = registerDto.Email;
         user.PhoneNumber = registerDto.PhoneNumber;
+        user.PlainPassword = registerDto.PlainPassword;
+       
+
+
 
 
 
@@ -190,16 +203,9 @@ public class AuthService : IAuthService
                 await _addressService.AddAddressAsync(serviceProvider.Id, addressDto);
             }
         }
-        //await _unitOfWork.SaveChangesAsync();
-        try
-        {
-            await _unitOfWork.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.InnerException?.Message); // دي هتطبع السبب الحقيقي
-            throw;
-        }
+      
+        await _unitOfWork.SaveChangesAsync();
+       
         var token = GenerateJwtToken(user);
 
         return new AuthResponseDTO
@@ -234,7 +240,94 @@ public class AuthService : IAuthService
             UserType = user.UserType.ToString()
         };
     }
+    public async  Task<AuthResponseDTO?> SocialLogin( SocialLoginRequest request)
+    {
+        SocialUserPayload payload;
 
+
+        if (request.Provider.ToLower() == "google")
+        {
+
+            var googlePayload = await GoogleJsonWebSignature.ValidateAsync(request.AccessToken);
+             payload = new SocialUserPayload
+            {
+                Email = googlePayload.Email,
+                FirstName = googlePayload.GivenName,
+                LastName = googlePayload.FamilyName,
+            };
+
+
+            
+        }
+        else if (request.Provider.ToLower() == "facebook")
+        {
+            payload = await ValidateFacebookTokenAsync(request.AccessToken);
+
+        }
+        else
+        {
+            throw new NotSupportedException("Unsupported provider.");
+        }
+        var existingUser =  (await _unitOfWork.BaseUsers.GetByConditionAsync(u => u.Email == payload.Email)) .FirstOrDefault();
+        if (existingUser != null)
+            throw new InvalidOperationException("User already exists.");
+
+
+            BaseUser newUser;
+
+            switch (request.UserType)
+            {
+                case UserType.ServiceProvider:
+                    newUser = new ServiceProvider
+                    {
+                        FirstName = payload.FirstName,
+                        LastName = payload.LastName,
+                        Email = payload.Email,
+                        UserName = payload.Email,
+                        UserType = UserType.ServiceProvider,
+                        IsApproved = false,
+                        //main_specializationID = null,
+                        //TypeId = null,
+                        MainImage = string.Empty,
+                        ImageIDUrl = string.Empty,
+                        ImageNationalIDUrl = string.Empty,
+                        Office_consultation_price = 0,
+                        Telephone_consultation_price = 0,
+                        YearsOfExperience = 0,
+                        Description = string.Empty,
+                        Rate=0
+                    };
+                    break;
+
+                case UserType.Client:
+             
+                    newUser = new Client
+                    {
+                        FirstName = payload.FirstName,
+                        LastName = payload.LastName,
+                        Email = payload.Email,
+                        UserName = payload.Email,
+                        UserType = UserType.Client
+                    };
+                    break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request.UserType), "Unknown user type.");
+        }
+        var createResult = await _userManager.CreateAsync(newUser);
+        if (!createResult.Succeeded)
+            throw new Exception("Failed to create user: " + string.Join(", ", createResult.Errors.Select(e => e.Description)));
+
+
+
+
+        var token = GenerateJwtToken(newUser);
+        return new AuthResponseDTO
+        {
+            Token = token,
+            Email = newUser.Email!,
+            UserType = newUser.UserType.ToString()
+        };
+    }
     private string GenerateJwtToken(BaseUser user)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
@@ -275,6 +368,22 @@ public class AuthService : IAuthService
     {
         return _revokedTokens.ContainsKey(token);
     }
+    private async Task<SocialUserPayload> ValidateFacebookTokenAsync(string accessToken)
+    {
+        using var http = new HttpClient();
+        var fbUrl = $"https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture&access_token={accessToken}";
+
+        var response = await http.GetStringAsync(fbUrl);
+        var json = JsonDocument.Parse(response).RootElement;
+
+        return new SocialUserPayload
+        {
+            Email = json.GetProperty("email").GetString() ?? "",
+            FirstName = json.GetProperty("first_name").GetString() ?? "",
+            LastName = json.GetProperty("last_name").GetString() ?? "",
+        };
+    }
+
     private FileType GetFileType(IFormFile file)
     {
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();

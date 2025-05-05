@@ -1,5 +1,6 @@
 using ClientNexus.Application.Enums;
 using ClientNexus.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 
 namespace ClientNexus.Application.Interfaces;
 
@@ -19,5 +20,7 @@ public interface IFileService
         UploadedFor uploadedFor
     );
     Task DeleteFileAsync(string key);
+    public FileType GetFileType(IFormFile file);
+
 
 }

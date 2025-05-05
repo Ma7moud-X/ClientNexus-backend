@@ -701,6 +701,9 @@ namespace ClientNexus.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
@@ -716,6 +719,11 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MainImage")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -736,6 +744,9 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("PlainPassword")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -1125,11 +1136,6 @@ namespace ClientNexus.Infrastructure.Migrations
                 {
                     b.HasBaseType("ClientNexus.Domain.Entities.Users.BaseUser");
 
-                    b.Property<float>("Rate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("real")
-                        .HasDefaultValue(0f);
-
                     b.ToTable("Clients", "ClientNexusSchema");
                 });
 
@@ -1150,11 +1156,13 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<string>("ImageIDUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("ImageNationalIDUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<bool>("IsApproved")
                         .ValueGeneratedOnAdd()
@@ -1173,11 +1181,6 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<DateTime?>("LastLocationUpdateTime")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("MainImage")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Office_consultation_price")
                         .HasColumnType("int");
@@ -1201,13 +1204,13 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("Telephone_consultation_price")
                         .HasColumnType("int");
 
-                    b.Property<int>("TypeId")
+                    b.Property<int?>("TypeId")
                         .HasColumnType("int");
 
                     b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
-                    b.Property<int>("main_specializationID")
+                    b.Property<int?>("main_specializationID")
                         .HasColumnType("int");
 
                     b.HasIndex("ApprovedById");
@@ -1294,8 +1297,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Country");
 
                     b.Navigation("Country");
 
@@ -1679,8 +1680,7 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProviderType", "Type")
                         .WithMany("ServiceProviders")
                         .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ApprovingAdmin");
 

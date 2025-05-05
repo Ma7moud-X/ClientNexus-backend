@@ -13,8 +13,12 @@ namespace ClientNexus.Infrastructure.Configurations.Users
             builder.ToTable("ServiceProviders");
 
             builder.Property(sp => sp.Description).IsRequired().HasMaxLength(1000);
+            builder.Property(sp => sp.main_specializationID).IsRequired();
 
-            builder.Property(sp => sp.MainImage).IsRequired().HasMaxLength(1000);
+
+            builder.Property(sp => sp.ImageNationalIDUrl).IsRequired().HasMaxLength(1000);
+            builder.Property(sp => sp.ImageIDUrl).IsRequired().HasMaxLength(1000);
+
 
             builder.Property(sp => sp.Rate).HasDefaultValue(0.0f);
 

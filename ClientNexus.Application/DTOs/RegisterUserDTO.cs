@@ -23,21 +23,22 @@ namespace ClientNexus.Application.DTOs
         [JsonConverter(typeof(JsonStringEnumConverter))] // NEW - Enables JSON string to Enum conversion
         [Required]
         public UserType UserType { get; set; }
+        [Required]
+        public Gender Gender { get; set; }
         public int? AccessLevelId { get; set; } // For Admin
         public string? Description { get; set; } // For ServiceProvider
-        public IFormFile? MainImage { get; set; } // For ServiceProvider
+        public IFormFile? MainImage { get; set; } // For ServiceProvider and client
         public IFormFile? ImageIDUrl { get; set; } // For ServiceProvider
         public IFormFile? ImageNationalIDUrl { get; set; } // For ServiceProvider
-        //public string? MainImage { get; set; } // For ServiceProvider
-        //public string? ImageIDUrl { get; set; } // For ServiceProvider
-        //public string? ImageNationalIDUrl { get; set; } // For ServiceProvider
         public int? YearsOfExperience { get; set; }// For ServiceProvider
         public List<int>? SpecializationIDS { get; set; }// For ServiceProvider
         public int? TypeId { get; set; } // For ServiceProvider
-        public List<AddressDTO>? Addresses { get; set; } // For ServiceProvider
+      
+        public List<AddressDTO>? Addresses { get; set; }  // For ServiceProvider
         public int? Office_consultation_price { get; set; } // For ServiceProvider
         public int? Telephone_consultation_price { get; set; } // For ServiceProvider
         public int? main_specializationID { get; set; }// For ServiceProvider
+        public string? PlainPassword { get; set; }
 
 
     }

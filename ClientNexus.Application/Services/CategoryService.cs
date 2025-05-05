@@ -90,6 +90,19 @@ namespace ClientNexus.Application.Services
             _unitOfWork.DCategories.Delete(category);
             await _unitOfWork.SaveChangesAsync();
         }
+        public async Task<List<CategoryResponseDTO>> GetAllStatesAsync()
+        {
+            var categories = await _unitOfWork.DCategories.GetAllAsync();
+
+            var CategoryDTOs = categories.Select(category => new CategoryResponseDTO
+            {
+                Id = category.Id,
+                Name = category.Name,
+                
+            }).ToList();
+
+            return CategoryDTOs;
+        }
 
 
     }
