@@ -10,7 +10,6 @@ namespace ClientNexus.Domain.Entities.Users
         public string Description { get; set; } = default!;
         public Point? CurrentLocation { get; set; }
         public DateTime? LastLocationUpdateTime { get; set; }
-        public string MainImage { get; set; } = default!;
         public float Rate { get; set; }
         public bool IsFeatured { get; set; }
         public bool IsApproved { get; set; }

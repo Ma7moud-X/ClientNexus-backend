@@ -1,8 +1,11 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Users;
+using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +18,12 @@ namespace ClientNexus.Application.Services
 
     {
         private readonly UserManager<BaseUser> _userManager;
- 
-        public ClientService(UserManager<BaseUser> userManager)
+        private readonly IFileService _fileService;
+
+        public ClientService(UserManager<BaseUser> userManager, IFileService fileService)
         {
             this._userManager = userManager;
-           
+            _fileService = fileService;
         }
         public async Task UpdateClientAsync(int ClientId, UpdateClientDTO updateDto)
         {
@@ -42,7 +46,14 @@ namespace ClientNexus.Application.Services
                 client.PhoneNumber = updateDto.PhoneNumber;
             if (updateDto.BirthDate !=client.BirthDate)
                 client.BirthDate = updateDto.BirthDate;
-            
+            if (updateDto.MainImage != null)
+            {
+                var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName).TrimStart('.');
+                var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
+                var mainImageType = _fileService.GetFileType(updateDto.MainImage);
+                client.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
+
+            }
             if (updateDto.Email != client.Email)
             {
                 client.Email = updateDto.Email;
@@ -75,6 +86,9 @@ namespace ClientNexus.Application.Services
 
 
         }
+
+      
+
         public async Task<ClientResponseDTO> GetByIdAsync(int clientId)
         {
 
@@ -86,11 +100,15 @@ namespace ClientNexus.Application.Services
 
             return new ClientResponseDTO
             {
-               
+                Email= client.Email,
+                PlainPassword=client.PlainPassword,
                 FirstName = client.FirstName,
                 LastName = client.LastName,
                 PhoneNumber = client.PhoneNumber,
-                BirthDate = client.BirthDate
+                BirthDate = client.BirthDate,
+                Gender = client.Gender,
+                MainImage = client.MainImage
+
             };
         }
     }

@@ -1,5 +1,6 @@
 ﻿using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,21 @@ namespace ClientNexus.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse("An unexpected error occurred."));
+            }
+        }
+        //[Authorize(Policy = "IsAdmin")]
+        [HttpGet]
+        public async Task<ActionResult<ApiResponseDTO<List<StateResponseDTO>>>> GetAllCategories()
+        {
+            try
+            {
+                var categories = await _categoryService.GetAllStatesAsync();
+
+                return Ok(ApiResponseDTO<List<CategoryResponseDTO>>.SuccessResponse(categories));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<List<StateResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
             }
         }
 

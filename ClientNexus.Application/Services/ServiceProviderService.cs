@@ -234,6 +234,10 @@ namespace ClientNexus.Application.Services
             UpdateServiceProviderDTO updateDto
         )
         {
+            if (updateDto == null)
+            {
+                throw new ArgumentNullException(nameof(updateDto), "Invalid request data.");
+            }
             var serviceprovider =
                 await _userManager.FindByIdAsync(ServiceProviderId.ToString()) as ServiceProvider;
             if (serviceprovider == null)
@@ -253,12 +257,18 @@ namespace ClientNexus.Application.Services
                 var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName)
                     .TrimStart('.');
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
+<<<<<<< HEAD
                 var mainImageType = GetFileType(updateDto.MainImage);
                 serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
                     updateDto.MainImage.OpenReadStream(),
                     mainImageType,
                     mainImageKey
                 );
+=======
+                var mainImageType = _fileService.GetFileType(updateDto.MainImage);
+                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
+
+>>>>>>> main
             }
             if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
                 serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
@@ -477,6 +487,7 @@ namespace ClientNexus.Application.Services
                     MainImage = sp.MainImage,
                     ImageIDUrl = sp.ImageIDUrl,
                     ImageNationalIDUrl = sp.ImageNationalIDUrl,
+                    Gender = sp.Gender,
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
@@ -524,6 +535,7 @@ namespace ClientNexus.Application.Services
                 ImageIDUrl = sp.ImageIDUrl,
                 ImageNationalIDUrl = sp.ImageNationalIDUrl,
                 YearsOfExperience = sp.YearsOfExperience,
+                Gender = sp.Gender,
                 Office_consultation_price = sp.Office_consultation_price,
                 Telephone_consultation_price = sp.Telephone_consultation_price,
                 City = sp.Addresses?.FirstOrDefault()?.City?.Name,
@@ -534,6 +546,7 @@ namespace ClientNexus.Application.Services
             };
         }
 
+<<<<<<< HEAD
         private FileType GetFileType(IFormFile file)
         {
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -549,5 +562,9 @@ namespace ClientNexus.Application.Services
                     throw new ArgumentException($"Unsupported file type: {extension}");
             }
         }
+=======
+      
+
+>>>>>>> main
     }
 }

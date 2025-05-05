@@ -4,6 +4,7 @@ using ClientNexus.Application.Enums;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
 using System.Net;
 
 namespace ClientNexus.Application.Services;
@@ -98,6 +99,21 @@ public class FileService : IFileService
         };
 
         await _s3Client.DeleteObjectAsync(request);
+    }
+    public FileType GetFileType(IFormFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        switch (extension)
+        {
+            case ".jpg":
+                return FileType.Jpg;
+            case ".jpeg":
+                return FileType.Jpeg;
+            case ".png":
+                return FileType.Png;
+            default:
+                throw new ArgumentException($"Unsupported file type: {extension}");
+        }
     }
 
 

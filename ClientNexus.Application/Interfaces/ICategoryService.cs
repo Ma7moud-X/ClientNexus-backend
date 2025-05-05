@@ -14,6 +14,8 @@ namespace ClientNexus.Application.Interfaces
         public Task AddCategoriesToDocument(ICollection<DocumentCategory> DocumentCategories, List<int> CategoryIDs, int DocumentId);
         public  Task<CategoryResponseDTO> AddCategoryAsync(string CategoryName);
         public Task DeleteCategoryAsync(int categoryId);
+        public Task<List<CategoryResponseDTO>> GetAllStatesAsync();
+
 
 
     }

@@ -95,6 +95,8 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 
+
+
 // NEW - Configure Identity with BaseUser
 builder
     .Services.AddIdentity<BaseUser, IdentityRole<int>>()

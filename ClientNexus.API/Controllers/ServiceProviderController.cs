@@ -70,7 +70,7 @@ namespace ClientNexus.API.Controllers
 
 
             }
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
@@ -115,7 +115,7 @@ namespace ClientNexus.API.Controllers
                 try
                 {
                     await _serviceProviderIsService.UpdateServiceProviderAsync(userId.Value, updateDto);
-                    return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+                    return Ok(ApiResponseDTO<string>.SuccessResponse("serviceprovider updated successfully."));
                 }
                 catch (KeyNotFoundException ex)
                 {
@@ -133,15 +133,26 @@ namespace ClientNexus.API.Controllers
         [Authorize(Policy = "IsServiceProviderOrAdmin")]
 
         [HttpGet]
-        public async Task<IActionResult> GetById()
+        public async Task<IActionResult> GetById(int? id)
         {
-            var userId = User.GetId();
-            if (userId is null)
-                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
 
+            int Id;
+            if (id == null)
+            {
+                var userId = User.GetId();
+                if (userId is null)
+                    return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+                Id = userId.Value;
+            }
+            else
+            {
+                Id = id.Value;
+            }
+
+           
             try
             {
-                var response = await _serviceProviderIsService.GetByIdAsync(userId.Value);
+                var response = await _serviceProviderIsService.GetByIdAsync(Id);
 
                 if (response == null)
                     return NotFound(ApiResponseDTO<string>.ErrorResponse("ServiceProvider not found."));
@@ -159,6 +170,7 @@ namespace ClientNexus.API.Controllers
             }
 
         }
+
     }
 
     }
