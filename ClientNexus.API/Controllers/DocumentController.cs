@@ -14,7 +14,6 @@ namespace ClientNexus.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "IsAdmin")]
 
     public class DocumentController : ControllerBase
     {
@@ -25,7 +24,7 @@ namespace ClientNexus.API.Controllers
             _documentService = documentService;
             this.unitOfWork = unitOfWork;
         }
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         [HttpPost]
         public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> AddDocument([FromForm] DocumentDTO dto)
         {
@@ -57,7 +56,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("{documentId}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<IActionResult> DeleteDocumentAsync(int documentId)
         {
@@ -78,15 +77,47 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred while deleting the document: {ex.Message}"));
             }
         }
-        [HttpGet]
-        public async Task<IActionResult> GetDocuments()
+
+        [Authorize(Policy = "IsClientOrAdmin")]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> GetDocument(int id)
         {
-            var documents =  await unitOfWork.Documents.GetAllQueryable().ToListAsync();
-       
-            return Ok(documents);
+            try
+            {
+                var documentResponse = await _documentService.GetDocumentByIdAsync(id);
+
+                // Return a success response with the document data
+                return Ok(ApiResponseDTO<DocumentResponseDTO>.SuccessResponse(documentResponse));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // If the document is not found, return an error response
+                return NotFound(ApiResponseDTO<DocumentResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                // Handle other errors and return a generic error response
+                return StatusCode(500, ApiResponseDTO<DocumentResponseDTO>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
         }
+        [Authorize(Policy = "IsClientOrAdmin")]
 
+        [HttpGet]
+        public async Task<ActionResult<ApiResponseDTO<List<DocumentResponseDTO>>>> GetAllDocuments()
+        {
+            try
+            {
+                var documentsResponse = await _documentService.GetAllDocumentsAsync();
 
+                // Return a success response with all documents
+                return Ok(ApiResponseDTO<List<DocumentResponseDTO>>.SuccessResponse(documentsResponse));
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors and return a generic error response
+                return StatusCode(500, ApiResponseDTO<List<DocumentResponseDTO>>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
 
 
     }

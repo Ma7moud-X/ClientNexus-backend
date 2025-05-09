@@ -67,17 +67,17 @@ namespace ClientNexus.Application.Services
             return feedbacks.Average(f => f.Rate);
         }
         
-        public async Task<FeedbackDTO> CreateClientToProviderFeedbackAsync(CreateFeedbackDTO createFeedbackDto)
+        public async Task<FeedbackDTO> CreateClientToProviderFeedbackAsync(CreateFeedbackDTO createFeedbackDto, int clientId)
         {
-            var client = await _unitOfWork.Clients.GetByIdAsync(createFeedbackDto.ClientId) 
-            ?? throw new KeyNotFoundException($"Client with ID {createFeedbackDto.ClientId} not found");
+            var client = await _unitOfWork.Clients.GetByIdAsync(clientId) 
+            ?? throw new KeyNotFoundException($"Client with ID {clientId} not found");
 
             var serviceProvider = await _unitOfWork.ServiceProviders.GetByIdAsync(createFeedbackDto.ServiceProviderId) 
             ?? throw new KeyNotFoundException($"Service provider with ID {createFeedbackDto.ServiceProviderId} not found");
 
             var feedback = new ClientServiceProviderFeedback
             {
-                ClientId = createFeedbackDto.ClientId,
+                ClientId = clientId,
                 ServiceProviderId = createFeedbackDto.ServiceProviderId,
                 Rate = createFeedbackDto.Rate,
                 Feedback = createFeedbackDto.Feedback,

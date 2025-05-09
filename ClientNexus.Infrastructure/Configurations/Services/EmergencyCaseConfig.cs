@@ -11,6 +11,12 @@ namespace ClientNexus.Infrastructure.Configurations
             builder.ToTable("EmergencyCases");
 
             builder.HasBaseType<Service>();
+
+            builder
+                .Property(ec => ec.MeetingTextAddress)
+                .IsRequired()
+                .HasColumnType("nvarchar(400)");
+            builder.Property(ec => ec.MeetingLocation).IsRequired();
         }
     }
 }

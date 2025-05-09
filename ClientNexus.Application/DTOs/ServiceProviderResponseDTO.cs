@@ -9,27 +9,35 @@ namespace ClientNexus.Application.DTOs
 {
     public class ServiceProviderResponseDTO
     {
-        [Required]
+       
+        public int? Id { get; set; }
+        
         public string FirstName { get; set; }
-        [Required]
+        
         public string LastName { get; set; }
-        [Required]
+        
         public float Rate { get; set; }
-        [Required]
+      
         public string Description { get; set; }
-        [Required]
+      
         public string MainImage { get; set; }
-        [Required]
+      
         public string ImageIDUrl { get; set; }
-        [Required]
+     
         public string ImageNationalIDUrl { get; set; }
-        [Required]
+      
         public int YearsOfExperience { get; set; }
-        [Required]
+       
         public string State { get; set; }
-        [Required]
+       
         public string City { get; set; }
-        [Required]
+  
         public List<string> SpecializationName { get; set; }
+        
+        public int Office_consultation_price { get; set; }
+      
+        public int Telephone_consultation_price { get; set; } 
+
+        public string main_Specialization { get; set; }
     }
 }

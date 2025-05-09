@@ -1,7 +1,9 @@
 using System.Runtime.Serialization;
 using System.Text.Json;
 using ClientNexus.API.Utilities;
+using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
@@ -182,19 +184,23 @@ namespace ClientNexus.API.Controllers
             return Ok(
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     conditions,
-                    ec => new
+                    ec => new EmergencyCaseOverviewDTO
                     {
                         Id = ec.Id,
-                        Title = ec.Name,
-                        Description = ec.Description,
-                        Status = ec.Status,
+                        Title = ec.Name!,
+                        Description = ec.Description!,
+                        Status = (char)ec.Status,
                         CreatedAt = ec.CreatedAt,
                         Price = ec.Price ?? 0,
                         MeetingLongitude = ec.MeetingLocation!.X,
                         MeetingLatitude = ec.MeetingLocation!.Y,
+                        ClientId = ec.ClientId,
+                        ServiceProviderId = ec.ServiceProviderId,
                     },
                     offset: offset,
-                    limit: limit
+                    limit: limit,
+                    orderByExp: ec => ec.Id,
+                    descendingOrdering: true
                 )
             );
         }
@@ -322,6 +328,11 @@ namespace ClientNexus.API.Controllers
                 return Unauthorized();
             }
 
+            if (emergencyDetails.Status == ServiceStatus.Cancelled)
+            {
+                return NoContent();
+            }
+
             if (emergencyDetails.Status != ServiceStatus.Pending)
             {
                 return BadRequest(
@@ -389,7 +400,7 @@ namespace ClientNexus.API.Controllers
                     emergencyLocation.Value,
                     offerDTO.TransportationType
                 ),
-                TimeSpan.FromMinutes(1)
+                TimeSpan.FromMinutes(GlobalConstants.EmergencyCaseOfferTTLInMinutes)
             );
 
             return NoContent();
@@ -575,6 +586,34 @@ namespace ClientNexus.API.Controllers
 
             await _baseServiceService.SetDoneAsync(id);
             return NoContent();
+        }
+
+        [HttpGet("available-emergencies")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> GetAvailableEmergencies(
+            [FromQuery] double? longitude,
+            [FromQuery] double? latitude,
+            [FromQuery] double? radiusInMeters,
+            [FromQuery] int offsetId = -1,
+            [FromQuery] int limit = 10
+        )
+        {
+            return Ok(
+                await _emergencyCaseService.GetAvailableEmergenciesAsync(
+                    offsetId: offsetId,
+                    limit: limit,
+                    longitude: longitude,
+                    latitude: latitude,
+                    radiusInMeters: radiusInMeters
+                )
+            );
+        }
+
+        [HttpGet("available-emergencies/{id:int}")]
+        [Authorize(Policy = "IsServiceProvider")]
+        public async Task<IActionResult> GetAvailableEmergencyById([FromRoute] int id)
+        {
+            return Ok(await _emergencyCaseService.GetAvailableEmegencyByIdAsync(id));
         }
     }
 }

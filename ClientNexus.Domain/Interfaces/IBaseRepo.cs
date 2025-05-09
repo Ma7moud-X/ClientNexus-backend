@@ -23,7 +23,9 @@ public interface IBaseRepo<EType>
         Expression<Func<EType, T>> selectExp,
         bool getAll = false,
         int offset = 0,
-        int limit = 20
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
     );
 
     Task<IEnumerable<T>> GetByConditionAsync<T>(
@@ -31,7 +33,9 @@ public interface IBaseRepo<EType>
         Expression<Func<EType, T>> selectExp,
         bool getAll = false,
         int offset = 0,
-        int limit = 20
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
     );
 
     Task<EType> AddAsync(EType entity);

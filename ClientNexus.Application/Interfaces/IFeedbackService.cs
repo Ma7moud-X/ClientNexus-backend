@@ -17,7 +17,7 @@ namespace ClientNexus.Application.Interfaces
         Task<float> GetAverageRatingForServiceProviderAsync(int serviceProviderId);
         
         // Create new feedback
-        Task<FeedbackDTO> CreateClientToProviderFeedbackAsync(CreateFeedbackDTO createFeedbackDto);
+        Task<FeedbackDTO> CreateClientToProviderFeedbackAsync(CreateFeedbackDTO createFeedbackDto, int clientId);
         
         // Update existing feedback
         Task<FeedbackDTO> UpdateFeedbackAsync(UpdateFeedbackDTO updateFeedbackDto, int FeedbackId);

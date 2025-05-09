@@ -19,12 +19,12 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost]
-       [Authorize(Policy= "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         public async Task<IActionResult> AddCategory([FromBody] string categoryName)
         {
             try
             {
-               var result = await _categoryService.AddCategoryAsync(categoryName);
+                var result = await _categoryService.AddCategoryAsync(categoryName);
 
                 var response = ApiResponseDTO<CategoryResponseDTO>.SuccessResponse(result, "Category added successfully.");
                 return Ok(response);
@@ -46,7 +46,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("{id}")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
 
         public async Task<IActionResult> DeleteCategory(int id)
@@ -60,12 +60,13 @@ namespace ClientNexus.API.Controllers
             {
                 return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
             }
-            
+
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponseDTO<string>.ErrorResponse("An unexpected error occurred."));
             }
         }
+
 
 
     }

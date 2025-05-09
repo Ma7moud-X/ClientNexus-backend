@@ -18,7 +18,7 @@ namespace ClientNexus.API.Controllers
         {
             _feedbackService = feedbackService;
         }
-        
+
 
         [HttpGet("{id:int}")]
         [AllowAnonymous]
@@ -47,15 +47,16 @@ namespace ClientNexus.API.Controllers
             {
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
-                
+
                 var feedbacks = await _feedbackService.GetAllForServiceProviderAsync(serviceProviderId, pageNumber, pageSize);
-                
+
                 // Add pagination headers
                 var totalCount = _feedbackService.GetTotalFeedbackCount(serviceProviderId: serviceProviderId);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                Response.Headers.Append("X-Pagination", 
-                    System.Text.Json.JsonSerializer.Serialize(new {
+
+                Response.Headers.Append("X-Pagination",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
                         CurrentPage = pageNumber,
                         PageSize = pageSize,
                         TotalCount = totalCount,
@@ -63,7 +64,7 @@ namespace ClientNexus.API.Controllers
                         HasNext = pageNumber < totalPages,
                         HasPrevious = pageNumber > 1
                     }));
-                    
+
                 return Ok(feedbacks);
             }
             catch (KeyNotFoundException ex)
@@ -76,7 +77,7 @@ namespace ClientNexus.API.Controllers
             }
         }
 
-      
+
         [HttpGet("client/{clientId:int}")]
         [Authorize(Roles = "Admin,Client")] // Only admin or the client themselves
         public async Task<IActionResult> GetClientFeedback(int clientId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
@@ -94,15 +95,16 @@ namespace ClientNexus.API.Controllers
 
                 // Enforce maximum page size
                 if (pageSize > 50) pageSize = 50;
-                
+
                 var feedbacks = await _feedbackService.GetAllByClientAsync(clientId, pageNumber, pageSize);
-                
+
                 // Add pagination headers
                 var totalCount = _feedbackService.GetTotalFeedbackCount(clientId: clientId);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                Response.Headers.Append("X-Pagination", 
-                    System.Text.Json.JsonSerializer.Serialize(new {
+
+                Response.Headers.Append("X-Pagination",
+                    System.Text.Json.JsonSerializer.Serialize(new
+                    {
                         CurrentPage = pageNumber,
                         PageSize = pageSize,
                         TotalCount = totalCount,
@@ -110,7 +112,7 @@ namespace ClientNexus.API.Controllers
                         HasNext = pageNumber < totalPages,
                         HasPrevious = pageNumber > 1
                     }));
-                    
+
                 return Ok(feedbacks);
             }
             catch (KeyNotFoundException ex)
@@ -154,14 +156,13 @@ namespace ClientNexus.API.Controllers
 
             try
             {
-                // Verify the client ID matches the authenticated user
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userIdClaim == null || int.Parse(userIdClaim) != feedbackDto.ClientId)
+                if (userIdClaim == null)
                 {
                     return BadRequest($"You can only submit feedback as yourself");
                 }
 
-                var createdFeedback = await _feedbackService.CreateClientToProviderFeedbackAsync(feedbackDto);
+                var createdFeedback = await _feedbackService.CreateClientToProviderFeedbackAsync(feedbackDto, int.Parse(userIdClaim));
                 return CreatedAtAction(nameof(GetFeedback), new { id = createdFeedback.Id }, createdFeedback);
             }
             catch (KeyNotFoundException ex)
@@ -173,7 +174,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-     
+
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> UpdateFeedback(int id, [FromBody] UpdateFeedbackDTO updateFeedbackDto)
@@ -188,7 +189,7 @@ namespace ClientNexus.API.Controllers
                 // Verify the user owns this feedback
                 var feedback = await _feedbackService.GetByIdAsync(id);
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
+
                 if (userIdClaim == null || int.Parse(userIdClaim) != feedback.ClientId)
                 {
                     return StatusCode(403, "You can only update your own feedback");
@@ -206,7 +207,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-       
+
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Client,Admin")]
         public async Task<IActionResult> DeleteFeedback(int id)
@@ -217,7 +218,7 @@ namespace ClientNexus.API.Controllers
                 var feedback = await _feedbackService.GetByIdAsync(id);
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-                
+
                 if (userRoleClaim != "Admin" && (userIdClaim == null || int.Parse(userIdClaim) != feedback.ClientId))
                 {
                     return StatusCode(403, "You can only delete your own feedback");

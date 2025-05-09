@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using NetTopologySuite.Geometries;
@@ -42,6 +44,7 @@ public class EmergencyCaseService : IEmergencyCaseService
             ),
             ClientId = clientId,
             Status = ServiceStatus.Pending,
+            MeetingTextAddress = emergencyDTO.MeetingTextAddress,
         };
 
         await _unitOfWork.EmergencyCases.AddAsync(emergencyCase);
@@ -157,7 +160,7 @@ public class EmergencyCaseService : IEmergencyCaseService
 
         if (res is null)
         {
-            throw new ArgumentException($"Client with {clientId} does not exist");
+            throw new NotFoundException($"Client is not found");
         }
 
         return !res.IsBlocked
@@ -229,25 +232,92 @@ public class EmergencyCaseService : IEmergencyCaseService
 
     public async Task<EmergencyCaseOverviewDTO?> GetOverviewByIdAsync(int id)
     {
-        return await _unitOfWork.SqlGetSingleAsync<EmergencyCaseOverviewDTO>(
-            @"SELECT EmergencyCases.Id, Name AS Title, Description, Status, CreatedAt, Price, MeetingLongitude, MeetingLatitude, ClientId, ServiceProviderId
-            FROM ClientNexusSchema.EmergencyCases
-            JOIN ClientNexusSchema.Services ON EmergencyCases.Id = Services.Id
-            WHERE EmergencyCases.Id = @id",
-            new Parameter("@id", id)
+        return (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                condExp: ec => ec.Id == id,
+                selectExp: ec => new EmergencyCaseOverviewDTO
+                {
+                    Id = ec.Id,
+                    Title = ec.Name!,
+                    Description = ec.Description!,
+                    MeetingLongitude = ec.MeetingLocation!.X,
+                    MeetingLatitude = ec.MeetingLocation!.Y,
+                    CreatedAt = ec.CreatedAt,
+                    Status = (char)ec.Status,
+                    ServiceProviderId = ec.ServiceProviderId,
+                    ClientId = ec.ClientId,
+                    Price = ec.Price,
+                },
+                limit: 1
+            )
+        ).FirstOrDefault();
+    }
+
+    public async Task<IEnumerable<ServiceProviderEmergencyDTO>> GetAvailableEmergenciesAsync(
+        int offsetId = -1,
+        int limit = 10,
+        double? longitude = null,
+        double? latitude = null,
+        double? radiusInMeters = null
+    )
+    {
+        Expression<Func<EmergencyCase, bool>> condition;
+        if (longitude is not null && latitude is not null && radiusInMeters is not null)
+        {
+            condition = ec =>
+                ec.MeetingLocation != null
+                && ec.MeetingLocation.Distance(new MapPoint(longitude.Value, latitude.Value))
+                    <= radiusInMeters
+                && ec.Status == ServiceStatus.Pending
+                && DateTime.UtcNow
+                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                && ec.Id > offsetId;
+        }
+        else
+        {
+            condition = ec =>
+                ec.Status == ServiceStatus.Pending
+                && DateTime.UtcNow
+                    < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                && ec.Id > offsetId;
+        }
+
+        return await _unitOfWork.EmergencyCases.GetByConditionAsync(
+            condExp: condition,
+            ec => new ServiceProviderEmergencyDTO
+            {
+                ClientFirstName = ec.Client!.FirstName,
+                ClientLastName = ec.Client.LastName,
+                Name = ec.Name!,
+                Description = ec.Description!,
+                ServiceId = ec.Id,
+                MeetingTextAddress = ec.MeetingTextAddress,
+            },
+            orderByExp: ec => ec.Id,
+            limit: limit
         );
     }
 
-    // public async Task<bool> CancelEmergencyCaseAsync(int id)
-    // {
-    //     int affectedCount = await _unitOfWork.SqlExecuteAsync(
-    //         @$"
-    //         UPDATE ClientNexusSchema.Services SET Status = '{(char)ServiceStatus.Cancelled}'
-    //         WHERE Id in (
-    //             SELECT Id FROM ClientNexusSchema.EmergencyCases WHERE Id = @id
-    //         )
-    //     ",
-    //         new Parameter("@id", id)
-    //     );
-    // }
+    public async Task<ServiceProviderEmergencyDTO?> GetAvailableEmegencyByIdAsync(int id)
+    {
+        return (
+            await _unitOfWork.EmergencyCases.GetByConditionAsync(
+                condExp: ec =>
+                    ec.Status == ServiceStatus.Pending
+                    && DateTime.UtcNow
+                        < ec.CreatedAt.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes)
+                    && ec.Id == id,
+                selectExp: ec => new ServiceProviderEmergencyDTO
+                {
+                    ClientFirstName = ec.Client!.FirstName,
+                    ClientLastName = ec.Client.LastName,
+                    Name = ec.Name!,
+                    Description = ec.Description!,
+                    ServiceId = ec.Id,
+                    MeetingTextAddress = ec.MeetingTextAddress,
+                },
+                limit: 1
+            )
+        ).FirstOrDefault();
+    }
 }

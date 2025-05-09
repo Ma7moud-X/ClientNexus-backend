@@ -11,5 +11,7 @@ namespace ClientNexus.Application.Interfaces
     {
         public Task AddStateAsync(StateDTO stateDTO);
         public Task DeleteStateAsync(int id);
+        public Task<List<StateResponseDTO>> GetAllStatesAsync();
+
     }
 }

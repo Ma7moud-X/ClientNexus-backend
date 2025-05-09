@@ -15,4 +15,8 @@ public class CreateEmergencyCaseDTO
 
     [Required]
     public required double MeetingLongitude { get; init; }
+
+    [Required]
+    [Length(5, 400)]
+    public required string MeetingTextAddress { get; init; }
 }

@@ -35,6 +35,11 @@ namespace ClientNexus.Application.DTOs
         public List<int>? SpecializationIDS { get; set; }// For ServiceProvider
         public int? TypeId { get; set; } // For ServiceProvider
         public List<AddressDTO>? Addresses { get; set; } // For ServiceProvider
+        public int? Office_consultation_price { get; set; } // For ServiceProvider
+        public int? Telephone_consultation_price { get; set; } // For ServiceProvider
+        public int? main_specializationID { get; set; }// For ServiceProvider
+
+
     }
 
 }

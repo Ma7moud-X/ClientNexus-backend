@@ -11,5 +11,7 @@ namespace ClientNexus.Application.Interfaces
     {
         public Task AddCityAsync(CityDTO cityDTO);
         public Task DeleteCityAsync(int id);
+        public Task<List<CityResponseDTO>> GetAllCitiesAsync();
+
     }
 }

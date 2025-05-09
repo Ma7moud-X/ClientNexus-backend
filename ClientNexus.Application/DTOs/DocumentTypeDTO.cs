@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class StateDTO
+   public  class DocumentTypeDTO
     {
-        
         [Required]
         public string Name { get; set; } 
-        public string? Abbreviation { get; set; }
     }
 }
