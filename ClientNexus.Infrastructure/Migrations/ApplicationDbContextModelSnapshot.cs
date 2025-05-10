@@ -1080,7 +1080,12 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasBaseType("ClientNexus.Domain.Entities.Services.Service");
 
                     b.Property<Point>("MeetingLocation")
+                        .IsRequired()
                         .HasColumnType("geography");
+
+                    b.Property<string>("MeetingTextAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(400)");
 
                     b.Property<int?>("TimeForArrival")
                         .HasColumnType("int");
@@ -1204,18 +1209,20 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("Telephone_consultation_price")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TypeId")
+                    b.Property<int>("TypeId")
                         .HasColumnType("int");
 
                     b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
-                    b.Property<int?>("main_specializationID")
+                    b.Property<int>("main_specializationID")
                         .HasColumnType("int");
 
                     b.HasIndex("ApprovedById");
 
                     b.HasIndex("TypeId");
+
+                    b.HasIndex("main_specializationID");
 
                     b.ToTable("ServiceProviders", "ClientNexusSchema");
                 });
@@ -1680,9 +1687,18 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProviderType", "Type")
                         .WithMany("ServiceProviders")
                         .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClientNexus.Domain.Entities.Users.Specialization", "MainSpecialization")
+                        .WithMany()
+                        .HasForeignKey("main_specializationID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ApprovingAdmin");
+
+                    b.Navigation("MainSpecialization");
 
                     b.Navigation("Type");
                 });

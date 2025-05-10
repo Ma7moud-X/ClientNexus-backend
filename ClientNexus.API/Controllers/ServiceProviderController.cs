@@ -35,12 +35,13 @@ namespace ClientNexus.API.Controllers
                 {
                     var providers = await _serviceProviderIsService.SearchServiceProvidersAsync(searchQuery);
 
-                    if (!providers.Any())
-                    {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
-                    }
+                if (!providers.Any())
+                {
+                    var successResponse = ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(new List<ServiceProviderResponseDTO>(), "No matching service providers found.");
+                    return Ok(successResponse);
+                }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {
@@ -56,12 +57,13 @@ namespace ClientNexus.API.Controllers
                 {
                     var providers = await _serviceProviderIsService.FilterServiceProviderResponses(searchQuery, minRate, state, city, specializationName);
 
-                    if (!providers.Any())
-                    {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
-                    }
+                if (!providers.Any())
+                {
+                    var successResponse = ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(new List<ServiceProviderResponseDTO>(), "No matching service providers found.");
+                    return Ok(successResponse);
+                }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {

@@ -48,13 +48,21 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost("SocialLogin")]
-        public async Task<IActionResult> SocialLogin([FromBody] SocialLoginRequest request)
+        public async Task<IActionResult> SocialLogin([FromBody] SocialLoginRequestDTO request)
         {
             try
             {
                 var result = await _authService.SocialLogin(request);
+                if (result == null)
+                {
+                    return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse("Authentication failed."));
+                }
 
                 return Ok(ApiResponseDTO<AuthResponseDTO>.SuccessResponse(result, "Social Login successful."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
             }
             catch (InvalidOperationException ex)
             {
@@ -74,7 +82,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromForm] RegisterUserDTO registerDto) // NEW - Explicitly binding from body
+        public async Task<IActionResult> Register([FromForm] RegisterUserDTO dto) // NEW - Explicitly binding from body
         {
 
 
@@ -83,13 +91,61 @@ namespace ClientNexus.API.Controllers
 
             try
             {
-                var response = await _authService.RegisterAsync(registerDto);
+                var response = await _authService.RegisterAsync(dto);
 
                 if (response == null)
                     return BadRequest(ApiResponseDTO<string>.ErrorResponse("Registration failed. Please try again."));
 
                 return CreatedAtAction(nameof(Login), new { email = response.Email },
                     ApiResponseDTO<AuthResponseDTO>.SuccessResponse(response, "User registered successfully."));
+            }
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+
+        }
+        [HttpPost("Socialregister")]
+        public async Task<IActionResult> SocialRegister([FromForm] SocialAuthDTO dto) // NEW - Explicitly binding from body
+        {
+
+
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse("Invalid request data"));
+
+            try
+            {
+                var response = await _authService.SocialRegisterAsync(dto);
+
+                if (response == null)
+                    return BadRequest(ApiResponseDTO<string>.ErrorResponse("Registration failed. Please try again."));
+
+                return CreatedAtAction(nameof(Login), new { email = response.Email },
+                    ApiResponseDTO<AuthResponseDTO>.SuccessResponse(response, "User registered successfully."));
+            }
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
             }
             catch (Exception ex)
             {
@@ -98,7 +154,17 @@ namespace ClientNexus.API.Controllers
 
         }
 
+        [HttpGet("verify-token")]
+        [AllowAnonymous]
+        public IActionResult VerifyToken()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return Ok(ApiResponseDTO<string>.SuccessResponse("Token is valid"));
+            }
 
+            return Unauthorized(ApiResponseDTO<string>.ErrorResponse("Invalid or expired token"));
+        }
 
 
 
