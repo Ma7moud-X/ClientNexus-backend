@@ -22,9 +22,6 @@ namespace ClientNexus.Application.DTO
     public class CreateFeedbackDTO
     {
         [Required]
-        public int ClientId { get; set; }
-        
-        [Required]
         public int ServiceProviderId { get; set; }
         
         [Required]

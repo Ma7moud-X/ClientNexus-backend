@@ -129,6 +129,7 @@ src/.vs/config/applicationhost.config
 
 # Ignore migration files in ClientNexus.Infrastructure/Migrations/
 ClientNexus.Infrastructure/Migrations/*
+ClientNexus.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
 
 # Ignore environment-specific configuration
 appsettings.Development.json

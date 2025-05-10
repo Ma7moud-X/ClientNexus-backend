@@ -81,7 +81,7 @@ public class GeneralOfferListenerService : IGeneralOfferListenerService
                         offer
                     );
 
-                    var tmp = DateTime.UtcNow - offer.ExpiresAt + TimeSpan.FromSeconds(30);
+                    var tmp = DateTime.UtcNow - offer.ExpiresAt + TimeSpan.FromSeconds(10);
                     if (tmp > timeout)
                     {
                         timeout = tmp;
@@ -139,8 +139,13 @@ public class GeneralOfferListenerService : IGeneralOfferListenerService
             while (offer is null && _missedOfferIdx < _missedOffers.Count())
             {
                 offer = _missedOffers.ElementAt(_missedOfferIdx++);
-                if (DateTime.UtcNow >= offer?.ExpiresAt)
-                { // TODO: check if timing is correct
+                if (
+                    DateTime.UtcNow
+                    >= offer?.ExpiresAt.AddSeconds(
+                        -GlobalConstants.EmergencyCaseOfferTTLInMinutes / 2
+                    )
+                )
+                {
                     offer = null;
                 }
             }

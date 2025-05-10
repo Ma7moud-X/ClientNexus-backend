@@ -1,8 +1,10 @@
+using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using Microsoft.AspNetCore.Http;
@@ -15,9 +17,13 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<BaseUser> _userManager;
-       private readonly IFileService _fileService;
+        private readonly IFileService _fileService;
 
-        public ServiceProviderService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager, IFileService fileService)
+        public ServiceProviderService(
+            IUnitOfWork unitOfWork,
+            UserManager<BaseUser> userManager,
+            IFileService fileService
+        )
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
@@ -43,15 +49,16 @@ namespace ClientNexus.Application.Services
 
             if (res is null)
             {
-                throw new ArgumentException(
-                    $"Service provider with ID {serviceProviderId} not found"
-                );
+                throw new NotFoundException($"Service provider is not found");
             }
 
             var emergencyCase = (
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     ec =>
-                        ec.CreatedAt >= DateTime.UtcNow.AddHours(-2)
+                        ec.CreatedAt
+                            >= DateTime.UtcNow.AddHours(
+                                -GlobalConstants.TimeAfterWhichServiceIsCancelledByDefaultInMinutes
+                            )
                         && ec.ServiceProviderId == serviceProviderId
                         && ec.Status == ServiceStatus.InProgress,
                     limit: 1
@@ -85,9 +92,7 @@ namespace ClientNexus.Application.Services
 
             if (res is null)
             {
-                throw new ArgumentException(
-                    $"Service provider with ID {serviceProviderId} not found"
-                );
+                throw new NotFoundException($"Service provider is not found");
             }
 
             var emergencyCase = (
@@ -137,7 +142,10 @@ namespace ClientNexus.Application.Services
                     && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
                         <= radiusInMeters
                     && sp.LastLocationUpdateTime != null
-                    && sp.LastLocationUpdateTime > DateTime.UtcNow.AddMinutes(-2)
+                    && sp.LastLocationUpdateTime
+                        > DateTime.UtcNow.AddMinutes(
+                            -GlobalConstants.ServiceProviderLocationValiditySpanInMinutes
+                        )
                     && sp.NotificationToken != null,
                 sp => new NotificationToken { Token = sp.NotificationToken! }
             );
@@ -161,9 +169,7 @@ namespace ClientNexus.Application.Services
 
             if (res is null)
             {
-                throw new ArgumentException(
-                    $"Service provider with ID {serviceProviderId} not found"
-                );
+                throw new NotFoundException($"Service provider is not found");
             }
 
             if (
@@ -199,7 +205,12 @@ namespace ClientNexus.Application.Services
                 new Parameter("@serviceProviderId", serviceProviderId)
             );
 
-            if (availability is null || availability.IsAvailableForEmergency == false)
+            if (availability is null)
+            {
+                throw new NotFoundException("Service provider with is not found");
+            }
+
+            if (availability.IsAvailableForEmergency == false)
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 return false;
@@ -243,16 +254,30 @@ namespace ClientNexus.Application.Services
                 serviceprovider.BirthDate = updateDto.BirthDate;
             if (updateDto.MainImage != null)
             {
-                var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName).TrimStart('.');
+                var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName)
+                    .TrimStart('.');
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
+<<<<<<< HEAD
                 var mainImageType = _fileService.GetFileType(updateDto.MainImage);
                 serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
 
+=======
+                var mainImageType = GetFileType(updateDto.MainImage);
+                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
+                    updateDto.MainImage.OpenReadStream(),
+                    mainImageType,
+                    mainImageKey
+                );
+>>>>>>> 31d336d1807c7a0589cf648cc43af85b55e28747
             }
             if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
                 serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
-            if (updateDto.Telephone_consultation_price != serviceprovider.Telephone_consultation_price)
-                serviceprovider.Telephone_consultation_price = updateDto.Telephone_consultation_price;
+            if (
+                updateDto.Telephone_consultation_price
+                != serviceprovider.Telephone_consultation_price
+            )
+                serviceprovider.Telephone_consultation_price =
+                    updateDto.Telephone_consultation_price;
             if (updateDto.YearsOfExperience != serviceprovider.YearsOfExperience)
                 serviceprovider.YearsOfExperience = updateDto.YearsOfExperience;
             if (updateDto.Description != serviceprovider.Description)
@@ -311,33 +336,41 @@ namespace ClientNexus.Application.Services
             return input;
         }
 
-        public async Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(string? searchQuery)
+        public async Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(
+            string? searchQuery
+        )
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
                 return new List<ServiceProviderResponseDTO>();
 
             searchQuery = NormalizeSearchQuery(searchQuery);
 
-            var matchedSpecialization = await _unitOfWork.Specializations
-                .FirstOrDefaultAsync(s => s.Name.ToLower().Contains(searchQuery.ToLower()));
+            var matchedSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
+                s.Name.ToLower().Contains(searchQuery.ToLower())
+            );
 
-            var filteredServiceProviders = await _unitOfWork.ServiceProviders.GetAllQueryable()
+            var filteredServiceProviders = await _unitOfWork
+                .ServiceProviders.GetAllQueryable()
                 .AsNoTracking()
                 .Include(sp => sp.Addresses!)
-                    .ThenInclude(a => a.City!)
-                        .ThenInclude(c => c.State!)
+                .ThenInclude(a => a.City!)
+                .ThenInclude(c => c.State!)
                 .Include(sp => sp.Specializations!)
                 .Where(sp =>
-                    sp.FirstName.ToLower().StartsWith(searchQuery.ToLower()) ||
-                    sp.LastName.ToLower().StartsWith(searchQuery.ToLower()) ||
-                    (matchedSpecialization != null && sp.main_specializationID == matchedSpecialization.Id)
+                    sp.FirstName.ToLower().StartsWith(searchQuery.ToLower())
+                    || sp.LastName.ToLower().StartsWith(searchQuery.ToLower())
+                    || (
+                        matchedSpecialization != null
+                        && sp.main_specializationID == matchedSpecialization.Id
+                    )
                 )
                 .ToListAsync();
 
             var serviceProviderTasks = filteredServiceProviders.Select(async sp =>
             {
-                var mainSpecialization = await _unitOfWork.Specializations
-                    .FirstOrDefaultAsync(s => s.Id == sp.main_specializationID);
+                var mainSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
+                    s.Id == sp.main_specializationID
+                );
 
                 return new ServiceProviderResponseDTO
                 {
@@ -353,7 +386,8 @@ namespace ClientNexus.Application.Services
                     City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                     State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
                     main_Specialization = mainSpecialization?.Name,
-                    SpecializationName = sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>()
+                    SpecializationName =
+                        sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
                 };
             });
 
@@ -378,20 +412,28 @@ namespace ClientNexus.Application.Services
                     &&
                     // State filter (if provided)
                     (
-                         string.IsNullOrEmpty(city)
-                || (
-                    !string.IsNullOrEmpty(sp.City)
-                    && NormalizeSearchQuery(sp.City).Equals(NormalizeSearchQuery(city), StringComparison.OrdinalIgnoreCase)
-                )
+                        string.IsNullOrEmpty(city)
+                        || (
+                            !string.IsNullOrEmpty(sp.City)
+                            && NormalizeSearchQuery(sp.City)
+                                .Equals(
+                                    NormalizeSearchQuery(city),
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        )
                     )
                     &&
                     // City filter (if provided)
                     (
                         string.IsNullOrEmpty(city)
-                || (
-                    !string.IsNullOrEmpty(sp.City)
-                    && NormalizeSearchQuery(sp.City).Equals(NormalizeSearchQuery(city), StringComparison.OrdinalIgnoreCase)
-                )
+                        || (
+                            !string.IsNullOrEmpty(sp.City)
+                            && NormalizeSearchQuery(sp.City)
+                                .Equals(
+                                    NormalizeSearchQuery(city),
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        )
                     )
                     &&
                     // Specialization filter (if provided)
@@ -399,15 +441,18 @@ namespace ClientNexus.Application.Services
                         string.IsNullOrEmpty(specializationName)
                         || (
                             sp.main_Specialization != null
-                    && sp.main_Specialization.Contains(specializationName, StringComparison.OrdinalIgnoreCase)
+                            && sp.main_Specialization.Contains(
+                                specializationName,
+                                StringComparison.OrdinalIgnoreCase
                             )
                         )
-                    
+                    )
                 )
                 .ToList();
 
             return filter;
         }
+
         public async Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved)
         {
             if (IsApproved == null)
@@ -415,20 +460,22 @@ namespace ClientNexus.Application.Services
                 return new List<ServiceProviderResponseDTO>();
             }
 
-            var serviceProviders = await _unitOfWork.ServiceProviders.GetAllQueryable()
+            var serviceProviders = await _unitOfWork
+                .ServiceProviders.GetAllQueryable()
                 .AsNoTracking()
                 .Include(sp => sp.Addresses!)
-                    .ThenInclude(a => a.City!)
-                        .ThenInclude(c => c.State!)
+                .ThenInclude(a => a.City!)
+                .ThenInclude(c => c.State!)
                 .Include(sp => sp.Specializations!)
-                .Where(sp => sp.IsApproved == IsApproved) 
+                .Where(sp => sp.IsApproved == IsApproved)
                 .ToListAsync();
 
             var serviceProviderResponse = new List<ServiceProviderResponseDTO>();
             foreach (var sp in serviceProviders)
             {
-                var mainSpec = await _unitOfWork.Specializations
-                    .FirstOrDefaultAsync(s => s.Id == sp.main_specializationID);
+                var mainSpec = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
+                    s.Id == sp.main_specializationID
+                );
 
                 var serviceProviderDto = new ServiceProviderResponseDTO
                 {
@@ -447,7 +494,8 @@ namespace ClientNexus.Application.Services
                     City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                     State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
                     main_Specialization = mainSpec?.Name,
-                    SpecializationName = sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>()
+                    SpecializationName =
+                        sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
                 };
 
                 serviceProviderResponse.Add(serviceProviderDto);
@@ -458,12 +506,13 @@ namespace ClientNexus.Application.Services
 
         public async Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId)
         {
-            var sp = await _unitOfWork.ServiceProviders.GetAllQueryable()
+            var sp = await _unitOfWork
+                .ServiceProviders.GetAllQueryable()
                 .AsNoTracking()
                 .Include(s => s.Addresses!)
-                    .ThenInclude(a => a.City!)
-                        .ThenInclude(c => c.State!)
-                .Include(s => s.Specializations!) 
+                .ThenInclude(a => a.City!)
+                .ThenInclude(c => c.State!)
+                .Include(s => s.Specializations!)
                 .FirstOrDefaultAsync(s => s.Id == ServiceProviderId);
 
             if (sp == null)
@@ -471,8 +520,9 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("ServiceProviderId not found.");
             }
 
-            var mainSpecialization = await _unitOfWork.Specializations
-                .FirstOrDefaultAsync(s => s.Id == sp.main_specializationID);
+            var mainSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
+                s.Id == sp.main_specializationID
+            );
 
             return new ServiceProviderResponseDTO
             {
@@ -491,11 +541,30 @@ namespace ClientNexus.Application.Services
                 City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                 State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
                 main_Specialization = mainSpecialization?.Name,
-                SpecializationName = sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>()
+                SpecializationName =
+                    sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
             };
         }
 
+<<<<<<< HEAD
       
 
+=======
+        private FileType GetFileType(IFormFile file)
+        {
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            switch (extension)
+            {
+                case ".jpg":
+                    return FileType.Jpg;
+                case ".jpeg":
+                    return FileType.Jpeg;
+                case ".png":
+                    return FileType.Png;
+                default:
+                    throw new ArgumentException($"Unsupported file type: {extension}");
+            }
+        }
+>>>>>>> 31d336d1807c7a0589cf648cc43af85b55e28747
     }
 }

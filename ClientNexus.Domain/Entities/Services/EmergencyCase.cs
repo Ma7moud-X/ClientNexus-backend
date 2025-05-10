@@ -7,6 +7,7 @@ namespace ClientNexus.Domain.Entities.Services
     {
         public int? TimeForArrival { get; set; }
         public Point? MeetingLocation { get; set; }
+        public required string MeetingTextAddress { get; set; }
 
         // public int EmergencyCategoryId { get; set; }
         // public EmergencyCategory? EmergencyCategory { get; set; }

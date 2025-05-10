@@ -79,15 +79,15 @@ public class OfferService : IOfferService
         ).FirstOrDefault();
         if (createdAt is null)
         {
-            throw new InvalidOperationException("Emergency case not found");
+            throw new NotFoundException("Emergency case not found");
         }
 
         TimeSpan requestTTL =
-            createdAt.Value.AddMinutes(GlobalConstants.EmergencyCaseTTL) - DateTime.UtcNow;
+            createdAt.Value.AddMinutes(GlobalConstants.EmergencyCaseTTLInMinutes) - DateTime.UtcNow;
 
         if (requestTTL.TotalMinutes <= 1)
         {
-            throw new InvalidOperationException("Request is no longer accepting offers");
+            throw new ExpiredException("Request is no longer accepting offers");
         }
 
         _cache.StartTransaction();
@@ -120,7 +120,7 @@ public class OfferService : IOfferService
 
         if (!await offerSet)
         {
-            throw new InvalidOperationException(
+            throw new NotAllowedException(
                 "Can't make another offer without waiting for previous offer to expire"
             );
         }
@@ -148,7 +148,7 @@ public class OfferService : IOfferService
 
         if (!transactionCommitted2)
         {
-            throw new Exception(
+            throw new ServerException(
                 "Error creating the offer. Transaction saving missed offers has failed"
             );
         }
@@ -158,7 +158,7 @@ public class OfferService : IOfferService
             return;
         }
 
-        throw new Exception("Error publishing offer");
+        throw new ServerException("Error publishing offer");
     }
 
     public async Task<decimal?> GetOfferPriceAsync(int serviceId, int serviceProviderId)
@@ -189,7 +189,7 @@ public class OfferService : IOfferService
         var price = await GetOfferPriceAsync(serviceId, serviceProviderId);
         if (price is null)
         {
-            throw new Exception("Offer has expired or does not exist");
+            throw new ExpiredException("Offer has expired or does not exist");
         }
 
         var serviceStatusEnumerable = await _unitOfWork.Services.GetByConditionAsync(
@@ -199,13 +199,13 @@ public class OfferService : IOfferService
 
         if (serviceStatusEnumerable is null || !serviceStatusEnumerable.Any())
         {
-            throw new Exception("Service does not exist");
+            throw new NotFoundException("Service does not exist");
         }
 
         var serviceStatus = serviceStatusEnumerable.FirstOrDefault();
         if (serviceStatus != ServiceStatus.Pending)
         {
-            throw new Exception("Service can't accept offers");
+            throw new NotAllowedException("Service can't accept offers");
         }
 
         bool unAvailableSet = await _serviceProviderService.SetUnvavailableForEmergencyAsync(
@@ -213,7 +213,7 @@ public class OfferService : IOfferService
         );
         if (!unAvailableSet)
         {
-            throw new Exception("Service provider is no longer available");
+            throw new NotAllowedException("Service provider is no longer available");
         }
 
         var assigned = await _baseServiceService.AssignServiceProviderAsync(

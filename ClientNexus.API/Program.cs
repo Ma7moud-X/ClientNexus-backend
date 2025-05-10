@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using Amazon.S3;
 using ClientNexus.API.Extensions;
 using ClientNexus.API.Utilities.SwaggerUtilities;
 using ClientNexus.Application.Interfaces;
@@ -10,17 +9,15 @@ using ClientNexus.Application.Mapping;
 using ClientNexus.Application.Services;
 using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
 using IClientService = ClientNexus.Application.Interfaces.IClientService;
 
 //DotNetEnv.Env.Load();
@@ -33,7 +30,11 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddS3Storage();
 builder.Services.AddFileService();
 builder.Services.AddHangfireServices(builder.Configuration);
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork>(sp =>
+{
+    var context = sp.GetRequiredService<ApplicationDbContext>();
+    return DbTryCatchDecorator<IUnitOfWork>.Create(new UnitOfWork(context));
+});
 builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
@@ -74,17 +75,6 @@ builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 
 builder.Services.AddTransient<IOtpService, OtpService>();
 builder.Services.AddScoped<ServiceProviderService>(); // FIX: Register ServiceProviderService
-
-var cacheConnOptions = ConfigurationOptions.Parse(Environment.GetEnvironmentVariable("REDIS_CONNECTION_STR")!);
-cacheConnOptions.Password = Environment.GetEnvironmentVariable("REDIS_PASS")!;
-cacheConnOptions.User = Environment.GetEnvironmentVariable("REDIS_USER");
-cacheConnOptions.Ssl = true;
-cacheConnOptions.AllowAdmin = false;
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(cacheConnOptions)
-);
-builder.Services.AddSingleton<ICache, RedisCache>();
 builder.Services.AddScoped<PaymentService>();
 
 builder.Services.AddScoped<PaymobPaymentService>(sp => new PaymobPaymentService(
@@ -290,8 +280,21 @@ app.UseExceptionHandler(errorApp =>
             InvalidOperationException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             KeyNotFoundException => StatusCodes.Status404NotFound,
+            ServerException => StatusCodes.Status500InternalServerError,
+            NotFoundException => StatusCodes.Status404NotFound,
+            NotAllowedException => StatusCodes.Status400BadRequest,
+            ExpiredException => StatusCodes.Status400BadRequest,
+            InvalidInputException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError,
         };
+
+        if (exception is ServerException)
+        {
+            await context.Response.WriteAsync(
+                JsonSerializer.Serialize(new { error = "Internal Server Error" })
+            );
+            return;
+        }
 
         await context.Response.WriteAsync(
             JsonSerializer.Serialize(new { error = exception?.Message })
