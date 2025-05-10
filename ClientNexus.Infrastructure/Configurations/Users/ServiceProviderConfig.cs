@@ -3,6 +3,7 @@ using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace ClientNexus.Infrastructure.Configurations.Users
 {
@@ -52,6 +53,7 @@ namespace ClientNexus.Infrastructure.Configurations.Users
                 .HasForeignKey(sp => sp.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
             builder
                 .HasMany(sp => sp.ClientsWithFeedbacks)
                 .WithMany(c => c.FeedbackedServiceProviders)
@@ -67,6 +69,13 @@ namespace ClientNexus.Infrastructure.Configurations.Users
                             .HasForeignKey(cspf => cspf.ServiceProviderId)
                             .OnDelete(DeleteBehavior.Restrict)
                 );
+            builder
+
+.HasOne(sp => sp.MainSpecialization)
+.WithMany()
+.HasForeignKey(sp => sp.main_specializationID)
+.OnDelete(DeleteBehavior.Restrict);
         }
+
     }
 }

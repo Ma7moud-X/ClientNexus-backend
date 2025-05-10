@@ -101,7 +101,6 @@ namespace ClientNexus.Application.Services
             return new ClientResponseDTO
             {
                 Email= client.Email,
-                PlainPassword=client.PlainPassword,
                 FirstName = client.FirstName,
                 LastName = client.LastName,
                 PhoneNumber = client.PhoneNumber,

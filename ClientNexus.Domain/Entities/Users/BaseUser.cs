@@ -15,7 +15,6 @@ public class BaseUser : IdentityUser<int>
     public Gender Gender { get; set; }
     public string? NotificationToken { get; set; }
     public string? MainImage { get; set; }
-    public string? PlainPassword { get; set; }
 
 
     public int? BlockedById { get; set; }

@@ -15,6 +15,7 @@ namespace ClientNexus.Application.DTOs
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
+        [Required]
         public DateOnly BirthDate { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
@@ -38,7 +39,6 @@ namespace ClientNexus.Application.DTOs
         public int? Office_consultation_price { get; set; } // For ServiceProvider
         public int? Telephone_consultation_price { get; set; } // For ServiceProvider
         public int? main_specializationID { get; set; }// For ServiceProvider
-        public string? PlainPassword { get; set; }
 
 
     }

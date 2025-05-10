@@ -20,6 +20,7 @@ namespace ClientNexus.Domain.Entities.Users
         public int Office_consultation_price { get; set; }
         public int Telephone_consultation_price { get; set; }
         public int main_specializationID {  get; set; }
+        public Specialization? MainSpecialization { get; set; }
         public SubscriptionType SubType { get; set; }
         public SubscriptionStatus SubscriptionStatus { get; set; }
         public DateTime? SubscriptionExpiryDate { get; set; }
