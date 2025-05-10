@@ -257,18 +257,10 @@ namespace ClientNexus.Application.Services
                 var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName)
                     .TrimStart('.');
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
-<<<<<<< HEAD
+
                 var mainImageType = _fileService.GetFileType(updateDto.MainImage);
                 serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
 
-=======
-                var mainImageType = GetFileType(updateDto.MainImage);
-                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
-                    updateDto.MainImage.OpenReadStream(),
-                    mainImageType,
-                    mainImageKey
-                );
->>>>>>> 31d336d1807c7a0589cf648cc43af85b55e28747
             }
             if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
                 serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
@@ -316,7 +308,7 @@ namespace ClientNexus.Application.Services
             var updateResult = await _userManager.UpdateAsync(serviceprovider);
             if (!updateResult.Succeeded)
             {
-                throw new InvalidOperationException("Client update failed.");
+                throw new InvalidOperationException("ServiceProvider update failed.");
             }
         }
 
@@ -337,8 +329,8 @@ namespace ClientNexus.Application.Services
         }
 
         public async Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(
-            string? searchQuery
-        )
+        string? searchQuery
+    )
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
                 return new List<ServiceProviderResponseDTO>();
@@ -356,9 +348,10 @@ namespace ClientNexus.Application.Services
                 .ThenInclude(a => a.City!)
                 .ThenInclude(c => c.State!)
                 .Include(sp => sp.Specializations!)
+                  .Include(sp => sp.MainSpecialization!)
                 .Where(sp =>
-                    sp.FirstName.ToLower().StartsWith(searchQuery.ToLower())
-                    || sp.LastName.ToLower().StartsWith(searchQuery.ToLower())
+                     sp.FirstName.ToLower().Contains(searchQuery.ToLower())
+                     || sp.LastName.ToLower().Contains(searchQuery.ToLower())
                     || (
                         matchedSpecialization != null
                         && sp.main_specializationID == matchedSpecialization.Id
@@ -366,33 +359,27 @@ namespace ClientNexus.Application.Services
                 )
                 .ToListAsync();
 
-            var serviceProviderTasks = filteredServiceProviders.Select(async sp =>
+            var result = filteredServiceProviders.Select(sp => new ServiceProviderResponseDTO
             {
-                var mainSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
-                    s.Id == sp.main_specializationID
-                );
+                Id = sp.Id,
+                FirstName = sp.FirstName,
+                LastName = sp.LastName,
+                Rate = sp.Rate,
+                Description = sp.Description,
+                MainImage = sp.MainImage,
+                ImageIDUrl = sp.ImageIDUrl,
+                ImageNationalIDUrl = sp.ImageNationalIDUrl,
+                Gender = sp.Gender,
+                YearsOfExperience = sp.YearsOfExperience,
+                Office_consultation_price = sp.Office_consultation_price,
+                Telephone_consultation_price = sp.Telephone_consultation_price,
+                City = sp.Addresses?.FirstOrDefault()?.City?.Name,
+                State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                main_Specialization = sp.MainSpecialization?.Name,
+                SpecializationName = sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
+            }).ToList();
 
-                return new ServiceProviderResponseDTO
-                {
-                    Id = sp.Id,
-                    FirstName = sp.FirstName,
-                    LastName = sp.LastName,
-                    Rate = sp.Rate,
-                    Description = sp.Description,
-                    MainImage = sp.MainImage,
-                    YearsOfExperience = sp.YearsOfExperience,
-                    Office_consultation_price = sp.Office_consultation_price,
-                    Telephone_consultation_price = sp.Telephone_consultation_price,
-                    City = sp.Addresses?.FirstOrDefault()?.City?.Name,
-                    State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
-                    main_Specialization = mainSpecialization?.Name,
-                    SpecializationName =
-                        sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
-                };
-            });
-
-            var result = await Task.WhenAll(serviceProviderTasks);
-            return result.ToList();
+            return result;
         }
 
         public async Task<List<ServiceProviderResponseDTO>> FilterServiceProviderResponses(
@@ -496,6 +483,8 @@ namespace ClientNexus.Application.Services
                     main_Specialization = mainSpec?.Name,
                     SpecializationName =
                         sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
+                    
+
                 };
 
                 serviceProviderResponse.Add(serviceProviderDto);
@@ -546,25 +535,8 @@ namespace ClientNexus.Application.Services
             };
         }
 
-<<<<<<< HEAD
-      
 
-=======
-        private FileType GetFileType(IFormFile file)
-        {
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            switch (extension)
-            {
-                case ".jpg":
-                    return FileType.Jpg;
-                case ".jpeg":
-                    return FileType.Jpeg;
-                case ".png":
-                    return FileType.Png;
-                default:
-                    throw new ArgumentException($"Unsupported file type: {extension}");
-            }
-        }
->>>>>>> 31d336d1807c7a0589cf648cc43af85b55e28747
+
+
     }
 }
