@@ -56,7 +56,7 @@ namespace ClientNexus.Application.Services
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     ec =>
                         ec.CreatedAt
-                            >= DateTime.UtcNow.AddHours(
+                            >= DateTime.UtcNow.AddMinutes(
                                 -GlobalConstants.TimeAfterWhichServiceIsCancelledByDefaultInMinutes
                             )
                         && ec.ServiceProviderId == serviceProviderId
