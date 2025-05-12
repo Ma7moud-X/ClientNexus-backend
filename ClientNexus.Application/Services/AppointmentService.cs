@@ -5,6 +5,7 @@ using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ClientNexus.Application.Services
@@ -45,14 +46,43 @@ namespace ClientNexus.Application.Services
             if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
                 throw new KeyNotFoundException("Invalid Client Id");
 
-
-            // Fetch appointments
-            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.ClientId == clientId, offset: offset, limit: limit);
-            /*
-            if (!appointments.Any())
-                throw new KeyNotFoundException("No appointments found for the given client");
-            */
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            return await _unitOfWork.Appointments.GetByConditionWithIncludesAsync<AppointmentDTO>(
+                condExp: a => a.ClientId == clientId,
+                selectExp: a => new AppointmentDTO
+                {
+                    Id = a.Id,
+                    Status = a.Status,
+                    ClientId = a.ClientId,
+                    ServiceProviderId = (int)a.ServiceProviderId!,
+                    SlotId = a.SlotId,
+                    CheckInTime = a.CheckInTime,
+                    CompletionTime = a.CompletionTime,
+                    CancellationReason = a.CancellationReason,
+                    CancellationTime = a.CancellationTime,
+                    ReminderSent = a.ReminderSent,
+                    ReminderSentTime = a.ReminderSentTime,
+                    // Provider info
+                    FirstName = a.ServiceProvider!.FirstName,
+                    LastName = a.ServiceProvider.LastName,
+                    ServiceProviderMainSpecialization = a.ServiceProvider.MainSpecialization!.Name,
+                    ServiceProviderCity = a.ServiceProvider.Addresses!.FirstOrDefault()!.City!.Name,
+                    ServiceProviderRate = a.ServiceProvider.Rate,
+                    // Slot info
+                    SlotType = a.Slot.SlotType,
+                    SlotDate = a.Slot.Date
+                },
+                includeFunc: q => q
+                    .Include(a => a.ServiceProvider)
+                        .ThenInclude(sp => sp!.MainSpecialization!)
+                    .Include(a => a.ServiceProvider)
+                        .ThenInclude(sp => sp!.Addresses!)
+                            .ThenInclude(addr => addr.City!)
+                    .Include(a => a.Slot),
+                offset: offset,
+                limit: limit,
+                orderByExp: a => a.Slot.Date,
+                descendingOrdering: false
+            );
         }
         public async Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO)
         {
@@ -77,10 +107,10 @@ namespace ClientNexus.Application.Services
 
                 if (await HasConflictAsync(clientId, slot.Date))
                     throw new InvalidOperationException("Client already has an appointment at this time.");
-                
+
                 //update slot status to be booked
                 slot.Status = SlotStatus.Booked;
-                await _unitOfWork.SaveChangesAsync();   
+                await _unitOfWork.SaveChangesAsync();
 
                 Appointment appoint = _mapper.Map<Appointment>(appointmentDTO);
                 appoint.ServiceType = ServiceType.Appointment;
@@ -134,7 +164,7 @@ namespace ClientNexus.Application.Services
                         await HandleCancelledStatusAsync(existingAppointment, slot, role, cancellationReason);
                         break;
                 }
-              
+
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
@@ -161,7 +191,7 @@ namespace ClientNexus.Application.Services
                 var slot = await _unitOfWork.Slots.GetByIdAsync(appointment.SlotId);
                 if (slot != null)
                 {
-                    if(slot.Date > DateTime.UtcNow)
+                    if (slot.Date > DateTime.UtcNow)
                         slot.Status = SlotStatus.Available;
                     else
                         slot.Status = SlotStatus.Deleted;
