@@ -1,9 +1,10 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
-using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
+
 using static Amazon.S3.Util.S3EventNotification;
 
 namespace ClientNexus.Infrastructure.Repositories;
@@ -251,6 +252,43 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         return await query.ToListAsync();
     }
+    public async Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc,
+        AutoMapper.IConfigurationProvider mapperConfig, // AutoMapper config
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    )
+    {
+        var q = _context.Set<EType>().AsNoTracking();
+
+        if (condExp is not null)
+        {
+            q = q.Where(condExp);
+        }
+
+        q = includeFunc(q); // Apply includes
+
+        if (orderByExp is not null)
+        {
+            q = descendingOrdering
+                ? q.OrderByDescending(orderByExp)
+                : q.OrderBy(orderByExp);
+        }
+
+        var projected = q.ProjectTo<T>(mapperConfig); // Use AutoMapper to project
+
+        if (!getAll)
+        {
+            projected = projected.Skip(offset).Take(limit);
+        }
+
+        return await projected.ToListAsync();
+    }
+
 
     public async Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,
