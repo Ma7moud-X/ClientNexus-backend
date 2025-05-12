@@ -204,6 +204,54 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         return await query.ToListAsync();
     }
 
+    public async Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+    Expression<Func<EType, bool>>? condExp,
+    Expression<Func<EType, T>> selectExp,
+    Func<IQueryable<EType>, IQueryable<EType>> includeFunc, // Function to build includes
+    bool getAll = false,
+    int offset = 0,
+    int limit = 20,
+    Expression<Func<EType, object>>? orderByExp = null,
+    bool descendingOrdering = false
+)
+    {
+        if (selectExp is null)
+        {
+            throw new Exception("Select expression can't be null");
+        }
+
+        var q = _context.Set<EType>().AsNoTracking();
+
+        if (condExp is not null)
+        {
+            q = q.Where(condExp);
+        }
+
+        //Apply includes
+        q = includeFunc(q);
+
+        if (orderByExp is not null)
+        {
+            if (descendingOrdering)
+            {
+                q = q.OrderByDescending(orderByExp);
+            }
+            else
+            {
+                q = q.OrderBy(orderByExp);
+            }
+        }
+
+        IQueryable<T> query = q.Select(selectExp);
+
+        if (!getAll)
+        {
+            query = query.Skip(offset).Take(limit);
+        }
+
+        return await query.ToListAsync();
+    }
+
     public async Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,
         Func<IQueryable<EType>, IQueryable<EType>>? include = null

@@ -38,6 +38,17 @@ public interface IBaseRepo<EType>
         bool descendingOrdering = false
     );
 
+    Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Expression<Func<EType, T>> selectExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc, // Function to build includes
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    );
+
     Task<EType> AddAsync(EType entity);
     Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,
