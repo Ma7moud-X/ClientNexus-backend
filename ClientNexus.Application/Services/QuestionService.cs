@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
 using Microsoft.Extensions.Logging;
+using ClientNexus.Application.DTO;
+using ClientNexus.Domain.Entities.Users;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace ClientNexus.Application.Services
 {
@@ -106,43 +110,72 @@ namespace ClientNexus.Application.Services
             return _mapper.Map<QuestionResponseDTO>(question);
         }
 
-        public async Task<List<QuestionResponseDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit, bool onlyUnanswered = false)
+        public async Task<List<QuestionResponseCDTO>> GetQuestionsByClientAsync(int clientId, int offset, int limit, bool onlyUnanswered = false)
         {
             if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
                 throw new KeyNotFoundException("Invalid Client Id.");
+            Expression<Func<Question, bool>> condition;
+            if (onlyUnanswered)
+            {
+                condition = q => q.ClientId == clientId &&  q.Status == ServiceStatus.Pending;
+            }
+            else
+            {
+                condition = q => q.ClientId == clientId && (q.Status == ServiceStatus.Pending || q.Status == ServiceStatus.Done);
+            }
+            var questions = await _unitOfWork.Questions.GetByConditionWithIncludesAsync<QuestionResponseCDTO>(
+            condExp: condition,
+            includeFunc: c => c
+                .Include(q => q.ServiceProvider),
 
-            IEnumerable<Question> questions;
-            if(onlyUnanswered)
-            questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.ClientId == clientId && q.Status == ServiceStatus.Pending, offset : offset, limit : limit);
-
-            else //retrieve all questions answered or not
-                questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.ClientId == clientId, offset: offset, limit: limit);
-            return _mapper.Map<List<QuestionResponseDTO>>(questions);
+            mapperConfig: _mapper.ConfigurationProvider,
+            offset: offset,
+            limit: limit
+        ); return _mapper.Map<List<QuestionResponseCDTO>>(questions);
         }
 
-        public async Task<List<QuestionResponseDTO>> GetQuestionsAnsweredByProviderAsync(int providerId, int offset, int limit)
+        public async Task<List<QuestionResponsePDTO>> GetQuestionsAnsweredByProviderAsync(int providerId, int offset, int limit)
         {
             if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == providerId))
                 throw new KeyNotFoundException("Invalid Provider Id.");
 
-            IEnumerable<Question> questions = await _unitOfWork.Questions.GetByConditionAsync(c => c.Status == ServiceStatus.Done && c.ServiceProviderId == providerId, offset: offset, limit: limit);
+            var questions = await _unitOfWork.Questions.GetByConditionWithIncludesAsync<QuestionResponsePDTO>(
+                condExp: q => q.Status == ServiceStatus.Done && q.ServiceProviderId == providerId,
+                includeFunc: c => c
+                    .Include(q => q.ServiceProvider)
+                    .Include(q => q.Client),
 
-            return _mapper.Map<List<QuestionResponseDTO>>(questions);
+                mapperConfig: _mapper.ConfigurationProvider,
+                offset: offset,
+                limit: limit
+            );
+
+            return _mapper.Map<List<QuestionResponsePDTO>>(questions);
         }
 
-        public async Task<List<QuestionResponseDTO>> GetAllQuestionsAsync(int offset, int limit, bool onlyUnanswered = false)
+        public async Task<List<QuestionResponsePDTO>> GetAllQuestionsAsync(int offset, int limit, bool onlyUnanswered = false)
         {
-            IEnumerable<Question> questions;
+            Expression<Func<Question, bool>> statusCondition;
             if (onlyUnanswered)
             {
-                questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.Status == ServiceStatus.Pending, offset: offset, limit: limit);
+                statusCondition = q => q.Status == ServiceStatus.Pending;
             }
             else
             {
-                //retrieve both answered and non-answered questions
-                questions = await _unitOfWork.Questions.GetByConditionAsync(q => q.Status == ServiceStatus.Pending || q.Status == ServiceStatus.Done , offset: offset, limit: limit);
+                statusCondition = q => q.Status == ServiceStatus.Pending || q.Status == ServiceStatus.Done;
             }
-            return _mapper.Map<List<QuestionResponseDTO>>(questions);
+                var questions = await _unitOfWork.Questions.GetByConditionWithIncludesAsync<QuestionResponsePDTO>(
+                condExp: statusCondition,
+                includeFunc: c => c
+                    .Include(q => q.ServiceProvider)
+                    .Include(q => q.Client),
+
+                mapperConfig: _mapper.ConfigurationProvider,
+                offset: offset,
+                limit: limit
+            );
+
+            return _mapper.Map<List<QuestionResponsePDTO>>(questions);
         }
 
         public async Task DeleteQuestionAsync(int questionId, int currentClientId, UserType role)
