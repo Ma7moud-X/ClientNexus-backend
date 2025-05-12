@@ -1,6 +1,7 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -54,7 +55,6 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     //     return await _context.Set<EType>().FromSqlRaw(query, parameters).FirstOrDefaultAsync();
     // }
 
-
     public IQueryable<EType> GetAllQueryable(params Expression<Func<EType, object>>[] includes)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
@@ -98,6 +98,18 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         if (!getAll)
         {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
             query = query.Skip(offset).Take(limit);
         }
 
@@ -148,6 +160,18 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         IQueryable<T> query = q.Select(selectExp);
         if (!getAll)
         {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
             query = query.Skip(offset).Take(limit);
         }
 
@@ -198,6 +222,18 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         IQueryable<T> query = q.Select(selectExp);
         if (!getAll)
         {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
             query = query.Skip(offset).Take(limit);
         }
 
