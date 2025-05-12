@@ -40,37 +40,14 @@ namespace ClientNexus.Application.Services
             var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit); //, includes: new string[] { "Slot" }
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
-        public async Task<IEnumerable<AppointmentDTO>> GetByClientIdAsync(int clientId, int offset, int limit)
+        public async Task<IEnumerable<AppointmentDTO2>> GetByClientIdAsync(int clientId, int offset, int limit)
         {
             // Check if the client exists
             if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
                 throw new KeyNotFoundException("Invalid Client Id");
 
-            return await _unitOfWork.Appointments.GetByConditionWithIncludesAsync<AppointmentDTO>(
+            return await _unitOfWork.Appointments.GetByConditionWithIncludesAsync<AppointmentDTO2>(
                 condExp: a => a.ClientId == clientId,
-                selectExp: a => new AppointmentDTO
-                {
-                    Id = a.Id,
-                    Status = a.Status,
-                    ClientId = a.ClientId,
-                    ServiceProviderId = (int)a.ServiceProviderId!,
-                    SlotId = a.SlotId,
-                    CheckInTime = a.CheckInTime,
-                    CompletionTime = a.CompletionTime,
-                    CancellationReason = a.CancellationReason,
-                    CancellationTime = a.CancellationTime,
-                    ReminderSent = a.ReminderSent,
-                    ReminderSentTime = a.ReminderSentTime,
-                    // Provider info
-                    FirstName = a.ServiceProvider!.FirstName,
-                    LastName = a.ServiceProvider.LastName,
-                    ServiceProviderMainSpecialization = a.ServiceProvider.MainSpecialization!.Name,
-                    ServiceProviderCity = a.ServiceProvider.Addresses!.FirstOrDefault()!.City!.Name,
-                    ServiceProviderRate = a.ServiceProvider.Rate,
-                    // Slot info
-                    SlotType = a.Slot.SlotType,
-                    SlotDate = a.Slot.Date
-                },
                 includeFunc: q => q
                     .Include(a => a.ServiceProvider)
                         .ThenInclude(sp => sp!.MainSpecialization!)
@@ -78,6 +55,7 @@ namespace ClientNexus.Application.Services
                         .ThenInclude(sp => sp!.Addresses!)
                             .ThenInclude(addr => addr.City!)
                     .Include(a => a.Slot),
+                mapperConfig: _mapper.ConfigurationProvider,
                 offset: offset,
                 limit: limit,
                 orderByExp: a => a.Slot.Date,

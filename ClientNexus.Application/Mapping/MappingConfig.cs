@@ -15,6 +15,24 @@ namespace ClientNexus.Application.Mapping
 
             CreateMap<Appointment, AppointmentCreateDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentDTO>().ReverseMap();
+            CreateMap<Appointment, AppointmentDTO2>()
+            .ForMember(dest => dest.ServiceProviderId,
+                       opt => opt.MapFrom(src => src.ServiceProviderId))
+            .ForMember(dest => dest.ServiceProviderFirstName, 
+                       opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.FirstName : null))
+            .ForMember(dest => dest.ServiceProviderLastName, 
+                       opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.LastName : null))
+            .ForMember(dest => dest.ServiceProviderMainImage,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.MainImage))
+            .ForMember(dest => dest.ServiceProviderMainSpecialization,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.MainSpecialization!.Name))
+            .ForMember(dest => dest.ServiceProviderCity,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.Addresses!.FirstOrDefault()!.City!.Name))
+            .ForMember(dest => dest.SlotDate,
+                       opt => opt.MapFrom(src => src.Slot.Date))
+            .ForMember(dest => dest.SlotType,
+                       opt => opt.MapFrom(src => src.Slot.SlotType));
+
 
             CreateMap<Question, QuestionCreateDTO>().ReverseMap();
             CreateMap<Question, QuestionResponseDTO>().ReverseMap();
