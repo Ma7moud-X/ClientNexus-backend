@@ -9,7 +9,7 @@ namespace ClientNexus.Application.Interfaces
 {
     public interface IAdmainService
     {
-        public Task ApprovingServiceProviderAsync(int ServiceID);
+        public Task ApprovingServiceProviderAsync(int ServiceID, int adminId);
         //public Task AddCountryAsync(CountryDTO countryDTO);
         //public Task DeleteCountryAsync(int id);
         //public Task AddStateAsync(StateDTO stateDTO);

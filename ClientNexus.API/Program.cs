@@ -49,8 +49,8 @@ builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 builder.Services.AddScoped<IBaseServiceService, BaseServiceService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(
-    () => provider.GetRequiredService<IAppointmentService>()
+builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(() =>
+    provider.GetRequiredService<IAppointmentService>()
 ));
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 
@@ -94,8 +94,7 @@ builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeServi
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
-
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // NEW - Configure Identity with BaseUser
 builder
