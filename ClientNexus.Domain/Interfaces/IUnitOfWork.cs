@@ -78,6 +78,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<SubscriptionPayment> SubscriptionPayments { get; }
     IBaseRepo<Problem> Problems { get; }
     IBaseRepo<Slot> Slots { get; }
+    IBaseRepo<AvailableDay> AvailableDays { get; }
     IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
     IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks {get; }
     IBaseRepo<Notification> Notifications {get; }

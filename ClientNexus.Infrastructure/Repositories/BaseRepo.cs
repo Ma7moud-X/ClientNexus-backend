@@ -399,4 +399,15 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     {
         return await _context.Set<EType>().AnyAsync(condExp);
     }
+    public async Task<IEnumerable<EType>> AddRangeAsync(IEnumerable<EType> entities)
+    {
+        if (entities is null)
+            throw new Exception("Can't add null entities");
+
+        if (!entities.Any())
+            return entities;
+
+        await _context.Set<EType>().AddRangeAsync(entities);
+        return entities;
+    }
 }

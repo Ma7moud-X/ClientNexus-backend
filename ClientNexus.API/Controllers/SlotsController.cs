@@ -66,6 +66,24 @@ namespace ClientNexus.API.Controllers
             var slot = await _slotService.CreateAsync(slotDTO, userId.Value);
             return CreatedAtRoute("GetSlotById", new { id = slot.Id }, slot);
         }
+        // <summary>
+        /// Service Provider Requests creating slots based on his schedule
+        /// </summary>
+        [HttpPost("generate-slots")]
+        [Authorize(Policy = "IsServiceProvider")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<IEnumerable<SlotDTO>>> GenerateSlots(GenerateSlotsRequestDTO request)
+        {
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized();
+
+            var generatedSlots = await _slotService.GenerateSlotsAsync(userId.Value, request.StartDate, request.EndDate);
+            return Ok(generatedSlots);
+        }
 
         // <summary>
         /// Update specific slot date

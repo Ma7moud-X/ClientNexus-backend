@@ -57,6 +57,7 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<Problem> Problems { get; private set; }
 
     public IBaseRepo<Slot> Slots { get; private set; }
+    public IBaseRepo<AvailableDay> AvailableDays { get; private set; } 
 
     public IBaseRepo<DocumentType> DocumentTypes { get; private set; }
 
@@ -164,6 +165,8 @@ public class UnitOfWork : IUnitOfWork
         Payments = DbTryCatchDecorator<IBaseRepo<Payment>>.Create(new BaseRepo<Payment>(context));
         Problems = DbTryCatchDecorator<IBaseRepo<Problem>>.Create(new BaseRepo<Problem>(context));
         Slots = DbTryCatchDecorator<IBaseRepo<Slot>>.Create(new BaseRepo<Slot>(context));
+        AvailableDays = DbTryCatchDecorator<IBaseRepo<AvailableDay>>.Create(new BaseRepo<AvailableDay>(context));
+
         OfficeImageUrls = DbTryCatchDecorator<IBaseRepo<OfficeImageUrl>>.Create(
             new BaseRepo<OfficeImageUrl>(context)
         );

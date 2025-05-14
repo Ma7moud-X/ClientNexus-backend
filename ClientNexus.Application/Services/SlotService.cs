@@ -80,6 +80,107 @@ namespace ClientNexus.Application.Services
 
         }
 
+        public async Task<IEnumerable<SlotDTO>> GenerateSlotsAsync(int serviceProviderId, DateTime startDate, DateTime endDate)
+        {
+            DateTime utcNowDate = DateTime.UtcNow.Date;
+            if (startDate < DateTime.UtcNow.Date)
+                startDate = utcNowDate; // Don't generate slots in the past
+
+            if (startDate > endDate)
+                throw new ArgumentException("Start date must be before end date and not in the past");
+
+            if ((endDate - startDate).TotalDays > 90)
+                throw new ArgumentException("Cannot generate slots for more than 90 days at once");
+
+            if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == serviceProviderId))
+                throw new KeyNotFoundException("Invalid Service Provider Id");
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                // Get all available days for this service provider
+                var availableDays = await _unitOfWork.AvailableDays.GetByConditionAsync(ad =>
+                    ad.ServiceProviderId == serviceProviderId)
+                    ?? throw new InvalidOperationException("No available days defined for this service provider");
+
+                var existingSlots = await _unitOfWork.Slots.GetByConditionAsync(s =>
+                                                            s.ServiceProviderId == serviceProviderId &&
+                                                            s.Date >= startDate && s.Date <= endDate);
+
+                var existingSlotTimes = new HashSet<DateTime>(existingSlots.Select(s => s.Date));
+
+                var generatedSlots = new List<Slot>();
+                var utcNow = DateTime.UtcNow;
+
+                // Index available days by day of week for fast lookup
+                var dayOfWeekGroups = availableDays
+                    .Where(ad => !ad.LastGenerationEndDate.HasValue || ad.LastGenerationEndDate.Value < endDate)
+                    .GroupBy(ad => ad.DayOfWeek)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // Early exit if no days remain after filtering
+                if (dayOfWeekGroups.Count == 0)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return Enumerable.Empty<SlotDTO>();
+                }
+
+                for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    if (!dayOfWeekGroups.TryGetValue(date.DayOfWeek, out var matchingAvailableDays))
+                        continue;
+
+                    foreach (var availableDay in matchingAvailableDays)
+                    {
+                        TimeSpan currentTime = availableDay.StartTime;
+
+                        while (currentTime.Add(availableDay.SlotDuration) <= availableDay.EndTime)
+                        {
+                            DateTime slotDateTime = date.Date.Add(currentTime);
+
+                            // Skip slots in the past
+                            if (slotDateTime < utcNow || existingSlotTimes.Contains(slotDateTime))
+                            {
+                                currentTime = currentTime.Add(availableDay.SlotDuration);
+                                continue;
+                            }
+
+                            generatedSlots.Add(new Slot
+                            {
+                                ServiceProviderId = serviceProviderId,
+                                Date = slotDateTime,
+                                Status = SlotStatus.Available,
+                                SlotType = availableDay.SlotType,
+                                AvailableDayId = availableDay.Id
+                            });
+
+                            currentTime = currentTime.Add(availableDay.SlotDuration);
+                        }
+                        // Update LastGenerationEndDate after generation
+                        availableDay.LastGenerationEndDate = endDate;
+                        _unitOfWork.AvailableDays.Update(availableDay);
+                    }
+                }
+                
+
+                // Save all generated slots to the database
+                if (generatedSlots.Any())
+                {
+                    await _unitOfWork.Slots.AddRangeAsync(generatedSlots);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                await _unitOfWork.CommitTransactionAsync();
+
+                return _mapper.Map<List<SlotDTO>>(generatedSlots);
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw new Exception("Error occured while generating slots, " + ex.Message, ex);
+            }
+
+        }
+
         public async Task UpdateDateAsync(int slotId, DateTime date, int serviceProviderId)
         {
             var slot = await _unitOfWork.Slots.GetByIdAsync(slotId);
