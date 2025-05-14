@@ -35,7 +35,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp =>
     var context = sp.GetRequiredService<ApplicationDbContext>();
     return DbTryCatchDecorator<IUnitOfWork>.Create(new UnitOfWork(context));
 });
-builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
+builder.Services.AddSingleton<IPushNotification, ExpoPushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpService, HttpService>();
