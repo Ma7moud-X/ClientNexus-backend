@@ -50,6 +50,7 @@ public interface IBaseRepo<EType>
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
 
     Task<EType?> GetByIdWithLockAsync(int id);
+    Task<IEnumerable<EType>> AddRangeAsync(IEnumerable<EType> entities);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
     // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }
