@@ -48,6 +48,7 @@ builder.Services.AddScoped<IServiceProviderService, ServiceProviderService>();
 builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 builder.Services.AddScoped<IBaseServiceService, BaseServiceService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
+builder.Services.AddScoped<IAvailableDayService, AvailableDayService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(
     () => provider.GetRequiredService<IAppointmentService>()

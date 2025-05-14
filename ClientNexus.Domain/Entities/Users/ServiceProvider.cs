@@ -41,10 +41,12 @@ namespace ClientNexus.Domain.Entities.Users
         public ICollection<SubscriptionPayment>? SubscriptionPayments { get; set; }
 
         public ICollection<Slot>? Slots { get; set; }
+        public ICollection<AvailableDay>? AvailableDays { get; set; }
 
         public ICollection<ClientServiceProviderFeedback>? ClientServiceProviderFeedbacks { get; set; }
         public ICollection<Client>? ClientsWithFeedbacks { get; set; }
 
         public ICollection<AppointmentCost>? AppointmentCosts { get; set; }
+
     }
 }
