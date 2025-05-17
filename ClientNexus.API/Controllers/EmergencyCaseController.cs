@@ -534,7 +534,9 @@ namespace ClientNexus.API.Controllers
                     );
                 }
 
-                await _serviceProviderService.SetUnvavailableForEmergencyAsync(userId.Value);
+                await _serviceProviderService.SetUnvavailableForEmergencyWithLockingAsync(
+                    userId.Value
+                );
                 return NoContent();
             }
 

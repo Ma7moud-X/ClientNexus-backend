@@ -17,8 +17,8 @@ public class OfferService : IOfferService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBaseServiceService _baseServiceService;
     private readonly IServiceProviderService _serviceProviderService;
-    private readonly IPushNotification _pushNotificationService;
     private readonly IEmergencyCaseService _emergencyCaseService;
+    private readonly INotificationService _notificationService;
 
     public OfferService(
         ICache cache,
@@ -26,8 +26,8 @@ public class OfferService : IOfferService
         IUnitOfWork unitOfWork,
         IBaseServiceService baseServiceService,
         IServiceProviderService serviceProviderService,
-        IPushNotification pushNotificationService,
-        IEmergencyCaseService emergencyCaseService
+        IEmergencyCaseService emergencyCaseService,
+        INotificationService notificationService
     )
     {
         _cache = cache;
@@ -35,8 +35,8 @@ public class OfferService : IOfferService
         _unitOfWork = unitOfWork;
         _baseServiceService = baseServiceService;
         _serviceProviderService = serviceProviderService;
-        _pushNotificationService = pushNotificationService;
         _emergencyCaseService = emergencyCaseService;
+        _notificationService = notificationService;
     }
 
     public async Task CreateOfferAsync(
@@ -208,11 +208,25 @@ public class OfferService : IOfferService
             throw new NotAllowedException("Service can't accept offers");
         }
 
-        bool unAvailableSet = await _serviceProviderService.SetUnvavailableForEmergencyAsync(
-            serviceProviderId
-        );
+        await _unitOfWork.BeginTransactionAsync();
+
+        bool unAvailableSet = false;
+        try
+        {
+            unAvailableSet =
+                await _serviceProviderService.SetUnvavailableForEmergencyWithLockingAsync(
+                    serviceProviderId
+                );
+        }
+        catch (NotFoundException)
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+
         if (!unAvailableSet)
         {
+            await _unitOfWork.RollbackTransactionAsync();
             throw new NotAllowedException("Service provider is no longer available");
         }
 
@@ -225,46 +239,48 @@ public class OfferService : IOfferService
 
         if (!assigned)
         {
+            await _unitOfWork.RollbackTransactionAsync();
             throw new ServerException("Failed to assign service provider to service");
         }
 
-        var cachedOffersRemoved = await _cache.RemoveKeyAsync(
-            string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId)
-        );
-
-        var providerDetails = (
-            await _unitOfWork.ServiceProviders.GetByConditionAsync(
-                sp => sp.Id == serviceProviderId,
-                sp => new { sp.NotificationToken, sp.PhoneNumber }
+        var result = (
+            await _unitOfWork.BaseUsers.GetByConditionAsync(
+                u => u.Id == serviceProviderId || u.Id == clientId,
+                u => new { u.Id, u.PhoneNumber }
             )
-        ).FirstOrDefault();
-
-        if (providerDetails is null)
-        {
-            throw new ServerException("Service provider does not exist");
-        }
-
-        if (providerDetails.NotificationToken is null || providerDetails.PhoneNumber is null)
-        {
-            throw new ServerException(
-                "Service provider notification token or phone number does not exist"
-            );
-        }
-
-        string? clientPhoneNumber = (
-            await _unitOfWork.Clients.GetByConditionAsync(c => c.Id == clientId, c => c.PhoneNumber)
-        ).FirstOrDefault();
-
-        if (clientPhoneNumber is null)
-        {
-            throw new ServerException("Client phone number does not exist");
-        }
+        ).ToList();
 
         var meetingLocation = await _emergencyCaseService.GetMeetingLocationAsync(serviceId);
-        await _pushNotificationService.SendNotificationAsync(
-            "Offer accepted",
-            $"Meeting Longitude: {meetingLocation.Value.longitude}\nMeeting Latitude: {meetingLocation.Value.latitude}\nClient Phone Number: {clientPhoneNumber}\nService Id: {serviceId}",
-            providerDetails.NotificationToken
+
+        var providerDetails = result.FirstOrDefault(u => u.Id == serviceProviderId);
+        var clientDetails = result.FirstOrDefault(u => u.Id == clientId);
+
+        if (providerDetails is null || providerDetails.PhoneNumber is null) // can't happen
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw new ServerException("Service provider info is missing");
+        }
+
+        if (clientDetails is null || clientDetails.PhoneNumber is null) // can't happen
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw new ServerException("Client info is missing");
+        }
+
+        await _unitOfWork.CommitTransactionAsync();
+
+        string notificationTitle = "Offer accepted";
+        string notificationBody =
+            $"Meeting Longitude: {meetingLocation.Value.longitude}\nMeeting Latitude: {meetingLocation.Value.latitude}\nClient Phone Number: {clientDetails.PhoneNumber}\nService Id: {serviceId}";
+
+        bool isSent = await _notificationService.SendNotificationAsync(
+            notificationTitle,
+            notificationBody,
+            serviceProviderId
+        );
+
+        var cachedOffersRemovedTask = _cache.RemoveKeyAsync(
+            string.Format(CacheConstants.MissedOffersKeyTemplate, serviceId)
         );
 
         return new PhoneNumberDTO { PhoneNumber = providerDetails.PhoneNumber };

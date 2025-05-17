@@ -11,5 +11,27 @@ namespace ClientNexus.Application.Interfaces
             int limit,
             Ulid? belowUlid = null
         );
+        Task<bool> SendNotificationAsync(
+            string title,
+            string body,
+            int userId,
+            Dictionary<string, string>? data = null
+        );
+        Task<bool> SendNotificationAsync(
+            string title,
+            string body,
+            int userId,
+            string notificationToken,
+            Dictionary<string, string>? data = null
+        );
+        Task SendNotificationToServiceProvidersNearLocationAsync(
+            double longitude,
+            double latitude,
+            double radiusInMeters,
+            string title,
+            string body,
+            Dictionary<string, string>? data = null
+        );
+        Task<bool> RemoveNotificationTokenAsync(int userId);
     }
 }

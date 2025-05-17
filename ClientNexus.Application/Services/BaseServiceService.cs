@@ -64,5 +64,18 @@ namespace ClientNexus.Application.Services
 
             return affectedCount == 1;
         }
+
+        public async Task<bool> UnassignServiceProviderAndSetPendingAsync(int serviceId)
+        {
+            int affectedCount = await _unitOfWork.SqlExecuteAsync(
+                @$"
+                UPDATE ClientNexusSchema.Services SET ServiceProviderId = NULL, Status = {(char)ServiceStatus.Pending}
+                WHERE Id = @serviceId
+                ",
+                new Parameter("@serviceId", serviceId)
+            );
+
+            return affectedCount != 0;
+        }
     }
 }
