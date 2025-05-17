@@ -10,5 +10,6 @@ namespace ClientNexus.Application.Interfaces
         );
         Task CancelAsync(int serviceId);
         Task<bool> SetDoneAsync(int serviceId);
+        Task<bool> UnassignServiceProviderAndSetPendingAsync(int serviceId);
     }
 }

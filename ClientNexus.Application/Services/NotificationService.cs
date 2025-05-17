@@ -1,19 +1,23 @@
 using System.Linq.Expressions;
+using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
+using ClientNexus.Domain.ValueObjects;
 
 namespace ClientNexus.Application.Services
 {
     public class NotificationService : INotificationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPushNotification _pushNotification;
 
-        public NotificationService(IUnitOfWork unitOfWork)
+        public NotificationService(IUnitOfWork unitOfWork, IPushNotification pushNotification)
         {
             _unitOfWork = unitOfWork;
+            _pushNotification = pushNotification;
         }
 
         public async Task<NotificationDTO> CreateNotificationAsync(
@@ -110,6 +114,147 @@ namespace ClientNexus.Application.Services
             ).FirstOrDefault();
 
             return not;
+        }
+
+        public async Task<bool> RemoveNotificationTokenAsync(int userId)
+        {
+            int rowsAffected = await _unitOfWork.SqlExecuteAsync(
+                @"
+                UPDATE ClientNexusSchema.BaseUsers SET NotificationToken = NULL
+                WHERE Id = @userId
+            ",
+                new Parameter("@userId", userId)
+            );
+
+            return rowsAffected != 0;
+        }
+
+        public async Task<bool> SendNotificationAsync(
+            string title,
+            string body,
+            int userId,
+            Dictionary<string, string>? data = null
+        )
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                throw new InvalidOperationException($"{nameof(title)} can't be null");
+            }
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                throw new InvalidOperationException($"{nameof(body)} can't be null");
+            }
+
+            var notificationToken = (
+                await _unitOfWork.BaseUsers.GetByConditionAsync(
+                    condExp: u => u.Id == userId,
+                    selectExp: u => u.NotificationToken
+                )
+            ).FirstOrDefault();
+
+            if (notificationToken is null)
+            {
+                throw new NotFoundException("Notification token not found");
+            }
+
+            return await SendNotificationAsync(title, body, userId, notificationToken, data);
+        }
+
+        public async Task<bool> SendNotificationAsync(
+            string title,
+            string body,
+            int userId,
+            string notificationToken,
+            Dictionary<string, string>? data = null
+        )
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                throw new InvalidOperationException($"{nameof(title)} can't be null");
+            }
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                throw new InvalidOperationException($"{nameof(body)} can't be null");
+            }
+
+            if (string.IsNullOrWhiteSpace(notificationToken))
+            {
+                throw new InvalidOperationException($"{nameof(notificationToken)} can't be null");
+            }
+
+            bool isSent = false;
+            try
+            {
+                await _pushNotification.SendNotificationAsync(title, body, notificationToken, data);
+                isSent = true;
+            }
+            catch (DeviceNotRegisteredException)
+            {
+                await RemoveNotificationTokenAsync(userId);
+            }
+            catch (MessageRateExceeded)
+            {
+                int retryCount = 0;
+                while (retryCount < 3)
+                {
+                    retryCount++;
+                    await Task.Delay(1000 * retryCount);
+                    try
+                    {
+                        await _pushNotification.SendNotificationAsync(
+                            title,
+                            body,
+                            notificationToken,
+                            data
+                        );
+                        isSent = true;
+                    }
+                    catch (DeviceNotRegisteredException)
+                    {
+                        await RemoveNotificationTokenAsync(userId);
+                        break;
+                    }
+                    catch (MessageRateExceeded) { }
+                }
+            }
+
+            if (isSent)
+            {
+                await CreateNotificationAsync(userId, title, body);
+            }
+
+            return isSent;
+        }
+
+        public async Task SendNotificationToServiceProvidersNearLocationAsync(
+            double longitude,
+            double latitude,
+            double radiusInMeters,
+            string title,
+            string body,
+            Dictionary<string, string>? data = null
+        )
+        {
+            var serviceProvidersDetails = await _unitOfWork.ServiceProviders.GetByConditionAsync(
+                sp =>
+                    sp.CurrentLocation != null
+                    && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
+                        <= radiusInMeters
+                    && sp.LastLocationUpdateTime != null
+                    && sp.LastLocationUpdateTime
+                        > DateTime.UtcNow.AddMinutes(
+                            -GlobalConstants.ServiceProviderLocationValiditySpanInMinutes
+                        )
+                    && sp.NotificationToken != null,
+                sp => new { Token = sp.NotificationToken!, sp.Id }
+            );
+
+            foreach (var detail in serviceProvidersDetails)
+            {
+                await SendNotificationAsync(title, body, detail.Id, detail.Token, data);
+            }
         }
     }
 }

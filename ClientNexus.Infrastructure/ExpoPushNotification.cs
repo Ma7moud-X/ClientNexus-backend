@@ -41,7 +41,8 @@ namespace ClientNexus.Infrastructure
     internal class ExpoPushResultSuccess
     {
         public string? status { get; set; }
-        public string? id { get; set; } = null;
+        public string? id { get; set; }
+        public ExpoErrorDetails? details { get; set; }
     }
 
     public class ExpoPushNotification : IPushNotification
@@ -117,6 +118,18 @@ namespace ClientNexus.Infrastructure
                 );
                 if (pushResponseSuccess is not null)
                 {
+                    if (pushResponseSuccess.data!.status == "error")
+                    {
+                        if (pushResponseSuccess.data!.details!.error == "DeviceNotRegistered")
+                        {
+                            throw new DeviceNotRegisteredException("Device not registered");
+                        }
+                        else if (pushResponseSuccess.data!.details!.error == "MessageRateExceeded")
+                        {
+                            throw new MessageRateExceeded("Message rate exceeded");
+                        }
+                    }
+
                     return pushResponseSuccess.data!.id!;
                 }
             }

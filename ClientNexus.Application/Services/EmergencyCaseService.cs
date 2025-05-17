@@ -15,18 +15,12 @@ namespace ClientNexus.Application.Services;
 public class EmergencyCaseService : IEmergencyCaseService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IServiceProviderService _serviceProviderService;
-    private readonly IPushNotification _pushNotificationService;
+    private readonly INotificationService _notificationService;
 
-    public EmergencyCaseService(
-        IUnitOfWork unitOfWork,
-        IServiceProviderService serviceProviderService,
-        IPushNotification pushNotificationService
-    )
+    public EmergencyCaseService(IUnitOfWork unitOfWork, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
-        _serviceProviderService = serviceProviderService;
-        _pushNotificationService = pushNotificationService;
+        _notificationService = notificationService;
     }
 
     private async Task<EmergencyCase> CreateEmergencyCaseAsync(
@@ -75,26 +69,18 @@ public class EmergencyCaseService : IEmergencyCaseService
         ArgumentException.ThrowIfNullOrWhiteSpace(clientLastName);
 
         EmergencyCase emergencyCase = await CreateEmergencyCaseAsync(emergencyDTO, clientId);
-        var providersTokens =
-            await _serviceProviderService.GetTokensOfServiceProvidersNearLocationAsync(
-                emergencyDTO.MeetingLongitude,
-                emergencyDTO.MeetingLatitude,
-                notifyServicePorvidersWithinMeters
-            );
-
-        foreach (var providerToken in providersTokens)
-        {
-            // Console.WriteLine($"Sending notification to {providerToken.Token}");
-            try
+        await _notificationService.SendNotificationToServiceProvidersNearLocationAsync(
+            emergencyDTO.MeetingLongitude,
+            emergencyDTO.MeetingLatitude,
+            notifyServicePorvidersWithinMeters,
+            $"New emergency case: {emergencyDTO.Name}",
+            $"Description: {emergencyDTO.Description}",
+            new Dictionary<string, string>
             {
-                await _pushNotificationService.SendNotificationAsync(
-                    $"New emergency case: {emergencyDTO.Name}",
-                    $"Description: {emergencyDTO.Description}",
-                    providerToken.Token
-                );
+                { "type", "EmergencyCase" },
+                { "id", emergencyCase.Id.ToString() },
             }
-            catch (Exception) { }
-        }
+        );
 
         return new ClientEmergencyDTO
         {
