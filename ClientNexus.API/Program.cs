@@ -81,7 +81,10 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<PaymobPaymentService>(sp => new PaymobPaymentService(
     secretKey: builder.Configuration["Paymob:SecretKey"],
     publicKey: builder.Configuration["Paymob:PublicKey"],
-    paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>()
+    paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>(),
+    redirectionUrl: builder.Configuration["Paymob:RedirectionUrl"],
+    notificationUrl : builder.Configuration["Paymob:NotificationUrl"]
+
 ));
 
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
