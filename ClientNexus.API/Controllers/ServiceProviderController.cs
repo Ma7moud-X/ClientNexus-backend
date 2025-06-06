@@ -23,8 +23,8 @@ namespace ClientNexus.API.Controllers
             {
                 this._serviceProviderIsService = serviceProviderIsService;
             }
-        //[Authorize(Policy = "IsClientOrAdmin")]
 
+        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("Search")]
         public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
             {
@@ -48,8 +48,9 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
-        [Authorize(Policy = "IsClientOrAdmin")]
 
+
+        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
             {
@@ -72,8 +73,7 @@ namespace ClientNexus.API.Controllers
 
 
             }
-        //[Authorize(Policy = "IsAdmin")]
-
+        [Authorize(Policy = "IsAdmin")]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
         {
@@ -101,7 +101,6 @@ namespace ClientNexus.API.Controllers
 
 
         [Authorize(Policy = "IsServiceProviderOrAdmin")]
-
         [HttpPut]
             public async Task<IActionResult> UpdateServiceProviderId( [FromForm] UpdateServiceProviderDTO updateDto)
             {
@@ -132,8 +131,7 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
-        [Authorize(Policy = "IsServiceProviderOrAdmin")]
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetById(int? id)
         {

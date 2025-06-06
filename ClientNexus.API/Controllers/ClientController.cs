@@ -50,7 +50,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet]
-        [Authorize(Policy = "IsClient")]
+        [Authorize]
         public async Task<IActionResult> GetById(int? id )
         {
             int Id;

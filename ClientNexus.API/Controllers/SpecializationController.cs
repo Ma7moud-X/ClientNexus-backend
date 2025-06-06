@@ -22,7 +22,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         public async Task<IActionResult> AddNewSpecialization([FromBody] SpecializationDTO specializationDTO)
         {
             try
@@ -48,7 +48,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("delete/{id}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         public async Task<IActionResult> DeleteSpecialization([FromRoute] int id)
         {
             try
@@ -69,6 +69,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet("GetAllSpecializations")]
+        [Authorize(Policy = "IsAdmin")]
         public async Task<ActionResult<ApiResponseDTO<List<SpecializationResponseDTO>>>> GetAllSpecializations()
         {
             try

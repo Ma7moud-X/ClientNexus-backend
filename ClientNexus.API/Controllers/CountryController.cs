@@ -20,7 +20,7 @@ namespace ClientNexus.API.Controllers
 
         // POST api/country
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+       [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<CountryDTO>>> AddCountry([FromBody] CountryDTO countryDTO)
         {
@@ -47,7 +47,7 @@ namespace ClientNexus.API.Controllers
 
         // DELETE api/country/{id}
         [HttpDelete("{id}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteCountry(int id)
         {

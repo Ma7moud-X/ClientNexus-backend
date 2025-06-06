@@ -19,6 +19,7 @@ using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Azure.Core;
+using System.Transactions;
 
 public class AuthService : IAuthService
 {
@@ -222,7 +223,7 @@ public class AuthService : IAuthService
 
 
 
-    public async Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO dto )
+    public async Task<AuthResponseDTO> RegisterAsync(RegisterUserDTO dto)
     {
         if (dto == null)
         {
@@ -247,7 +248,7 @@ public class AuthService : IAuthService
             {
                 throw new ArgumentNullException(nameof(dto.MainImage), "MainImage is required for ServiceProvider.");
             }
-            else if(dto.MainImage == null && dto.UserType == UserType.Client)
+            else if (dto.MainImage == null && dto.UserType == UserType.Client)
             {
                 mainImageUrl = null;
             }
@@ -256,11 +257,11 @@ public class AuthService : IAuthService
                 mainImageUrl = await UploadImageAsync(dto.MainImage);
 
             }
-        }          
+        }
 
-            if (dto.UserType == UserType.ServiceProvider)
+        if (dto.UserType == UserType.ServiceProvider)
         {
-            
+
             if (dto.Addresses == null || !dto.Addresses.Any())
             {
 
@@ -332,45 +333,49 @@ public class AuthService : IAuthService
         user.UserName = dto.Email;
         user.Email = dto.Email;
         user.PhoneNumber = dto.PhoneNumber;
-       
 
 
-        var createResult = await _userManager.CreateAsync(user, dto.Password);
-
-        if (!createResult.Succeeded)
+        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
         {
-            string errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"User creation failed: {errors}");
-        }
+            var createResult = await _userManager.CreateAsync(user, dto.Password);
 
-        if (dto.PhoneNumbers != null && dto.PhoneNumbers.Any(x => !string.IsNullOrWhiteSpace(x)))
-        {
-            user.PhoneNumbers = new List<PhoneNumber>();
-            await _phoneNumberService.AddCollectionOfPhoneNumer(user.PhoneNumbers, dto.PhoneNumbers);
-        }
-
-        if (user is ServiceProvider serviceProvider)
-        {
-            if (!((dto.SpecializationIDS) == null || !dto.SpecializationIDS.Any()))
+            if (!createResult.Succeeded)
             {
-                serviceProvider.ServiceProviderSpecializations = new List<ServiceProviderSpecialization>();
-                await _specializationService.AddSpecializationsToServiceProvider(serviceProvider.ServiceProviderSpecializations, dto.SpecializationIDS, serviceProvider.Id);
-
+                string errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"User creation failed: {errors}");
             }
 
-
-
-            // Add multiple addresses using AddressService
-
-
-            foreach (var addressDto in dto.Addresses)
+            if (dto.PhoneNumbers != null && dto.PhoneNumbers.Any(x => !string.IsNullOrWhiteSpace(x)))
             {
-                await _addressService.AddAddressAsync(serviceProvider.Id, addressDto);
+                user.PhoneNumbers = new List<PhoneNumber>();
+                await _phoneNumberService.AddCollectionOfPhoneNumer(user.PhoneNumbers, dto.PhoneNumbers);
             }
+
+            if (user is ServiceProvider serviceProvider)
+            {
+                if (!((dto.SpecializationIDS) == null || !dto.SpecializationIDS.Any()))
+                {
+                    serviceProvider.ServiceProviderSpecializations = new List<ServiceProviderSpecialization>();
+                    await _specializationService.AddSpecializationsToServiceProvider(serviceProvider.ServiceProviderSpecializations, dto.SpecializationIDS, serviceProvider.Id);
+
+                }
+
+
+
+                // Add multiple addresses using AddressService
+
+
+                foreach (var addressDto in dto.Addresses)
+                {
+                    await _addressService.AddAddressAsync(serviceProvider.Id, addressDto);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            scope.Complete();
+
         }
-      
-        await _unitOfWork.SaveChangesAsync();
-       
+
         var token = GenerateJwtToken(user);
 
         return new AuthResponseDTO
@@ -414,7 +419,8 @@ public class AuthService : IAuthService
         SocialUserPayload payload;
 
         payload = await GetSocialPayloadAsync(request.Provider, request.AccessToken);
-
+        if (payload == null || string.IsNullOrEmpty(payload.Email))
+            throw new UnauthorizedAccessException("Invalid social token or missing email.");
         var user = await _userManager.FindByEmailAsync(payload.Email);
         if (user == null)
             throw new InvalidOperationException("User not  exists in database");
@@ -469,6 +475,14 @@ public class AuthService : IAuthService
     {
         return _revokedTokens.ContainsKey(token);
     }
+   
+    private async Task<string> UploadImageAsync(IFormFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).TrimStart('.');
+        var key = $"{Guid.NewGuid()}.{extension}";
+        var fileType = GetFileType(file);
+        return await fileService.UploadPublicFileAsync(file.OpenReadStream(), fileType, key);
+    }
     private async Task<SocialUserPayload> ValidateFacebookTokenAsync(string accessToken)
     {
         using var http = new HttpClient();
@@ -483,13 +497,6 @@ public class AuthService : IAuthService
             FirstName = json.GetProperty("first_name").GetString() ?? "",
             LastName = json.GetProperty("last_name").GetString() ?? "",
         };
-    }
-    private async Task<string> UploadImageAsync(IFormFile file)
-    {
-        var extension = Path.GetExtension(file.FileName).TrimStart('.');
-        var key = $"{Guid.NewGuid()}.{extension}";
-        var fileType = GetFileType(file);
-        return await fileService.UploadPublicFileAsync(file.OpenReadStream(), fileType, key);
     }
     private async Task<SocialUserPayload> GetSocialPayloadAsync(string provider, string accessToken)
     {

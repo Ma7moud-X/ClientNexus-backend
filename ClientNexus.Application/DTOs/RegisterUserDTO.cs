@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
@@ -12,13 +13,16 @@ namespace ClientNexus.Application.DTOs
         [Required]
         public string LastName { get; set; }  // NEW - Last Name Field
         [Required]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
         [Required]
         public DateOnly BirthDate { get; set; }
         [Required]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "Please enter an 11-digit phone number.")]
         public string PhoneNumber { get; set; }
+        [PhoneListValidation]
         public List<string>? PhoneNumbers { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))] // NEW - Enables JSON string to Enum conversion

@@ -745,9 +745,6 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PlainPassword")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -1209,13 +1206,13 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<int>("Telephone_consultation_price")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TypeId")
+                    b.Property<int>("TypeId")
                         .HasColumnType("int");
 
                     b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
-                    b.Property<int?>("main_specializationID")
+                    b.Property<int>("main_specializationID")
                         .HasColumnType("int");
 
                     b.HasIndex("ApprovedById");
@@ -1687,7 +1684,8 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProviderType", "Type")
                         .WithMany("ServiceProviders")
                         .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("ClientNexus.Domain.Entities.Users.Specialization", "MainSpecialization")
                         .WithMany()
