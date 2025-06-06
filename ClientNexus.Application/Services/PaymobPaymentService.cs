@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,15 +13,22 @@ namespace ClientNexus.Application.Services
         private readonly HttpClient _httpClient;
         private readonly string _secretKey;
         private readonly string _publicKey;
+        private readonly string _redirectionUrl;
+        private readonly string _notificationUrl;
         private readonly string _baseUrl = "https://accept.paymob.com";
         private readonly int[] _paymentMethodIds;
+        private readonly IConfiguration _configuration;
 
-        public PaymobPaymentService(string secretKey, string publicKey, int[] paymentMethodIds)
+        public PaymobPaymentService(string secretKey, string publicKey, int[] paymentMethodIds, string redirectionUrl, string notificationUrl)
         {
             _httpClient = new HttpClient();
             _secretKey = secretKey;
             _publicKey = publicKey;
             _paymentMethodIds = paymentMethodIds;
+            _publicKey = publicKey;
+            _paymentMethodIds = paymentMethodIds;
+            _redirectionUrl = redirectionUrl;
+            _notificationUrl = notificationUrl;
         }
 
         public async Task<(string ClientSecret, string IntentionId)> StartPayment(
@@ -62,9 +70,8 @@ namespace ClientNexus.Application.Services
                 }).ToArray(),
                 special_reference = specialReference,
                 expiration,
-                notification_url = "https://yourdomain.com/api/webhook",
-                redirection_url = "myapp://payment/success"
-            };
+                notification_url = _notificationUrl,
+                redirection_url =  _redirectionUrl         };
 
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _secretKey);
