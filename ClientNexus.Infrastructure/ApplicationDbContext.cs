@@ -107,6 +107,7 @@ namespace ClientNexus.Infrastructure
             new CountryConfig().Configure(modelBuilder.Entity<Country>());
 
             new SlotConfig().Configure(modelBuilder.Entity<Slot>());
+            new AvailableDayConfig().Configure(modelBuilder.Entity<AvailableDay>());
 
             new DocumentConfig().Configure(modelBuilder.Entity<Document>());
             new CategoryConfig().Configure(modelBuilder.Entity<DCategory>());
@@ -150,6 +151,8 @@ namespace ClientNexus.Infrastructure
         public DbSet<Country> Countries { get; set; }
 
         public DbSet<Slot> Slots { get; set; }
+        public DbSet<AvailableDay> AvailableDays { get; set; }
+
 
         public DbSet<Document> Documents { get; set; }
         public DbSet<DCategory> DCategories { get; set; }

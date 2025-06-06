@@ -48,6 +48,10 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+<<<<<<< HEAD
+=======
+        //[Authorize(Policy = "IsClientOrAdmin")]
+>>>>>>> 82bb75ddfff2fcab5a6f0255ebd75f492e006128
 
 
         [Authorize(Policy = "IsClientOrAdmin")]

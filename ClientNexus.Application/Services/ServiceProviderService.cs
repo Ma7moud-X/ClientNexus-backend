@@ -55,11 +55,7 @@ namespace ClientNexus.Application.Services
             var emergencyCase = (
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     ec =>
-                        ec.CreatedAt
-                            >= DateTime.UtcNow.AddHours(
-                                -GlobalConstants.TimeAfterWhichServiceIsCancelledByDefaultInMinutes
-                            )
-                        && ec.ServiceProviderId == serviceProviderId
+                        ec.ServiceProviderId == serviceProviderId
                         && ec.Status == ServiceStatus.InProgress,
                     limit: 1
                 )
@@ -128,31 +124,6 @@ namespace ClientNexus.Application.Services
             );
         }
 
-        public async Task<
-            IEnumerable<NotificationToken>
-        > GetTokensOfServiceProvidersNearLocationAsync(
-            double longitude,
-            double latitude,
-            double radiusInMeters
-        )
-        {
-            var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
-                sp =>
-                    sp.CurrentLocation != null
-                    && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
-                        <= radiusInMeters
-                    && sp.LastLocationUpdateTime != null
-                    && sp.LastLocationUpdateTime
-                        > DateTime.UtcNow.AddMinutes(
-                            -GlobalConstants.ServiceProviderLocationValiditySpanInMinutes
-                        )
-                    && sp.NotificationToken != null,
-                sp => new NotificationToken { Token = sp.NotificationToken! }
-            );
-
-            return tokens;
-        }
-
         public async Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId)
         {
             var res = (
@@ -192,10 +163,8 @@ namespace ClientNexus.Application.Services
             return affectedCount == 1;
         }
 
-        public async Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId)
+        public async Task<bool> SetUnvavailableForEmergencyWithLockingAsync(int serviceProviderId)
         {
-            await _unitOfWork.BeginTransactionAsync();
-
             var availability = await _unitOfWork.SqlGetSingleAsync<AvailableForEmergencyResponse>(
                 @"
                 SELECT IsAvailableForEmergency FROM ClientNexusSchema.ServiceProviders
@@ -212,7 +181,6 @@ namespace ClientNexus.Application.Services
 
             if (availability.IsAvailableForEmergency == false)
             {
-                await _unitOfWork.RollbackTransactionAsync();
                 return false;
             }
 
@@ -223,8 +191,6 @@ namespace ClientNexus.Application.Services
             ",
                 new Parameter("@serviceProviderId", serviceProviderId)
             );
-
-            await _unitOfWork.CommitTransactionAsync();
 
             return affectedCount == 1;
         }
@@ -259,8 +225,11 @@ namespace ClientNexus.Application.Services
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
 
                 var mainImageType = _fileService.GetFileType(updateDto.MainImage);
-                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(), mainImageType, mainImageKey);
-
+                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
+                    updateDto.MainImage.OpenReadStream(),
+                    mainImageType,
+                    mainImageKey
+                );
             }
             if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
                 serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
@@ -329,8 +298,8 @@ namespace ClientNexus.Application.Services
         }
 
         public async Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(
-        string? searchQuery
-    )
+            string? searchQuery
+        )
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
                 return new List<ServiceProviderResponseDTO>();
@@ -349,10 +318,10 @@ namespace ClientNexus.Application.Services
                 .ThenInclude(a => a.City!)
                 .ThenInclude(c => c.State!)
                 .Include(sp => sp.Specializations!)
-                  .Include(sp => sp.MainSpecialization!)
+                .Include(sp => sp.MainSpecialization!)
                 .Where(sp =>
-                     sp.FirstName.ToLower().Contains(searchQuery.ToLower())
-                     || sp.LastName.ToLower().Contains(searchQuery.ToLower())
+                    sp.FirstName.ToLower().Contains(searchQuery.ToLower())
+                    || sp.LastName.ToLower().Contains(searchQuery.ToLower())
                     || (
                         matchedSpecialization != null
                         && sp.main_specializationID == matchedSpecialization.Id
@@ -360,25 +329,28 @@ namespace ClientNexus.Application.Services
                 )
                 .ToListAsync();
 
-            var result = filteredServiceProviders.Select(sp => new ServiceProviderResponseDTO
-            {
-                Id = sp.Id,
-                FirstName = sp.FirstName,
-                LastName = sp.LastName,
-                Rate = sp.Rate,
-                Description = sp.Description,
-                MainImage = sp.MainImage,
-                ImageIDUrl = sp.ImageIDUrl,
-                ImageNationalIDUrl = sp.ImageNationalIDUrl,
-                Gender = sp.Gender,
-                YearsOfExperience = sp.YearsOfExperience,
-                Office_consultation_price = sp.Office_consultation_price,
-                Telephone_consultation_price = sp.Telephone_consultation_price,
-                City = sp.Addresses?.FirstOrDefault()?.City?.Name,
-                State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
-                main_Specialization = sp.MainSpecialization?.Name,
-                SpecializationName = sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
-            }).ToList();
+            var result = filteredServiceProviders
+                .Select(sp => new ServiceProviderResponseDTO
+                {
+                    Id = sp.Id,
+                    FirstName = sp.FirstName,
+                    LastName = sp.LastName,
+                    Rate = sp.Rate,
+                    Description = sp.Description,
+                    MainImage = sp.MainImage,
+                    ImageIDUrl = sp.ImageIDUrl,
+                    ImageNationalIDUrl = sp.ImageNationalIDUrl,
+                    Gender = sp.Gender,
+                    YearsOfExperience = sp.YearsOfExperience,
+                    Office_consultation_price = sp.Office_consultation_price,
+                    Telephone_consultation_price = sp.Telephone_consultation_price,
+                    City = sp.Addresses?.FirstOrDefault()?.City?.Name,
+                    State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                    main_Specialization = sp.MainSpecialization?.Name,
+                    SpecializationName =
+                        sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
+                })
+                .ToList();
 
             return result;
         }
@@ -484,8 +456,6 @@ namespace ClientNexus.Application.Services
                     main_Specialization = mainSpec?.Name,
                     SpecializationName =
                         sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
-                    
-
                 };
 
                 serviceProviderResponse.Add(serviceProviderDto);
@@ -535,9 +505,5 @@ namespace ClientNexus.Application.Services
                     sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
             };
         }
-
-
-
-
     }
 }

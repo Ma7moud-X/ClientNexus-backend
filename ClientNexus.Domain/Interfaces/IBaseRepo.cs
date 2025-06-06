@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
+using AutoMapper.QueryableExtensions;
+
 
 namespace ClientNexus.Domain.Interfaces;
 
@@ -38,6 +41,28 @@ public interface IBaseRepo<EType>
         bool descendingOrdering = false
     );
 
+    Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Expression<Func<EType, T>> selectExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc, // Function to build includes
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    );
+
+    Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc,
+        AutoMapper.IConfigurationProvider mapperConfig, // AutoMapper config
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    );
+
     Task<EType> AddAsync(EType entity);
     Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,
@@ -50,6 +75,7 @@ public interface IBaseRepo<EType>
     Task<bool> CheckAnyExistsAsync(Expression<Func<EType, bool>> condExp);
 
     Task<EType?> GetByIdWithLockAsync(int id);
+    Task<IEnumerable<EType>> AddRangeAsync(IEnumerable<EType> entities);
     // Task<EType?> FromSqlSingleAsync(string query, params SqlParameter[] parameters);
     // Task<IEnumerable<EType>> FromSqlListAsync(string query, params SqlParameter[] parameters);
 }

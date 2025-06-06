@@ -145,6 +145,16 @@ namespace ClientNexus.API.Controllers
                 return Unauthorized();
             }
 
+            if (role == UserType.ServiceProvider && serviceProviderId is null)
+            {
+                serviceProviderId = userId;
+            }
+
+            if (role == UserType.Client && clientId is null)
+            {
+                clientId = userId;
+            }
+
             if (clientId is null && serviceProviderId is null)
             {
                 return BadRequest(
@@ -154,13 +164,12 @@ namespace ClientNexus.API.Controllers
 
             if (
                 role.Value == UserType.ServiceProvider
-                && serviceProviderId is not null
-                && serviceProviderId != userId
+                && (serviceProviderId is null || serviceProviderId != userId)
             )
             {
                 return Unauthorized();
             }
-            else if (role.Value == UserType.Client && clientId is not null && clientId != userId)
+            else if (role.Value == UserType.Client && (clientId is null || clientId != userId))
             {
                 return Unauthorized();
             }
@@ -525,7 +534,9 @@ namespace ClientNexus.API.Controllers
                     );
                 }
 
-                await _serviceProviderService.SetUnvavailableForEmergencyAsync(userId.Value);
+                await _serviceProviderService.SetUnvavailableForEmergencyWithLockingAsync(
+                    userId.Value
+                );
                 return NoContent();
             }
 

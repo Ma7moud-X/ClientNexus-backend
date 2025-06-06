@@ -35,7 +35,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp =>
     var context = sp.GetRequiredService<ApplicationDbContext>();
     return DbTryCatchDecorator<IUnitOfWork>.Create(new UnitOfWork(context));
 });
-builder.Services.AddSingleton<IPushNotification, FirebasePushNotification>();
+builder.Services.AddSingleton<IPushNotification, ExpoPushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpService, HttpService>();
@@ -48,9 +48,10 @@ builder.Services.AddScoped<IServiceProviderService, ServiceProviderService>();
 builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 builder.Services.AddScoped<IBaseServiceService, BaseServiceService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
+builder.Services.AddScoped<IAvailableDayService, AvailableDayService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(
-    () => provider.GetRequiredService<IAppointmentService>()
+builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(() =>
+    provider.GetRequiredService<IAppointmentService>()
 ));
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 
@@ -80,7 +81,10 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<PaymobPaymentService>(sp => new PaymobPaymentService(
     secretKey: builder.Configuration["Paymob:SecretKey"],
     publicKey: builder.Configuration["Paymob:PublicKey"],
-    paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>()
+    paymentMethodIds: builder.Configuration.GetSection("Paymob:PaymentMethodIds").Get<int[]>(),
+    redirectionUrl: builder.Configuration["Paymob:RedirectionUrl"],
+    notificationUrl : builder.Configuration["Paymob:NotificationUrl"]
+
 ));
 
 builder.Services.AddTransient<IPasswordResetService, PasswordResetService>();
@@ -94,8 +98,7 @@ builder.Services.AddScoped<IServiceProviderTypeService, serviceProviderTypeServi
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
-
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // NEW - Configure Identity with BaseUser
 builder
