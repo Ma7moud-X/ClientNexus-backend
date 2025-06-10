@@ -24,7 +24,7 @@ namespace ClientNexus.API.Controllers
             _documentService = documentService;
             this.unitOfWork = unitOfWork;
         }
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         [HttpPost]
         public async Task<ActionResult<ApiResponseDTO<DocumentResponseDTO>>> AddDocument([FromForm] DocumentDTO dto)
         {
@@ -56,7 +56,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpDelete("{documentId}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<IActionResult> DeleteDocumentAsync(int documentId)
         {
@@ -101,7 +101,6 @@ namespace ClientNexus.API.Controllers
             }
         }
         [Authorize(Policy = "IsClientOrAdmin")]
-
         [HttpGet]
         public async Task<ActionResult<ApiResponseDTO<List<DocumentResponseDTO>>>> GetAllDocuments()
         {

@@ -1,4 +1,5 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using ClientNexus.API.Utilities;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,19 +12,30 @@ namespace ClientNexus.API.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdmainService _admainService;
+
         public AdminController(IAdmainService admainService)
         {
             this._admainService = admainService;
         }
 
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         [HttpPut("approve/{serviceProviderId}")]
         public async Task<IActionResult> ApproveServiceProvider(int serviceProviderId)
         {
+            int? userId = User.GetId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
             try
             {
-                await _admainService.ApprovingServiceProviderAsync(serviceProviderId);
-                return Ok(ApiResponseDTO<string>.SuccessResponse("Service provider approved successfully."));
+                await _admainService.ApprovingServiceProviderAsync(serviceProviderId, userId.Value);
+                return Ok(
+                    ApiResponseDTO<string>.SuccessResponse(
+                        "Service provider approved successfully."
+                    )
+                );
             }
             catch (KeyNotFoundException ex)
             {
@@ -31,12 +43,11 @@ namespace ClientNexus.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+                return StatusCode(
+                    500,
+                    ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}")
+                );
             }
         }
-
     }
 }
-
-
-

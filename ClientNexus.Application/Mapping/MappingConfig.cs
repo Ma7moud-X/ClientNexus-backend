@@ -3,6 +3,7 @@ using ClientNexus.Application.DTO;
 using ClientNexus.Application.DTOs;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClientNexus.Application.Mapping
 {
@@ -19,9 +20,35 @@ namespace ClientNexus.Application.Mapping
 
             CreateMap<Appointment, AppointmentCreateDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentDTO>().ReverseMap();
+            CreateMap<Appointment, AppointmentDTO2>()
+            .ForMember(dest => dest.ServiceProviderId,
+                       opt => opt.MapFrom(src => src.ServiceProviderId))
+            .ForMember(dest => dest.ServiceProviderFirstName, 
+                       opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.FirstName : null))
+            .ForMember(dest => dest.ServiceProviderLastName, 
+                       opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.LastName : null))
+            .ForMember(dest => dest.ServiceProviderMainImage,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.MainImage))
+            .ForMember(dest => dest.ServiceProviderMainSpecialization,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.MainSpecialization!.Name))
+            .ForMember(dest => dest.ServiceProviderCity,
+                       opt => opt.MapFrom(src => src.ServiceProvider!.Addresses!.FirstOrDefault()!.City!.Name))
+            .ForMember(dest => dest.SlotDate,
+                       opt => opt.MapFrom(src => src.Slot.Date))
+            .ForMember(dest => dest.SlotType,
+                       opt => opt.MapFrom(src => src.Slot.SlotType));
+
 
             CreateMap<Question, QuestionCreateDTO>().ReverseMap();
             CreateMap<Question, QuestionResponseDTO>().ReverseMap();
+            CreateMap<Question, QuestionResponsePDTO>()
+                .ForMember(dest => dest.ClientBirthDate, opt => opt.MapFrom(src => src.Client!.BirthDate))
+                .ForMember(dest => dest.ClientGender, opt => opt.MapFrom(src => src.Client!.Gender))
+                .ForMember(dest => dest.ServiceProviderFirstName, opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.FirstName : null))
+                .ForMember(dest => dest.ServiceProviderLastName, opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.LastName : null));
+            CreateMap<Question, QuestionResponseCDTO>()
+                .ForMember(dest => dest.ServiceProviderFirstName, opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.FirstName : null))
+                .ForMember(dest => dest.ServiceProviderLastName, opt => opt.MapFrom(src => src.ServiceProvider != null ? src.ServiceProvider.LastName : null));
         }
     }
 }

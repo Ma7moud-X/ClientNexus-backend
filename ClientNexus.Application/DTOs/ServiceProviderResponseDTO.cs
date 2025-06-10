@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClientNexus.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -39,5 +40,7 @@ namespace ClientNexus.Application.DTOs
         public int Telephone_consultation_price { get; set; } 
 
         public string main_Specialization { get; set; }
+        public Gender Gender { get; set; }
+
     }
 }

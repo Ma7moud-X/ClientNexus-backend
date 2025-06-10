@@ -1,16 +1,16 @@
-﻿using ClientNexus.Application.DTOs;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace ClientNexus.Application.Services
 {
@@ -18,13 +18,14 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly UserManager<BaseUser> _userManager;
-        public AdmainService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager)
 
+        public AdmainService(IUnitOfWork unitOfWork, UserManager<BaseUser> userManager)
         {
             this.unitOfWork = unitOfWork;
             this._userManager = userManager;
         }
-        public async Task ApprovingServiceProviderAsync(int ServiceID)
+
+        public async Task ApprovingServiceProviderAsync(int ServiceID, int adminId)
         {
             // Retrieve the service provider from the database
             var serviceProvider = await unitOfWork.ServiceProviders.GetByIdAsync(ServiceID);
@@ -36,12 +37,8 @@ namespace ClientNexus.Application.Services
             }
 
             serviceProvider.IsApproved = true;
+            serviceProvider.ApprovedById = adminId;
             await unitOfWork.SaveChangesAsync();
-
         }
-
-
     }
-
-    }
-
+}

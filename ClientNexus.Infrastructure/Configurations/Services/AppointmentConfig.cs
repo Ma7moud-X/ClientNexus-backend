@@ -18,6 +18,8 @@ namespace ClientNexus.Infrastructure.Configurations.Services
             builder.Property(a => a.SlotId).IsRequired();
 
             //builder.Property(a => a.Date).IsRequired();
+            builder.HasIndex(a => a.ServiceProviderId);
+            builder.HasIndex(a => a.SlotId);
         }
     }
 }

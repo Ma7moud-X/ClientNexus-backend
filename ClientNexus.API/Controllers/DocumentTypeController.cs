@@ -19,7 +19,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         public async Task<IActionResult> AddDocumentTypeService([FromBody] DocumentTypeDTO documentTypeDTO)
         {
             try
@@ -49,7 +49,7 @@ namespace ClientNexus.API.Controllers
 
 
         [HttpDelete("{id}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteDocumentTypeAsyn(int id)
         {
             try

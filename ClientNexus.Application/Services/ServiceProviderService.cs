@@ -55,11 +55,7 @@ namespace ClientNexus.Application.Services
             var emergencyCase = (
                 await _unitOfWork.EmergencyCases.GetByConditionAsync(
                     ec =>
-                        ec.CreatedAt
-                            >= DateTime.UtcNow.AddHours(
-                                -GlobalConstants.TimeAfterWhichServiceIsCancelledByDefaultInMinutes
-                            )
-                        && ec.ServiceProviderId == serviceProviderId
+                        ec.ServiceProviderId == serviceProviderId
                         && ec.Status == ServiceStatus.InProgress,
                     limit: 1
                 )
@@ -128,31 +124,6 @@ namespace ClientNexus.Application.Services
             );
         }
 
-        public async Task<
-            IEnumerable<NotificationToken>
-        > GetTokensOfServiceProvidersNearLocationAsync(
-            double longitude,
-            double latitude,
-            double radiusInMeters
-        )
-        {
-            var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
-                sp =>
-                    sp.CurrentLocation != null
-                    && sp.CurrentLocation.Distance(new MapPoint(longitude, latitude))
-                        <= radiusInMeters
-                    && sp.LastLocationUpdateTime != null
-                    && sp.LastLocationUpdateTime
-                        > DateTime.UtcNow.AddMinutes(
-                            -GlobalConstants.ServiceProviderLocationValiditySpanInMinutes
-                        )
-                    && sp.NotificationToken != null,
-                sp => new NotificationToken { Token = sp.NotificationToken! }
-            );
-
-            return tokens;
-        }
-
         public async Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId)
         {
             var res = (
@@ -192,10 +163,8 @@ namespace ClientNexus.Application.Services
             return affectedCount == 1;
         }
 
-        public async Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId)
+        public async Task<bool> SetUnvavailableForEmergencyWithLockingAsync(int serviceProviderId)
         {
-            await _unitOfWork.BeginTransactionAsync();
-
             var availability = await _unitOfWork.SqlGetSingleAsync<AvailableForEmergencyResponse>(
                 @"
                 SELECT IsAvailableForEmergency FROM ClientNexusSchema.ServiceProviders
@@ -212,7 +181,6 @@ namespace ClientNexus.Application.Services
 
             if (availability.IsAvailableForEmergency == false)
             {
-                await _unitOfWork.RollbackTransactionAsync();
                 return false;
             }
 
@@ -224,8 +192,6 @@ namespace ClientNexus.Application.Services
                 new Parameter("@serviceProviderId", serviceProviderId)
             );
 
-            await _unitOfWork.CommitTransactionAsync();
-
             return affectedCount == 1;
         }
 
@@ -234,6 +200,10 @@ namespace ClientNexus.Application.Services
             UpdateServiceProviderDTO updateDto
         )
         {
+            if (updateDto == null)
+            {
+                throw new ArgumentNullException(nameof(updateDto), "Invalid request data.");
+            }
             var serviceprovider =
                 await _userManager.FindByIdAsync(ServiceProviderId.ToString()) as ServiceProvider;
             if (serviceprovider == null)
@@ -253,7 +223,8 @@ namespace ClientNexus.Application.Services
                 var mainImageExtension = Path.GetExtension(updateDto.MainImage.FileName)
                     .TrimStart('.');
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
-                var mainImageType = GetFileType(updateDto.MainImage);
+
+                var mainImageType = _fileService.GetFileType(updateDto.MainImage);
                 serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
                     updateDto.MainImage.OpenReadStream(),
                     mainImageType,
@@ -306,7 +277,7 @@ namespace ClientNexus.Application.Services
             var updateResult = await _userManager.UpdateAsync(serviceprovider);
             if (!updateResult.Succeeded)
             {
-                throw new InvalidOperationException("Client update failed.");
+                throw new InvalidOperationException("ServiceProvider update failed.");
             }
         }
 
@@ -342,13 +313,15 @@ namespace ClientNexus.Application.Services
             var filteredServiceProviders = await _unitOfWork
                 .ServiceProviders.GetAllQueryable()
                 .AsNoTracking()
+                .Where(sp=>sp.IsApproved==true)
                 .Include(sp => sp.Addresses!)
                 .ThenInclude(a => a.City!)
                 .ThenInclude(c => c.State!)
                 .Include(sp => sp.Specializations!)
+                .Include(sp => sp.MainSpecialization!)
                 .Where(sp =>
-                    sp.FirstName.ToLower().StartsWith(searchQuery.ToLower())
-                    || sp.LastName.ToLower().StartsWith(searchQuery.ToLower())
+                    sp.FirstName.ToLower().Contains(searchQuery.ToLower())
+                    || sp.LastName.ToLower().Contains(searchQuery.ToLower())
                     || (
                         matchedSpecialization != null
                         && sp.main_specializationID == matchedSpecialization.Id
@@ -356,13 +329,8 @@ namespace ClientNexus.Application.Services
                 )
                 .ToListAsync();
 
-            var serviceProviderTasks = filteredServiceProviders.Select(async sp =>
-            {
-                var mainSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
-                    s.Id == sp.main_specializationID
-                );
-
-                return new ServiceProviderResponseDTO
+            var result = filteredServiceProviders
+                .Select(sp => new ServiceProviderResponseDTO
                 {
                     Id = sp.Id,
                     FirstName = sp.FirstName,
@@ -370,19 +338,21 @@ namespace ClientNexus.Application.Services
                     Rate = sp.Rate,
                     Description = sp.Description,
                     MainImage = sp.MainImage,
+                    ImageIDUrl = sp.ImageIDUrl,
+                    ImageNationalIDUrl = sp.ImageNationalIDUrl,
+                    Gender = sp.Gender,
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
                     City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                     State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
-                    main_Specialization = mainSpecialization?.Name,
+                    main_Specialization = sp.MainSpecialization?.Name,
                     SpecializationName =
                         sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
-                };
-            });
+                })
+                .ToList();
 
-            var result = await Task.WhenAll(serviceProviderTasks);
-            return result.ToList();
+            return result;
         }
 
         public async Task<List<ServiceProviderResponseDTO>> FilterServiceProviderResponses(
@@ -477,6 +447,7 @@ namespace ClientNexus.Application.Services
                     MainImage = sp.MainImage,
                     ImageIDUrl = sp.ImageIDUrl,
                     ImageNationalIDUrl = sp.ImageNationalIDUrl,
+                    Gender = sp.Gender,
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
@@ -524,6 +495,7 @@ namespace ClientNexus.Application.Services
                 ImageIDUrl = sp.ImageIDUrl,
                 ImageNationalIDUrl = sp.ImageNationalIDUrl,
                 YearsOfExperience = sp.YearsOfExperience,
+                Gender = sp.Gender,
                 Office_consultation_price = sp.Office_consultation_price,
                 Telephone_consultation_price = sp.Telephone_consultation_price,
                 City = sp.Addresses?.FirstOrDefault()?.City?.Name,
@@ -532,22 +504,6 @@ namespace ClientNexus.Application.Services
                 SpecializationName =
                     sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
             };
-        }
-
-        private FileType GetFileType(IFormFile file)
-        {
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            switch (extension)
-            {
-                case ".jpg":
-                    return FileType.Jpg;
-                case ".jpeg":
-                    return FileType.Jpeg;
-                case ".png":
-                    return FileType.Png;
-                default:
-                    throw new ArgumentException($"Unsupported file type: {extension}");
-            }
         }
     }
 }

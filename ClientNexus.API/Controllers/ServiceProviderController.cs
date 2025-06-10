@@ -23,8 +23,8 @@ namespace ClientNexus.API.Controllers
             {
                 this._serviceProviderIsService = serviceProviderIsService;
             }
-        //[Authorize(Policy = "IsClientOrAdmin")]
 
+        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("Search")]
         public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
             {
@@ -35,20 +35,21 @@ namespace ClientNexus.API.Controllers
                 {
                     var providers = await _serviceProviderIsService.SearchServiceProvidersAsync(searchQuery);
 
-                    if (!providers.Any())
-                    {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
-                    }
+                if (!providers.Any())
+                {
+                    var successResponse = ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(new List<ServiceProviderResponseDTO>(), "No matching service providers found.");
+                    return Ok(successResponse);
+                }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
-        [Authorize(Policy = "IsClientOrAdmin")]
 
+        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
             {
@@ -56,12 +57,13 @@ namespace ClientNexus.API.Controllers
                 {
                     var providers = await _serviceProviderIsService.FilterServiceProviderResponses(searchQuery, minRate, state, city, specializationName);
 
-                    if (!providers.Any())
-                    {
-                        return NotFound(ApiResponseDTO<List<ServiceProviderResponseDTO>>.ErrorResponse("No matching service providers found."));
-                    }
+                if (!providers.Any())
+                {
+                    var successResponse = ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(new List<ServiceProviderResponseDTO>(), "No matching service providers found.");
+                    return Ok(successResponse);
+                }
 
-                    return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
+                return Ok(ApiResponseDTO<List<ServiceProviderResponseDTO>>.SuccessResponse(providers, "Service providers retrieved successfully."));
                 }
                 catch (Exception ex)
                 {
@@ -71,7 +73,6 @@ namespace ClientNexus.API.Controllers
 
             }
         [Authorize(Policy = "IsAdmin")]
-
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
         {
@@ -99,7 +100,6 @@ namespace ClientNexus.API.Controllers
 
 
         [Authorize(Policy = "IsServiceProviderOrAdmin")]
-
         [HttpPut]
             public async Task<IActionResult> UpdateServiceProviderId( [FromForm] UpdateServiceProviderDTO updateDto)
             {
@@ -115,7 +115,7 @@ namespace ClientNexus.API.Controllers
                 try
                 {
                     await _serviceProviderIsService.UpdateServiceProviderAsync(userId.Value, updateDto);
-                    return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+                    return Ok(ApiResponseDTO<string>.SuccessResponse("serviceprovider updated successfully."));
                 }
                 catch (KeyNotFoundException ex)
                 {
@@ -130,18 +130,28 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
-        [Authorize(Policy = "IsServiceProviderOrAdmin")]
-
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetById()
+        public async Task<IActionResult> GetById(int? id)
         {
-            var userId = User.GetId();
-            if (userId is null)
-                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
 
+            int Id;
+            if (id == null)
+            {
+                var userId = User.GetId();
+                if (userId is null)
+                    return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+                Id = userId.Value;
+            }
+            else
+            {
+                Id = id.Value;
+            }
+
+           
             try
             {
-                var response = await _serviceProviderIsService.GetByIdAsync(userId.Value);
+                var response = await _serviceProviderIsService.GetByIdAsync(Id);
 
                 if (response == null)
                     return NotFound(ApiResponseDTO<string>.ErrorResponse("ServiceProvider not found."));
@@ -159,6 +169,7 @@ namespace ClientNexus.API.Controllers
             }
 
         }
+
     }
 
     }

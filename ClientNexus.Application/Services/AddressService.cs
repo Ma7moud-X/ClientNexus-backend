@@ -50,7 +50,6 @@ namespace ClientNexus.Application.Services
             {
                 BaseUserId = serviceProviderId,
                 DetailedAddress = addressDto.DetailedAddress,
-                MapUrl = addressDto.MapUrl,
                 CityId = addressDto.CityId,
                 StateId= addressDto.StateId,
             };

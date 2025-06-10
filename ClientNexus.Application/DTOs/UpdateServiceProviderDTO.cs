@@ -28,9 +28,9 @@ namespace ClientNexus.Application.DTOs
         [Required]
 
         public string NewPassword { get; set; }
-        [Required]
+       
 
-        public IFormFile MainImage { get; set; }
+        public IFormFile? MainImage { get; set; }
         [Required]
 
         public int Office_consultation_price { get; set; }

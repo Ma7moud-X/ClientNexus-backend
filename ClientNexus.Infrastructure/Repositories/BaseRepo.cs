@@ -1,9 +1,12 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using ClientNexus.Domain.Entities.Services;
+using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
+
 using static Amazon.S3.Util.S3EventNotification;
 
 namespace ClientNexus.Infrastructure.Repositories;
@@ -54,7 +57,6 @@ public class BaseRepo<EType> : IBaseRepo<EType>
     //     return await _context.Set<EType>().FromSqlRaw(query, parameters).FirstOrDefaultAsync();
     // }
 
-
     public IQueryable<EType> GetAllQueryable(params Expression<Func<EType, object>>[] includes)
     {
         IQueryable<EType> query = _context.Set<EType>().AsNoTracking();
@@ -98,6 +100,18 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         if (!getAll)
         {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
             query = query.Skip(offset).Take(limit);
         }
 
@@ -148,6 +162,18 @@ public class BaseRepo<EType> : IBaseRepo<EType>
         IQueryable<T> query = q.Select(selectExp);
         if (!getAll)
         {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
             query = query.Skip(offset).Take(limit);
         }
 
@@ -203,6 +229,103 @@ public class BaseRepo<EType> : IBaseRepo<EType>
 
         return await query.ToListAsync();
     }
+
+    public async Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+    Expression<Func<EType, bool>>? condExp,
+    Expression<Func<EType, T>> selectExp,
+    Func<IQueryable<EType>, IQueryable<EType>> includeFunc, // Function to build includes
+    bool getAll = false,
+    int offset = 0,
+    int limit = 20,
+    Expression<Func<EType, object>>? orderByExp = null,
+    bool descendingOrdering = false
+)
+    {
+        if (selectExp is null)
+        {
+            throw new Exception("Select expression can't be null");
+        }
+
+        var q = _context.Set<EType>().AsNoTracking();
+
+        if (condExp is not null)
+        {
+            q = q.Where(condExp);
+        }
+
+        //Apply includes
+        q = includeFunc(q);
+
+        if (orderByExp is not null)
+        {
+            if (descendingOrdering)
+            {
+                q = q.OrderByDescending(orderByExp);
+            }
+            else
+            {
+                q = q.OrderBy(orderByExp);
+            }
+        }
+
+        IQueryable<T> query = q.Select(selectExp);
+
+        if (!getAll)
+        {
+            if (offset < 0)
+            {
+                throw new InvalidInputException(
+                    $"{nameof(offset)} must be greater than or equal zero"
+                );
+            }
+
+            if (limit <= 0)
+            {
+                throw new InvalidInputException($"{nameof(limit)} must be greater than 0");
+            }
+
+            query = query.Skip(offset).Take(limit);
+        }
+
+        return await query.ToListAsync();
+    }
+    public async Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc,
+        AutoMapper.IConfigurationProvider mapperConfig, // AutoMapper config
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    )
+    {
+        var q = _context.Set<EType>().AsNoTracking();
+
+        if (condExp is not null)
+        {
+            q = q.Where(condExp);
+        }
+
+        q = includeFunc(q); // Apply includes
+
+        if (orderByExp is not null)
+        {
+            q = descendingOrdering
+                ? q.OrderByDescending(orderByExp)
+                : q.OrderBy(orderByExp);
+        }
+
+        var projected = q.ProjectTo<T>(mapperConfig); // Use AutoMapper to project
+
+        if (!getAll)
+        {
+            projected = projected.Skip(offset).Take(limit);
+        }
+
+        return await projected.ToListAsync();
+    }
+
 
     public async Task<EType?> FirstOrDefaultAsync(
         Expression<Func<EType, bool>> condExp,

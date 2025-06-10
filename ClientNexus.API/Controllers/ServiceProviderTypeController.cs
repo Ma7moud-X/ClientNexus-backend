@@ -19,7 +19,7 @@ namespace ClientNexus.API.Controllers
             this.serviceProviderTypeService = serviceProviderTypeService;
         }
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> AddServiceProviderType([FromBody] string name)
         {
@@ -41,7 +41,7 @@ namespace ClientNexus.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteServiceProviderTypeAsyn(int id)
         {

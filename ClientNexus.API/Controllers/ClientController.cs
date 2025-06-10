@@ -19,7 +19,7 @@ namespace ClientNexus.API.Controllers
 
         [HttpPut]
         [Authorize(Policy = "IsClientOrAdmin")]
-        public async Task<IActionResult> UpdateClient( [FromBody] UpdateClientDTO updateDto)
+        public async Task<IActionResult> UpdateClient( [FromForm] UpdateClientDTO updateDto)
         {
             var userId = User.GetId();
             if (userId is null)
@@ -50,16 +50,25 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet]
-        [Authorize(Policy = "IsClient")]
-        public async Task<IActionResult> GetById()
+        [Authorize]
+        public async Task<IActionResult> GetById(int? id )
         {
-            var userId = User.GetId();
-            if (userId is null)
-                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+            int Id;
+            if (id == null)
+            {
+                var userId = User.GetId();
+                if (userId is null)
+                    return Unauthorized(ApiResponseDTO<string>.ErrorResponse("User is not authorized."));
+                Id= userId.Value;
+            }
+            else
+            {
+                Id = id.Value;
+            }
 
             try
             {
-                var response = await _clientService.GetByIdAsync(userId.Value);
+                var response = await _clientService.GetByIdAsync(Id);
 
                 if (response == null)
                     return NotFound(ApiResponseDTO<string>.ErrorResponse("Client not found."));

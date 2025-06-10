@@ -3,22 +3,17 @@ using ClientNexus.Application.Models;
 
 namespace ClientNexus.Application.Interfaces
 {
-
-
     public interface IServiceProviderService
     {
-        Task<IEnumerable<NotificationToken>> GetTokensOfServiceProvidersNearLocationAsync(
-            double longitude,
-            double latitude,
-            double radiusInMeters
-        );
         Task<ServiceProviderOverview?> GetServiceProviderOverviewAsync(int serviceProviderId);
 
-        Task<bool> SetUnvavailableForEmergencyAsync(int serviceProviderId);
+        Task<bool> SetUnvavailableForEmergencyWithLockingAsync(int serviceProviderId);
         Task<bool> CheckIfAllowedToMakeOffersAsync(int serviceProviderId);
         Task<bool> CheckIfAllowedToBeAvailableForEmergencyAsync(int serviceProviderId);
         Task<bool> SetAvailableForEmergencyAsync(int serviceProviderId);
-        public Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(string? searchQuery);
+        public Task<List<ServiceProviderResponseDTO>> SearchServiceProvidersAsync(
+            string? searchQuery
+        );
         public Task UpdateServiceProviderAsync(
             int ServiceProviderId,
             UpdateServiceProviderDTO updateDto
@@ -32,7 +27,5 @@ namespace ClientNexus.Application.Interfaces
         );
         public Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved);
         public Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId);
-
-
     }
 }

@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
+using AutoMapper.QueryableExtensions;
+
 
 namespace ClientNexus.Domain.Interfaces;
 
@@ -31,6 +34,28 @@ public interface IBaseRepo<EType>
     Task<IEnumerable<T>> GetByConditionAsync<T>(
         IEnumerable<(string conditionString, object conditionValue)> conditions,
         Expression<Func<EType, T>> selectExp,
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    );
+
+    Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Expression<Func<EType, T>> selectExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc, // Function to build includes
+        bool getAll = false,
+        int offset = 0,
+        int limit = 20,
+        Expression<Func<EType, object>>? orderByExp = null,
+        bool descendingOrdering = false
+    );
+
+    Task<IEnumerable<T>> GetByConditionWithIncludesAsync<T>(
+        Expression<Func<EType, bool>>? condExp,
+        Func<IQueryable<EType>, IQueryable<EType>> includeFunc,
+        AutoMapper.IConfigurationProvider mapperConfig, // AutoMapper config
         bool getAll = false,
         int offset = 0,
         int limit = 20,

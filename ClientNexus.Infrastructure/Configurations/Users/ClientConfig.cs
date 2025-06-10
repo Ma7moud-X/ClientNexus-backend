@@ -13,9 +13,9 @@ namespace ClientNexus.Infrastructure.Configurations.Users
 
             builder.HasBaseType<BaseUser>();
 
-            builder.Property(c => c.Rate)
-                .IsRequired()
-                .HasDefaultValue(0.0f);
+            //builder.Property(c => c.Rate)
+            //    .IsRequired()
+            //    .HasDefaultValue(0.0f);
 
             builder
                 .HasMany(cc => cc.Problems)

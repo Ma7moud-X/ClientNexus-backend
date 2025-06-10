@@ -7,7 +7,6 @@ using System.Text;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace ClientNexus.API.Controllers
 {
     [ApiController]
@@ -40,15 +39,16 @@ namespace ClientNexus.API.Controllers
 
                 string type = data.type?.ToString();
                 var obj = data.obj;
-                string intentionId = obj?.id?.ToString();
+                string transactionId = obj?.id?.ToString();
                 string success = obj?.success?.ToString()?.ToLower();
 
-                if (type != "TRANSACTION" || string.IsNullOrEmpty(intentionId))
+                if (type != "TRANSACTION" || string.IsNullOrEmpty(transactionId))
                 {
                     return BadRequest("Invalid webhook payload");
                 }
 
-                var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.IntentionId == intentionId);
+                // Assuming IntentionId in the database is the transaction ID
+                var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.IntentionId == transactionId);
                 if (payment == null)
                 {
                     return NotFound("Payment not found");
@@ -129,8 +129,8 @@ namespace ClientNexus.API.Controllers
             var fields = new List<string>
             {
                 obj.amount_cents?.ToString() ?? "",
-                obj.created_at?.ToString() ?? "",
-                obj.currency?.ToString() ?? "",
+                obj.order?.created_at?.ToString() ?? "", // Fixed: Access created_at from order
+                obj.currency?.ToString() ?? "", // Currency might be missing; default to empty
                 obj.error_occured?.ToString()?.ToLower() ?? "false",
                 obj.has_parent_transaction?.ToString()?.ToLower() ?? "false",
                 obj.id?.ToString() ?? "",
@@ -141,12 +141,12 @@ namespace ClientNexus.API.Controllers
                 obj.is_refunded?.ToString()?.ToLower() ?? "false",
                 obj.is_standalone_payment?.ToString()?.ToLower() ?? "false",
                 obj.is_voided?.ToString()?.ToLower() ?? "false",
-                obj.order_id?.ToString() ?? "",
-                obj.owner?.ToString() ?? "",
+                obj.order?.id?.ToString() ?? "", // Fixed: Access order_id from order
+                obj.profile_id?.ToString() ?? "", // Use profile_id as owner (merchant ID)
                 obj.pending?.ToString()?.ToLower() ?? "false",
-                obj.source_data_pan?.ToString() ?? "",
-                obj.source_data_sub_type?.ToString() ?? "",
-                obj.source_data_type?.ToString() ?? "",
+                obj.source_data?.pan?.ToString() ?? "", // Fixed: Access nested source_data
+                obj.source_data?.sub_type?.ToString() ?? "",
+                obj.source_data?.type?.ToString() ?? "",
                 obj.success?.ToString()?.ToLower() ?? "false"
             };
 

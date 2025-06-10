@@ -34,5 +34,8 @@ public class BaseUserConfig : IEntityTypeConfiguration<BaseUser>
             .WithOne(b => b.BaseUser)
             .HasForeignKey(b => b.BaseUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(sp => sp.MainImage).HasMaxLength(1000);
+
     }
 }
