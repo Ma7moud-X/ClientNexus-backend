@@ -15,7 +15,6 @@ namespace ClientNexus.Application.DTOs
         public string PhoneNumber { get; set; } 
         public DateOnly BirthDate { get; set; }
         public string Email { get; set; }
-        public string? PlainPassword { get; set; }
         public Gender Gender { get; set; }
         public string MainImage { get; set; }
 

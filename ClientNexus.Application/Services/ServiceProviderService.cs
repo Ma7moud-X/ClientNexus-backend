@@ -313,6 +313,7 @@ namespace ClientNexus.Application.Services
             var filteredServiceProviders = await _unitOfWork
                 .ServiceProviders.GetAllQueryable()
                 .AsNoTracking()
+                .Where(sp=>sp.IsApproved==true)
                 .Include(sp => sp.Addresses!)
                 .ThenInclude(a => a.City!)
                 .ThenInclude(c => c.State!)

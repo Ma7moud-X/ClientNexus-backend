@@ -24,7 +24,7 @@ namespace ClientNexus.API.Controllers
 
         // POST api/city
         [HttpPost]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<CityDTO>>> AddCity([FromBody] CityDTO cityDTO)
         {
@@ -57,7 +57,7 @@ namespace ClientNexus.API.Controllers
 
         // DELETE api/city/{id}
         [HttpDelete("{id}")]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<object>>> DeleteCity(int id)
         {
@@ -81,7 +81,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet]
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<List<CityResponseDTO>>>> GetAllCities()
         {

@@ -4,20 +4,21 @@ using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using ClientNexus.Application.DTOs;
+using ClientNexus.Application.Interfaces;
+using ClientNexus.Application.Services;
+using ClientNexus.Domain.Entities;
+using ClientNexus.Domain.Entities.Others;
+using ClientNexus.Domain.Interfaces;
+using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text.Json;
 
 namespace ClientNexus.API.Controllers
 {
-    using ClientNexus.Application.DTOs;
-    using ClientNexus.Application.Interfaces;
-    using ClientNexus.Application.Services;
-    using ClientNexus.Domain.Entities;
-    using ClientNexus.Domain.Entities.Others;
-    using ClientNexus.Domain.Interfaces;
-    using Google.Apis.Auth;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Mvc;
-    using System.IdentityModel.Tokens.Jwt;
-    using System.Text.Json;
+ 
 
     [ApiController]
     [Route("api/[controller]")]
@@ -68,10 +69,7 @@ namespace ClientNexus.API.Controllers
             {
                 return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
             }
-            catch (NotSupportedException ex)
-            {
-                return BadRequest(ApiResponseDTO<AuthResponseDTO>.ErrorResponse(ex.Message));
-            }
+            
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponseDTO<AuthResponseDTO>.ErrorResponse("An unexpected error occurred: " + ex.Message));
