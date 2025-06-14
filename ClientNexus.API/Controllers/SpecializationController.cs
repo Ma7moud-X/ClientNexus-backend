@@ -69,7 +69,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet("GetAllSpecializations")]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         public async Task<ActionResult<ApiResponseDTO<List<SpecializationResponseDTO>>>> GetAllSpecializations()
         {
             try

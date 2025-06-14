@@ -81,7 +81,7 @@ namespace ClientNexus.API.Controllers
             }
         }
         [HttpGet]
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
 
         public async Task<ActionResult<ApiResponseDTO<List<CityResponseDTO>>>> GetAllCities()
         {
