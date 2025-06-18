@@ -4,6 +4,10 @@ using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.Enums;
+using Newtonsoft.Json;
+using System.Net.Http;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace ClientNexus.Application.Services
 {
@@ -11,11 +15,14 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly PaymobPaymentService _paymobService;
-
-        public PaymentService(IUnitOfWork unitOfWork, PaymobPaymentService paymobService)
+        private readonly HttpClient _httpClient;
+        private readonly string _paymobAPIkey;
+        public PaymentService(IUnitOfWork unitOfWork, PaymobPaymentService paymobService, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
             _paymobService = paymobService;
+            _httpClient = httpClientFactory.CreateClient();
+            _paymobAPIkey = configuration["Paymob:APIKey"];
         }
 
         public async Task<PaymentResponseDTO> StartSubscriptionPayment(StartSubscriptionPaymentRequestDTO request)
@@ -219,5 +226,74 @@ namespace ClientNexus.Application.Services
                 return ServiceType.Appointment; // Default
             }
         }
+
+        public async Task<GetPaymentStatusResponseDTO> GetPaymentStatus(string referenceNumber)
+        {
+            if (string.IsNullOrEmpty(referenceNumber))
+            {
+                throw new ArgumentException("Reference number is required.");
+            }
+
+            // Step 1: Authenticate to get Bearer Token
+            var authRequest = new { api_key = _paymobAPIkey };
+            var authContent = new StringContent(JsonConvert.SerializeObject(authRequest), Encoding.UTF8, "application/json");
+            authContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            var authResponse = await _httpClient.PostAsync("https://accept.paymob.com/api/auth/tokens", authContent);
+            authResponse.EnsureSuccessStatusCode();
+            var authData = JsonConvert.DeserializeObject<dynamic>(await authResponse.Content.ReadAsStringAsync());
+            var token = authData.token?.ToString();
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new Exception("Invalid or empty token received from authentication.");
+            }
+
+            // Step 2: Retrieve transaction status
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var inquiryRequest = new { merchant_order_id = referenceNumber }; // Correct field name
+            var inquiryContent = new StringContent(JsonConvert.SerializeObject(inquiryRequest), Encoding.UTF8, "application/json");
+            inquiryContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            var inquiryResponse = await _httpClient.PostAsync("https://accept.paymob.com/api/ecommerce/orders/transaction_inquiry", inquiryContent);
+
+            if (!inquiryResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await inquiryResponse.Content.ReadAsStringAsync();
+                var requestBody = await inquiryContent.ReadAsStringAsync();
+                throw new HttpRequestException($"Transaction inquiry failed: {inquiryResponse.StatusCode} - {errorContent} (Request: {requestBody})");
+            }
+
+            var inquiryData = JsonConvert.DeserializeObject<dynamic>(await inquiryResponse.Content.ReadAsStringAsync());
+            var transactionStatus = inquiryData.data?.txn_response_code?.ToString(); // Use txn_response_code from data
+
+            if (string.IsNullOrEmpty(transactionStatus))
+            {
+                // Fallback to success flag if txn_response_code is missing
+                transactionStatus = inquiryData.success == true ? "APPROVED" : "FAILED";
+            }
+
+            // Map Paymob status to your enum
+            var paymentStatus = transactionStatus == "APPROVED" ? PaymentStatus.Completed :
+                               transactionStatus == "PENDING" ? PaymentStatus.Pending :
+                               transactionStatus == "FAILED" ? PaymentStatus.Failed :
+                               PaymentStatus.Failed; // Default to Failed for unknown statuses
+
+            // Update database
+            var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.ReferenceNumber == referenceNumber);
+            if (payment != null)
+            {
+                // Ensure the entity is tracked and marked as modified
+                _unitOfWork.Payments.Update(payment); // Explicitly mark as modified
+                payment.Status = paymentStatus;
+                payment.WebhookStatus = transactionStatus;
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return new GetPaymentStatusResponseDTO
+            {
+                ReferenceNumber = referenceNumber,
+                Status = transactionStatus,
+                PaymentStatus = paymentStatus.ToString()
+            };
+        }
+
     }
 }
