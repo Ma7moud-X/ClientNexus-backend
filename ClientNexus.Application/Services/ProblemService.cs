@@ -14,13 +14,13 @@ namespace ClientNexus.Application.Services
     public class ProblemService : IProblemService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IPushNotification _pushNotificationService;
+        private readonly INotificationService _notificationService;
 
 
-        public ProblemService(IUnitOfWork unitOfWork, IPushNotification pushNotificationService)
+        public ProblemService(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
-            _pushNotificationService = pushNotificationService;
+            _notificationService = notificationService;
         }
 
         public async Task<ProblemListItemDto> CreateProblemAsync(CreateProblemDto createProblemDto)
@@ -227,14 +227,14 @@ namespace ClientNexus.Application.Services
             {
                 string title = "Problem Status Update";
                 string body = $"Your reported problem has been updated to {problem.Status}";
-                await _pushNotificationService.SendNotificationAsync(title, body, problem.Client.NotificationToken);
+                await _notificationService.SendNotificationAsync(title, body, problem.ClientId, problem.Client.NotificationToken);
             }
             else if (problem.ReportedBy == ReporterType.ServiceProvider && 
                     !string.IsNullOrEmpty(problem.ServiceProvider?.NotificationToken))
             {
                 string title = "Problem Status Update";
                 string body = $"Your reported problem has been updated to {problem.Status}";
-                await _pushNotificationService.SendNotificationAsync(title, body, problem.ServiceProvider.NotificationToken);
+                await _notificationService.SendNotificationAsync(title, body, problem.ServiceProviderId, problem.ServiceProvider.NotificationToken);
             }
 
             return MapToProblemAdminDto(problem);
@@ -267,14 +267,14 @@ namespace ClientNexus.Application.Services
             {
                 string title = "Admin Comment on Your Problem";
                 string body = "An administrator has added a comment to your reported problem";
-                await _pushNotificationService.SendNotificationAsync(title, body, problem.Client.NotificationToken);
+                await _notificationService.SendNotificationAsync(title, body, problem.ClientId, problem.Client.NotificationToken);
             }
             else if (problem.ReportedBy == ReporterType.ServiceProvider && 
                     !string.IsNullOrEmpty(problem.ServiceProvider?.NotificationToken))
             {
                 string title = "Admin Comment on Your Problem";
                 string body = "An administrator has added a comment to your reported problem";
-                await _pushNotificationService.SendNotificationAsync(title, body, problem.ServiceProvider.NotificationToken);
+                await _notificationService.SendNotificationAsync(title, body, problem.ServiceProviderId, problem.ServiceProvider.NotificationToken);
             }
 
             return MapToProblemAdminDto(problem);

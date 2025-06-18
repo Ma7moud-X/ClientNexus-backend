@@ -14,14 +14,14 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IPushNotification _pushNotification;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<AppointmentService> _logger;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification, ILogger<AppointmentService> logger)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<AppointmentService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _pushNotification = pushNotification;
+            _notificationService = notificationService;
             _logger = logger;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
@@ -263,27 +263,19 @@ namespace ClientNexus.Application.Services
         {
             if (appointment == null) throw new ArgumentNullException(nameof(appointment));
             if (slot == null) throw new ArgumentNullException(nameof(slot));
-
             try
             {
-                var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
-                                 sp => sp.Id == appointment.ServiceProviderId,
-                                 sp => new NotificationToken { Token = sp.NotificationToken! }
-             );
-                var providerToken = tokens.FirstOrDefault();
-                if (providerToken is not null)
-                {
-
-                    await _pushNotification.SendNotificationAsync(
-                                                                title: "Appointment Cancelled",
-                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
-                                                                providerToken.Token);
-                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client");
-                }
+                string title = "إلغاء موعد";
+                string body = $"قام عميل بإلغاء موعدك بتاريخ {slot?.Date}";
+                bool isSent = await _notificationService.SendNotificationAsync(
+                                                            title: title,
+                                                            body: body,
+                                                            userId: appointment.ServiceProviderId!.Value);
+                _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client.");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Failed to send reminder for appointment,  {ex.Message}");
+                _logger.LogInformation($"Failed to send notification for cancelled appointment,  {ex.Message}");
             }
         }
 
@@ -291,26 +283,19 @@ namespace ClientNexus.Application.Services
         {
             if (appointment == null) throw new ArgumentNullException(nameof(appointment));
             if (slot == null) throw new ArgumentNullException(nameof(slot));
-
             try
             {
-                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
-                    c => c.Id == appointment.ClientId,
-                    c => new NotificationToken { Token = c.NotificationToken! }
-                );
-                var clientToken = tokens.FirstOrDefault();
-                if (clientToken is not null)
-                {
-                    await _pushNotification.SendNotificationAsync(
-                                                                title: "Appointment Cancelled",
-                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
-                                                               clientToken.Token);
-                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider");
-                }
+                string title = "إلغاء موعد";
+                string body = $"قام مزود الخدمة بإلغاء موعدك بتاريخ {slot?.Date}";
+                bool isSent = await _notificationService.SendNotificationAsync(
+                                                            title: title,
+                                                            body: body,
+                                                            userId: appointment.ClientId);
+                _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider.");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Failed to send notification for appointment. {ex.Message}");
+                _logger.LogInformation($"Failed to send notification for cancelled appointment, {ex.Message}");
             }
         }
         private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate)
@@ -356,12 +341,12 @@ namespace ClientNexus.Application.Services
                     try
                     {
                         var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
-
-                        await _pushNotification.SendNotificationAsync(
-                            title: "Appointment Reminder",
-                            body: $"You have an appointment scheduled for tomorrow, {appointmentTimeString}.",
-                            clientToken.Token);
-
+                        string title = "تذكير بموعد";
+                        string body = $"نذكرك بموعدك غدا {appointmentTimeString}";
+                        bool isSent = await _notificationService.SendNotificationAsync(
+                                                                    title: title,
+                                                                    body: body,
+                                                                    userId: appointment.ClientId);
                         _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
 
                         // Mark reminder as sent
