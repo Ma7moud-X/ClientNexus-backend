@@ -31,7 +31,12 @@ namespace ClientNexus.API.Controllers
                 var body = await reader.ReadToEndAsync();
                 var data = JsonConvert.DeserializeObject<dynamic>(body);
 
+                // Check hmac in query string if not in headers
                 var receivedHmac = Request.Headers["hmac"].ToString();
+                if (string.IsNullOrEmpty(receivedHmac))
+                {
+                    receivedHmac = Request.Query["hmac"].ToString();
+                }
                 if (string.IsNullOrEmpty(receivedHmac) || !ValidateHmac(data, receivedHmac))
                 {
                     return Unauthorized("Invalid HMAC signature");
@@ -47,7 +52,6 @@ namespace ClientNexus.API.Controllers
                     return BadRequest("Invalid webhook payload");
                 }
 
-                // Assuming IntentionId in the database is the transaction ID
                 var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.IntentionId == transactionId);
                 if (payment == null)
                 {
@@ -67,7 +71,6 @@ namespace ClientNexus.API.Controllers
                             sp => sp.Id == payment.Id,
                             q => q.Include(sp => sp.ServiceProvider)
                         );
-
                         if (subscriptionPayment != null)
                         {
                             var serviceProvider = subscriptionPayment.ServiceProvider;
@@ -83,7 +86,7 @@ namespace ClientNexus.API.Controllers
                             {
                                 "Normal" => SubscriptionType.Basic,
                                 "Advanced" => SubscriptionType.Premium,
-                                _ => serviceProvider.SubType // Keep existing if invalid
+                                _ => serviceProvider.SubType
                             };
                             _unitOfWork.ServiceProviders.Update(serviceProvider, serviceProvider);
                         }
@@ -94,7 +97,6 @@ namespace ClientNexus.API.Controllers
                             sp => sp.Id == payment.Id,
                             q => q.Include(sp => sp.Service)
                         );
-
                         if (servicePayment != null)
                         {
                             var service = servicePayment.Service;
@@ -129,8 +131,8 @@ namespace ClientNexus.API.Controllers
             var fields = new List<string>
             {
                 obj.amount_cents?.ToString() ?? "",
-                obj.order?.created_at?.ToString() ?? "", // Fixed: Access created_at from order
-                obj.currency?.ToString() ?? "", // Currency might be missing; default to empty
+                obj.order?.created_at?.ToString() ?? "",
+                obj.currency?.ToString() ?? "",
                 obj.error_occured?.ToString()?.ToLower() ?? "false",
                 obj.has_parent_transaction?.ToString()?.ToLower() ?? "false",
                 obj.id?.ToString() ?? "",
@@ -141,10 +143,10 @@ namespace ClientNexus.API.Controllers
                 obj.is_refunded?.ToString()?.ToLower() ?? "false",
                 obj.is_standalone_payment?.ToString()?.ToLower() ?? "false",
                 obj.is_voided?.ToString()?.ToLower() ?? "false",
-                obj.order?.id?.ToString() ?? "", // Fixed: Access order_id from order
-                obj.profile_id?.ToString() ?? "", // Use profile_id as owner (merchant ID)
+                obj.order?.id?.ToString() ?? "",
+                obj.profile_id?.ToString() ?? "",
                 obj.pending?.ToString()?.ToLower() ?? "false",
-                obj.source_data?.pan?.ToString() ?? "", // Fixed: Access nested source_data
+                obj.source_data?.pan?.ToString() ?? "",
                 obj.source_data?.sub_type?.ToString() ?? "",
                 obj.source_data?.type?.ToString() ?? "",
                 obj.success?.ToString()?.ToLower() ?? "false"
