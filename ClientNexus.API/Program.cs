@@ -13,6 +13,7 @@ using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -325,6 +326,8 @@ app.UseAuthorization();
 
 // Add Hangfire dashboard and configure jobs
 app.UseHangfireConfiguration();
+app.UseHangfireDashboard("/hangfire"); // no authorization
+
 
 app.MapControllers();
 

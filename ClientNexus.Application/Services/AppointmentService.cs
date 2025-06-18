@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
-using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Globalization;
+using TimeZoneConverter;
 
 namespace ClientNexus.Application.Services
 {
@@ -73,7 +75,7 @@ namespace ClientNexus.Application.Services
             {
                 //check if foreign key is valid
 
-                var slot = await _unitOfWork.Slots.GetByIdWithLockAsync(appointmentDTO.SlotId );
+                var slot = await _unitOfWork.Slots.GetByIdWithLockAsync(appointmentDTO.SlotId);
                 if (slot == null)
                     throw new KeyNotFoundException("Invalid Slot Id");
                 if (slot.Status != SlotStatus.Available || slot.Date < DateTime.UtcNow)
@@ -266,7 +268,18 @@ namespace ClientNexus.Application.Services
             try
             {
                 string title = "إلغاء موعد";
-                string body = $"قام عميل بإلغاء موعدك بتاريخ {slot?.Date}";
+                // Convert UTC to Egypt time
+                DateTime utcTime = appointment.Slot.Date;
+                TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
+                string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                           .Replace("AM", "صباحًا")
+                                           .Replace("PM", "مساءً");
+
+                string body = $"قام عميل بالغاء موعدك يوم {formattedDate} الساعة {formattedTime}";
+
                 bool isSent = await _notificationService.SendNotificationAsync(
                                                             title: title,
                                                             body: body,
@@ -286,7 +299,19 @@ namespace ClientNexus.Application.Services
             try
             {
                 string title = "إلغاء موعد";
-                string body = $"قام مزود الخدمة بإلغاء موعدك بتاريخ {slot?.Date}";
+
+                // Convert UTC to Egypt time
+                DateTime utcTime = appointment.Slot.Date;
+                TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
+                string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                           .Replace("AM", "صباحًا")
+                                           .Replace("PM", "مساءً");
+
+                string body = $"قام مزود الخدمة بالغاء موعدك يوم {formattedDate} الساعة {formattedTime}";
+
                 bool isSent = await _notificationService.SendNotificationAsync(
                                                             title: title,
                                                             body: body,
@@ -331,34 +356,37 @@ namespace ClientNexus.Application.Services
 
             foreach (var appointment in upcomingAppointments)
             {
-                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
-                                    c => c.Id == appointment.ClientId,
-                                    c => new NotificationToken { Token = c.NotificationToken! }
-                                );
-                var clientToken = tokens.FirstOrDefault();
-                if (clientToken is not null)
+                try
                 {
-                    try
-                    {
-                        var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
-                        string title = "تذكير بموعد";
-                        string body = $"نذكرك بموعدك غدا {appointmentTimeString}";
-                        bool isSent = await _notificationService.SendNotificationAsync(
-                                                                    title: title,
-                                                                    body: body,
-                                                                    userId: appointment.ClientId);
-                        _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+                    string title = "تذكير بموعد";
 
-                        // Mark reminder as sent
-                        await MarkReminderSentAsync(appointment.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogInformation($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
-                    }
+                    // Convert UTC to Egypt time
+                    DateTime utcTime = appointment.Slot.Date;
+                    TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                    DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+  
+                    string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                    string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                               .Replace("AM", "صباحًا")
+                                               .Replace("PM", "مساءً");
+
+                    string body = $"نذكرك بموعدك غدا {formattedDate} الساعة {formattedTime}";
+                    bool isSent = await _notificationService.SendNotificationAsync(
+                                                                title: title,
+                                                                body: body,
+                                                                userId: appointment.ClientId);
+                    _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+
+                    // Mark reminder as sent
+                    await MarkReminderSentAsync(appointment.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
                 }
             }
         }
-
     }
+
 }
+

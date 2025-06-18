@@ -12,7 +12,7 @@ public class DocumentConfig : IEntityTypeConfiguration<Document>
 
         builder.HasKey(d => d.Id);
 
-        builder.Property(d => d.Content).HasColumnType("nvarchar(2000)").IsRequired();
+        builder.Property(d => d.Content).HasColumnType("nvarchar(3507)").IsRequired();
 
         // builder.Property(d => d.Type).IsRequired().HasConversion<string>();
 
