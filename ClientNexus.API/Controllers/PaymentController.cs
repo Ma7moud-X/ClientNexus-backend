@@ -35,5 +35,13 @@ namespace ClientNexus.API.Controllers
             var response = await _paymentService.VerifyPayment(intentionId);
             return Ok(response);
         }
+        [HttpGet("status/{referenceNumber}")]
+        public async Task<IActionResult> GetPaymentStatus(string referenceNumber)
+        {
+            var response = await _paymentService.GetPaymentStatus(referenceNumber);
+            return Ok(response);
+        }
+
     }
+
 }
