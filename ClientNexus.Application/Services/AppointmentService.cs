@@ -33,14 +33,23 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("Invalid Appointment ID");
             return _mapper.Map<AppointmentDTO>(appoint);
         }
-        public async Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit)
+        public async Task<IEnumerable<AppointmentDTO3>> GetByProviderIdAsync(int providerId, int offset, int limit)
         {
             // Check if the provider exists
             if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == providerId))
                 throw new KeyNotFoundException("Invalid Service Provider Id");
 
-            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit); //, includes: new string[] { "Slot" }
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            return await _unitOfWork.Appointments.GetByConditionWithIncludesAsync<AppointmentDTO3>(
+                condExp: a => a.ServiceProviderId == providerId,
+                includeFunc: q => q
+                            .Include(a => a.Client)
+                            .Include(a => a.Slot),
+                mapperConfig: _mapper.ConfigurationProvider,
+                offset: offset,
+                limit: limit,
+                orderByExp: a => a.Slot.Date,
+                descendingOrdering: true
+                ); 
         }
         public async Task<IEnumerable<AppointmentDTO2>> GetByClientIdAsync(int clientId, int offset, int limit)
         {
