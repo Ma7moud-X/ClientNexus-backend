@@ -70,7 +70,7 @@ namespace ClientNexus.Application.Services
                 offset: offset,
                 limit: limit,
                 orderByExp: a => a.Slot.Date,
-                descendingOrdering: false
+                descendingOrdering: true
             );
         }
         public async Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO)

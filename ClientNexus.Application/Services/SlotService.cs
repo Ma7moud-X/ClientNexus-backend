@@ -70,6 +70,32 @@ namespace ClientNexus.Application.Services
             if (slotDTO.Date < DateTime.UtcNow)
                 throw new ArgumentException("Slot date cannot be in the past");
 
+            //Check for slot times conflicts for service provider: 
+            // 1. Get all existing slots for the service provider on the same date
+            var existingSlots = await _unitOfWork.Slots.GetByConditionAsync(s =>
+                s.ServiceProviderId == serviceProviderId &&
+                s.Date.Date == slotDTO.Date.Date); // Compare only the date part
+
+            DateTime newSlotStart = slotDTO.Date;
+            DateTime newSlotEnd = slotDTO.Date + slotDTO.SlotDuration;
+            
+            // 2. Iterate through existing slots and check for overlaps
+            foreach (var existingSlot in existingSlots)
+            {
+                DateTime existingSlotStart = existingSlot.Date;
+                DateTime existingSlotEnd = existingSlot.Date + existingSlot.SlotDuration;
+                // Check for overlap:
+                // An overlap occurs if:
+                // (newSlotStart is between existingSlotStart and existingSlotEnd) OR
+                // (newSlotEnd is between existingSlotStart and existingSlotEnd) OR
+                // (existingSlotStart is between newSlotStart and newSlotEnd) OR
+                // (existingSlotEnd is between newSlotStart and newSlotEnd) OR
+                if (newSlotStart < existingSlotEnd && newSlotEnd > existingSlotStart)
+                {
+                    throw new InvalidOperationException("The new slot conflicts with an existing slot.");
+                }
+            }
+
             Slot slot = _mapper.Map<Slot>(slotDTO);
             slot.Status = SlotStatus.Available;
             slot.ServiceProviderId = serviceProviderId;
@@ -89,8 +115,8 @@ namespace ClientNexus.Application.Services
             if (startDate > endDate)
                 throw new ArgumentException("Start date must be before end date and not in the past");
 
-            if ((endDate - startDate).TotalDays > 90)
-                throw new ArgumentException("Cannot generate slots for more than 90 days at once");
+            if ((endDate - startDate).TotalDays > 62)
+                throw new ArgumentException("Cannot generate slots for more than 62 days at once");
 
             if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == serviceProviderId))
                 throw new KeyNotFoundException("Invalid Service Provider Id");
@@ -149,6 +175,7 @@ namespace ClientNexus.Application.Services
                             {
                                 ServiceProviderId = serviceProviderId,
                                 Date = slotDateTime,
+                                SlotDuration = availableDay.SlotDuration,
                                 Status = SlotStatus.Available,
                                 SlotType = availableDay.SlotType,
                                 AvailableDayId = availableDay.Id
@@ -162,7 +189,7 @@ namespace ClientNexus.Application.Services
                     }
                 }
                 
-
+                
                 // Save all generated slots to the database
                 if (generatedSlots.Any())
                 {
