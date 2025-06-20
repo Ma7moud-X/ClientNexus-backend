@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.Domain;
@@ -7,6 +8,7 @@ using ClientNexus.Application.Models;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
+using TimeZoneConverter;
 
 namespace ClientNexus.Application.Services;
 
@@ -17,7 +19,6 @@ public class OfferService : IOfferService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBaseServiceService _baseServiceService;
     private readonly IServiceProviderService _serviceProviderService;
-    private readonly IEmergencyCaseService _emergencyCaseService;
     private readonly INotificationService _notificationService;
 
     public OfferService(
@@ -26,7 +27,6 @@ public class OfferService : IOfferService
         IUnitOfWork unitOfWork,
         IBaseServiceService baseServiceService,
         IServiceProviderService serviceProviderService,
-        IEmergencyCaseService emergencyCaseService,
         INotificationService notificationService
     )
     {
@@ -35,7 +35,6 @@ public class OfferService : IOfferService
         _unitOfWork = unitOfWork;
         _baseServiceService = baseServiceService;
         _serviceProviderService = serviceProviderService;
-        _emergencyCaseService = emergencyCaseService;
         _notificationService = notificationService;
     }
 
@@ -192,18 +191,18 @@ public class OfferService : IOfferService
             throw new ExpiredException("Offer has expired or does not exist");
         }
 
-        var serviceStatusEnumerable = await _unitOfWork.Services.GetByConditionAsync(
+        var serviceDetailsEnumerable = await _unitOfWork.EmergencyCases.GetByConditionAsync(
             s => s.Id == serviceId,
-            s => s.Status
+            s => new {s.Status, s.MeetingTextAddress}
         );
 
-        if (serviceStatusEnumerable is null || !serviceStatusEnumerable.Any())
+        if (serviceDetailsEnumerable is null || !serviceDetailsEnumerable.Any())
         {
             throw new NotFoundException("Service does not exist");
         }
 
-        var serviceStatus = serviceStatusEnumerable.FirstOrDefault();
-        if (serviceStatus != ServiceStatus.Pending)
+        var serviceDetails = serviceDetailsEnumerable.FirstOrDefault();
+        if (serviceDetails is null || serviceDetails.Status != ServiceStatus.Pending)
         {
             throw new NotAllowedException("Service can't accept offers");
         }
@@ -246,11 +245,10 @@ public class OfferService : IOfferService
         var result = (
             await _unitOfWork.BaseUsers.GetByConditionAsync(
                 u => u.Id == serviceProviderId || u.Id == clientId,
-                u => new { u.Id, u.PhoneNumber }
+                u => new { u.Id, u.PhoneNumber, u.FirstName, u.LastName }
             )
         ).ToList();
 
-        var meetingLocation = await _emergencyCaseService.GetMeetingLocationAsync(serviceId);
 
         var providerDetails = result.FirstOrDefault(u => u.Id == serviceProviderId);
         var clientDetails = result.FirstOrDefault(u => u.Id == clientId);
@@ -269,9 +267,21 @@ public class OfferService : IOfferService
 
         await _unitOfWork.CommitTransactionAsync();
 
-        string notificationTitle = "Offer accepted";
+         // Convert UTC to Egypt time
+        DateTime utcTime = DateTime.UtcNow;
+        TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+        DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
+        string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+        string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                    .Replace("AM", "صباحًا")
+                                    .Replace("PM", "مساءً");
+
+        string notificationTitle = "تم قبول الطلب";
         string notificationBody =
-            $"Client Phone Number: {clientDetails.PhoneNumber}";
+            $"تم قبول الطلب من العميل {clientDetails.FirstName} {clientDetails.LastName}\n" +
+            $"وهو بانتظارك في عنوان  {serviceDetails.MeetingTextAddress}\n" +
+            $"تاريخ القبول {formattedDate} الساعة {formattedTime}";
 
         bool isSent = await _notificationService.SendNotificationAsync(
             notificationTitle,
