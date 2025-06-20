@@ -271,7 +271,7 @@ public class OfferService : IOfferService
 
         string notificationTitle = "Offer accepted";
         string notificationBody =
-            $"Meeting Longitude: {meetingLocation.Value.longitude}\nMeeting Latitude: {meetingLocation.Value.latitude}\nClient Phone Number: {clientDetails.PhoneNumber}\nService Id: {serviceId}";
+            $"Client Phone Number: {clientDetails.PhoneNumber}";
 
         bool isSent = await _notificationService.SendNotificationAsync(
             notificationTitle,
