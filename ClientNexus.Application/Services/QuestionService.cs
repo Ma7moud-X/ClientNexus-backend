@@ -18,19 +18,19 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IPushNotification _pushNotification;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<IQuestionService> _logger;
 
-        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification, ILogger<IQuestionService> logger)
+        public QuestionService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<IQuestionService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _pushNotification = pushNotification;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
         //authorize client
-        public async Task<QuestionResponseDTO> CreateQuestionAsync(int clientId, [FromBody]QuestionCreateDTO dto)
+        public async Task<QuestionResponseDTO> CreateQuestionAsync(int clientId, [FromBody] QuestionCreateDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.QuestionBody))
                 throw new ArgumentNullException("Question body cannot be empty.");
@@ -53,7 +53,7 @@ namespace ClientNexus.Application.Services
         }
 
         //authorize provider
-        public async Task<QuestionResponseDTO> CreateAnswerAsync(int questionId, int providerId, [FromBody]AnswerCreateDTO dto)
+        public async Task<QuestionResponseDTO> CreateAnswerAsync(int questionId, int providerId, [FromBody] AnswerCreateDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.AnswerBody))
                 throw new ArgumentNullException("Answer body cannot be empty.");
@@ -78,20 +78,13 @@ namespace ClientNexus.Application.Services
             //notify the client that his question is answered
             try
             {
-                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
-                                 c => c.Id == question.ClientId,
-                                 c => new NotificationToken { Token = c.NotificationToken! }
-             );
-                var clientToken = tokens.FirstOrDefault();
-                if (clientToken is not null)
-                {
-
-                    await _pushNotification.SendNotificationAsync(
-                                                                title: "Question Answered",
-                                                                body: $"The question you asked at: {question.CreatedAt} has been answered.",
-                                                                clientToken.Token);
-                    _logger.LogInformation($"The question you asked at:  {question.CreatedAt}  has been answered.");
-                }
+                string title = "تم اجابة سؤالك";
+                string body = $"تم الإجابة على سؤالك: {question.QuestionBody}";
+                bool isSent = await _notificationService.SendNotificationAsync(
+                                                            title: title,
+                                                            body: body,
+                                                            userId: question.ClientId);
+                _logger.LogInformation($"The question you asked:  {question.QuestionBody}  has been answered.");
             }
             catch (Exception ex)
             {
@@ -117,7 +110,7 @@ namespace ClientNexus.Application.Services
             Expression<Func<Question, bool>> condition;
             if (onlyUnanswered)
             {
-                condition = q => q.ClientId == clientId &&  q.Status == ServiceStatus.Pending;
+                condition = q => q.ClientId == clientId && q.Status == ServiceStatus.Pending;
             }
             else
             {
@@ -164,16 +157,16 @@ namespace ClientNexus.Application.Services
             {
                 statusCondition = q => q.Status == ServiceStatus.Pending || q.Status == ServiceStatus.Done;
             }
-                var questions = await _unitOfWork.Questions.GetByConditionWithIncludesAsync<QuestionResponsePDTO>(
-                condExp: statusCondition,
-                includeFunc: c => c
-                    .Include(q => q.ServiceProvider)
-                    .Include(q => q.Client),
+            var questions = await _unitOfWork.Questions.GetByConditionWithIncludesAsync<QuestionResponsePDTO>(
+            condExp: statusCondition,
+            includeFunc: c => c
+                .Include(q => q.ServiceProvider)
+                .Include(q => q.Client),
 
-                mapperConfig: _mapper.ConfigurationProvider,
-                offset: offset,
-                limit: limit
-            );
+            mapperConfig: _mapper.ConfigurationProvider,
+            offset: offset,
+            limit: limit
+        );
 
             return _mapper.Map<List<QuestionResponsePDTO>>(questions);
         }
@@ -186,7 +179,7 @@ namespace ClientNexus.Application.Services
             if (question == null)
                 throw new KeyNotFoundException("Invalid Question ID.");
 
-         
+
             if (question.ClientId != currentClientId && role != UserType.Admin)
                 throw new UnauthorizedAccessException("You are not allowed to delete this question.");
 

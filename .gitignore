@@ -133,3 +133,5 @@ ClientNexus.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
 
 # Ignore environment-specific configuration
 appsettings.Development.json
+/ClientNexus.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
+/ClientNexus.API/Properties/PublishProfiles/site23914-WebDeploy.pubxml

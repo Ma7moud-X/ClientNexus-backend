@@ -50,8 +50,11 @@ namespace ClientNexus.API.Controllers
                 }
             }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
         //[Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)

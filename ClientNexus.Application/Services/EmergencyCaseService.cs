@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTO;
@@ -9,6 +10,7 @@ using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.ValueObjects;
 using NetTopologySuite.Geometries;
+using TimeZoneConverter;
 
 namespace ClientNexus.Application.Services;
 
@@ -68,13 +70,19 @@ public class EmergencyCaseService : IEmergencyCaseService
         ArgumentException.ThrowIfNullOrWhiteSpace(clientFirstName);
         ArgumentException.ThrowIfNullOrWhiteSpace(clientLastName);
 
+        DateTime utcTime = DateTime.UtcNow;
+        TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+        DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
         EmergencyCase emergencyCase = await CreateEmergencyCaseAsync(emergencyDTO, clientId);
         await _notificationService.SendNotificationToServiceProvidersNearLocationAsync(
             emergencyDTO.MeetingLongitude,
             emergencyDTO.MeetingLatitude,
             notifyServicePorvidersWithinMeters,
-            $"New emergency case: {emergencyDTO.Name}",
-            $"Description: {emergencyDTO.Description}",
+            $"طلب طارئ بالقرب منك",
+            $"عنوان الطلب: {emergencyDTO.Name}\n" +
+            $"الوصف: {emergencyDTO.Description}\n" +
+            $"الوقت: {egyptTime.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("ar-EG"))}",
             new Dictionary<string, string>
             {
                 { "type", "EmergencyCase" },
