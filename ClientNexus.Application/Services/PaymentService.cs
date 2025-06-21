@@ -8,6 +8,8 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ClientNexus.Application.Services
 {
@@ -17,15 +19,18 @@ namespace ClientNexus.Application.Services
         private readonly PaymobPaymentService _paymobService;
         private readonly HttpClient _httpClient;
         private readonly string _paymobAPIkey;
-        public PaymentService(IUnitOfWork unitOfWork, PaymobPaymentService paymobService, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public PaymentService(IUnitOfWork unitOfWork, PaymobPaymentService paymobService, IConfiguration configuration, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _paymobService = paymobService;
             _httpClient = httpClientFactory.CreateClient();
             _paymobAPIkey = configuration["Paymob:APIKey"];
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<PaymentResponseDTO> StartSubscriptionPayment(StartSubscriptionPaymentRequestDTO request)
+        public async Task<PaymentResponseDTO> StartSubscriptionPayment(StartSubscriptionPaymentRequestDTO request, int serviceProviderId)
         {
             // Validate SubscriptionType
             if (!new[] { "Monthly", "Quarterly", "Yearly" }.Contains(request.SubscriptionType))
@@ -39,11 +44,17 @@ namespace ClientNexus.Application.Services
                 throw new ArgumentException("Invalid subscription tier. Must be 'Normal' or 'Advanced'.");
             }
 
-            // Validate ServiceProviderId
-            var serviceProvider = await _unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == request.ServiceProviderId);
+            // Validate ServiceProviderId and retrieve user data
+            var serviceProvider = await _unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == serviceProviderId);
             if (serviceProvider == null)
             {
                 throw new ArgumentException("Service provider not found.");
+            }
+            var userData = await _unitOfWork.BaseUsers.FirstOrDefaultAsync(u => u.Id == serviceProviderId);
+            if (userData == null || string.IsNullOrEmpty(userData.Email) || string.IsNullOrEmpty(userData.FirstName) ||
+                string.IsNullOrEmpty(userData.LastName) || string.IsNullOrEmpty(userData.PhoneNumber))
+            {
+                throw new ArgumentException("User data not found or incomplete for the service provider.");
             }
 
             var amount = _paymobService.GetSubscriptionAmount(request.SubscriptionType, request.SubscriptionTier);
@@ -55,10 +66,10 @@ namespace ClientNexus.Application.Services
 
                 var (clientSecret, intentionId) = await _paymobService.StartPayment(
                     amount,
-                    request.Email,
-                    request.FirstName,
-                    request.LastName,
-                    request.Phone,
+                    userData.Email,
+                    userData.FirstName,
+                    userData.LastName,
+                    userData.PhoneNumber,
                     reference,
                     new[] { $"Subscription ({request.SubscriptionType}, {request.SubscriptionTier})" });
 
@@ -81,11 +92,11 @@ namespace ClientNexus.Application.Services
                         "Yearly" => 'Y',
                         _ => throw new ArgumentException("Invalid subscription type")
                     },
-                    ServiceProviderId = request.ServiceProviderId,
+                    ServiceProviderId = serviceProviderId,
                     SubscriptionTier = request.SubscriptionTier
                 };
 
-                await _unitOfWork.Payments.AddAsync(subscriptionPayment);
+                await _unitOfWork.SubscriptionPayments.AddAsync(subscriptionPayment);
                 await _unitOfWork.SaveChangesAsync();
 
                 await _unitOfWork.CommitTransactionAsync();
@@ -95,7 +106,8 @@ namespace ClientNexus.Application.Services
                     ClientSecret = clientSecret,
                     IntentionId = intentionId,
                     PublicKey = _paymobService.GetPublicKey(),
-                    Status = "pending"
+                    Status = "pending",
+                    ReferenceNumber = reference
                 };
             }
             catch (Exception ex)
@@ -105,17 +117,24 @@ namespace ClientNexus.Application.Services
             }
         }
 
-        public async Task<PaymentResponseDTO> StartServicePayment(StartServicePaymentRequestDTO request)
+        public async Task<PaymentResponseDTO> StartServicePayment(StartServicePaymentRequestDTO request, int clientId)
         {
-            // Validate ClientId
-            var client = await _unitOfWork.Clients.FirstOrDefaultAsync(c => c.Id == request.ClientId);
+            // Validate ClientId and retrieve user data
+            var client = await _unitOfWork.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
             if (client == null)
             {
                 throw new ArgumentException("Client not found.");
             }
+            var userData = await _unitOfWork.BaseUsers.FirstOrDefaultAsync(u => u.Id == clientId);
+            if (userData == null || string.IsNullOrEmpty(userData.Email) || string.IsNullOrEmpty(userData.FirstName) ||
+                string.IsNullOrEmpty(userData.LastName) || string.IsNullOrEmpty(userData.PhoneNumber))
+            {
+                throw new ArgumentException("User data not found or incomplete for the client.");
+            }
 
-            // Validate ServiceProviderId
-            var serviceProvider = await _unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == request.ServiceProviderId);
+            // Validate ServiceProviderId from request
+            var serviceProviderId = request.ServiceProviderId;
+            var serviceProvider = await _unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == serviceProviderId);
             if (serviceProvider == null)
             {
                 throw new ArgumentException("Service provider not found.");
@@ -129,10 +148,10 @@ namespace ClientNexus.Application.Services
 
                 var (clientSecret, intentionId) = await _paymobService.StartPayment(
                     request.Amount,
-                    request.Email,
-                    request.FirstName,
-                    request.LastName,
-                    request.Phone,
+                    userData.Email,
+                    userData.FirstName,
+                    userData.LastName,
+                    userData.PhoneNumber,
                     reference,
                     new[] { request.ServiceName });
 
@@ -146,8 +165,8 @@ namespace ClientNexus.Application.Services
                     Status = ServiceStatus.Pending,
                     ServiceType = serviceType,
                     Price = request.Amount,
-                    ClientId = request.ClientId,
-                    ServiceProviderId = request.ServiceProviderId
+                    ClientId = clientId,
+                    ServiceProviderId = serviceProviderId
                 };
 
                 await _unitOfWork.Services.AddAsync(service);
@@ -169,7 +188,7 @@ namespace ClientNexus.Application.Services
                     ServiceName = request.ServiceName
                 };
 
-                await _unitOfWork.Payments.AddAsync(servicePayment);
+                await _unitOfWork.ServicePayments.AddAsync(servicePayment);
                 await _unitOfWork.SaveChangesAsync();
 
                 await _unitOfWork.CommitTransactionAsync();
@@ -179,7 +198,8 @@ namespace ClientNexus.Application.Services
                     ClientSecret = clientSecret,
                     IntentionId = intentionId,
                     PublicKey = _paymobService.GetPublicKey(),
-                    Status = "pending"
+                    Status = "pending",
+                    ReferenceNumber = reference
                 };
             }
             catch (Exception ex)
@@ -188,7 +208,6 @@ namespace ClientNexus.Application.Services
                 throw new Exception($"Failed to start service payment: {ex.Message}", ex);
             }
         }
-
         public async Task<VerifyPaymentResponseDTO> VerifyPayment(string intentionId)
         {
             var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.IntentionId == intentionId);
@@ -294,6 +313,5 @@ namespace ClientNexus.Application.Services
                 PaymentStatus = paymentStatus.ToString()
             };
         }
-
     }
 }

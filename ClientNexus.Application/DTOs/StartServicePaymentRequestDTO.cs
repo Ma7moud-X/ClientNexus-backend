@@ -10,9 +10,6 @@ namespace ClientNexus.Application.DTOs
     public class StartServicePaymentRequestDTO
     {
         [Required]
-        public int ClientId { get; set; }
-
-        [Required]
         public int ServiceProviderId { get; set; }
 
         [Required]
@@ -20,18 +17,5 @@ namespace ClientNexus.Application.DTOs
 
         [Required]
         public decimal Amount { get; set; }
-
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-
-        [Required]
-        public string FirstName { get; set; }
-
-        [Required]
-        public string LastName { get; set; }
-
-        [Required]
-        public string Phone { get; set; }
     }
 }

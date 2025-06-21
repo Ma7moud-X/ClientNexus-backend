@@ -39,6 +39,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp =>
 builder.Services.AddSingleton<IPushNotification, ExpoPushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpService, HttpService>();
 builder.Services.AddMapService();
 builder.Services.AddScoped<IOfferService, OfferService>();
