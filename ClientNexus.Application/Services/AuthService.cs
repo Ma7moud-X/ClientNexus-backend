@@ -400,6 +400,11 @@ public class AuthService : IAuthService
         var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
         if (!result.Succeeded) return null;
 
+        if (user is ServiceProvider provider)
+        {
+            await CheckAndUpdateSubscriptionStatusAsync(provider);
+        }
+
         // Generate JWT Token
         var token = GenerateJwtToken(user);
 
@@ -425,7 +430,10 @@ public class AuthService : IAuthService
         if (user == null)
             throw new InvalidOperationException("User not  exists in database");
 
-
+        if (user is ServiceProvider provider)
+        {
+            await CheckAndUpdateSubscriptionStatusAsync(provider);
+        }
 
         var token = GenerateJwtToken(user);
         return new AuthResponseDTO
@@ -489,6 +497,7 @@ public class AuthService : IAuthService
         var fbUrl = $"https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture&access_token={accessToken}";
 
         var response = await http.GetStringAsync(fbUrl);
+       
         var json = JsonDocument.Parse(response).RootElement;
 
         return new SocialUserPayload
@@ -511,6 +520,9 @@ public class AuthService : IAuthService
     private async Task<SocialUserPayload> GetGooglePayloadAsync(string accessToken)
     {
         var googlePayload = await GoogleJsonWebSignature.ValidateAsync(accessToken);
+
+        if (string.IsNullOrEmpty(googlePayload.Email))
+            throw new UnauthorizedAccessException("Google payload missing email.");
         return new SocialUserPayload
         {
             Email = googlePayload.Email,
@@ -534,6 +546,20 @@ public class AuthService : IAuthService
                 return FileType.Png;
             default:
                 throw new ArgumentException($"Unsupported file type: {extension}");
+        }
+    }
+    private async Task CheckAndUpdateSubscriptionStatusAsync(ServiceProvider provider)
+    {
+        if (provider.SubscriptionStatus == SubscriptionStatus.Active)
+        {
+            if (provider.SubscriptionExpiryDate.HasValue &&
+                provider.SubscriptionExpiryDate.Value < DateTime.UtcNow)
+            {
+                provider.SubscriptionStatus = SubscriptionStatus.Expired;
+                provider.IsFeatured = false;
+                _unitOfWork.ServiceProviders.Update(provider);
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
     }
 }

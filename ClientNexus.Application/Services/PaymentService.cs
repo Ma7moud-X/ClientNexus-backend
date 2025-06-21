@@ -4,6 +4,7 @@ using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.Enums;
+using ClientNexus.Domain.Entities.Users;
 
 namespace ClientNexus.Application.Services
 {
@@ -194,6 +195,7 @@ namespace ClientNexus.Application.Services
             return new VerifyPaymentResponseDTO { Status = payment.WebhookStatus };
         }
 
+
         private ServiceType DetermineServiceType(string serviceName)
         {
             if (string.IsNullOrEmpty(serviceName))
@@ -219,5 +221,6 @@ namespace ClientNexus.Application.Services
                 return ServiceType.Appointment; // Default
             }
         }
+      
     }
 }

@@ -8,6 +8,7 @@ using ClientNexus.Application.Services;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Google.Apis.Services;
 
 namespace ClientNexus.API.Controllers
 {
@@ -24,7 +25,7 @@ namespace ClientNexus.API.Controllers
                 this._serviceProviderIsService = serviceProviderIsService;
             }
 
-        [Authorize(Policy = "IsClientOrAdmin")]
+        //[Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("Search")]
         public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
             {
@@ -48,13 +49,10 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
-<<<<<<< HEAD
-=======
+
+
+
         //[Authorize(Policy = "IsClientOrAdmin")]
->>>>>>> 82bb75ddfff2fcab5a6f0255ebd75f492e006128
-
-
-        [Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
             {
@@ -77,7 +75,7 @@ namespace ClientNexus.API.Controllers
 
 
             }
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
         {
@@ -135,6 +133,37 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+        [HttpPut("update-password")]
+        [Authorize(Policy = "IsServiceProviderOrAdmin")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDTO dto)
+        {
+
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
+            try
+            {
+
+                await _serviceProviderIsService.UpdateServiceProviderPasswordAsync(userId.Value, dto);
+                return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetById(int? id)

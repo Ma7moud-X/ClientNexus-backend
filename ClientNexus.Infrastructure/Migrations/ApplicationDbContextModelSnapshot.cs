@@ -187,6 +187,42 @@ namespace ClientNexus.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.AvailableDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("LastGenerationEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("SlotDuration")
+                        .HasColumnType("time");
+
+                    b.Property<int>("SlotType")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderId");
+
+                    b.ToTable("AvailableDays", "ClientNexusSchema");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
                 {
                     b.Property<int>("Id")
@@ -267,8 +303,8 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Notification", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<byte[]>("Id")
+                        .HasColumnType("BINARY(16)");
 
                     b.Property<int>("BaseUserId")
                         .HasColumnType("int");
@@ -647,6 +683,9 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AvailableDayId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -663,7 +702,9 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceProviderId", "Date", "SlotType")
+                    b.HasIndex("AvailableDayId");
+
+                    b.HasIndex("ServiceProviderId", "Date")
                         .IsUnique();
 
                     b.ToTable("Slots", "ClientNexusSchema");
@@ -721,7 +762,6 @@ namespace ClientNexus.Infrastructure.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("MainImage")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
@@ -1288,6 +1328,17 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("Document");
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.AvailableDay", b =>
+                {
+                    b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProvider", "ServiceProvider")
+                        .WithMany("AvailableDays")
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProvider");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
                 {
                     b.HasOne("ClientNexus.Domain.Entities.Others.Country", "Country")
@@ -1457,11 +1508,17 @@ namespace ClientNexus.Infrastructure.Migrations
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Services.Slot", b =>
                 {
+                    b.HasOne("ClientNexus.Domain.Entities.Others.AvailableDay", "AvailableDay")
+                        .WithMany("Slots")
+                        .HasForeignKey("AvailableDayId");
+
                     b.HasOne("ClientNexus.Domain.Entities.Users.ServiceProvider", "ServiceProvider")
                         .WithMany("Slots")
                         .HasForeignKey("ServiceProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("AvailableDay");
 
                     b.Navigation("ServiceProvider");
                 });
@@ -1720,6 +1777,11 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Navigation("Documents");
                 });
 
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.AvailableDay", b =>
+                {
+                    b.Navigation("Slots");
+                });
+
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.City", b =>
                 {
                     b.Navigation("Addresses");
@@ -1802,6 +1864,8 @@ namespace ClientNexus.Infrastructure.Migrations
             modelBuilder.Entity("ClientNexus.Domain.Entities.Users.ServiceProvider", b =>
                 {
                     b.Navigation("AppointmentCosts");
+
+                    b.Navigation("AvailableDays");
 
                     b.Navigation("ClientServiceProviderFeedbacks");
 

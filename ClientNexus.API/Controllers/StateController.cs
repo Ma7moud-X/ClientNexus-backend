@@ -62,7 +62,7 @@ namespace ClientNexus.API.Controllers
                 return StatusCode(500, ApiResponseDTO<object>.ErrorResponse($"An unexpected error occurred: {ex.Message}"));
             }
         }
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         [HttpGet]
         public async Task<ActionResult<ApiResponseDTO<List<StateResponseDTO>>>> GetAllStates()
         {

@@ -27,5 +27,7 @@ namespace ClientNexus.Application.Interfaces
         );
         public Task<List<ServiceProviderResponseDTO>> GetAllServiceProvider(bool? IsApproved);
         public Task<ServiceProviderResponseDTO> GetByIdAsync(int ServiceProviderId);
+        public Task UpdateServiceProviderPasswordAsync(int ServiceProviderId, UpdatePasswordDTO dto);
+
     }
 }

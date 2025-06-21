@@ -195,10 +195,7 @@ namespace ClientNexus.Application.Services
             return affectedCount == 1;
         }
 
-        public async Task UpdateServiceProviderAsync(
-            int ServiceProviderId,
-            UpdateServiceProviderDTO updateDto
-        )
+        public async Task UpdateServiceProviderAsync(int ServiceProviderId,UpdateServiceProviderDTO updateDto )
         {
             if (updateDto == null)
             {
@@ -225,20 +222,13 @@ namespace ClientNexus.Application.Services
                 var mainImageKey = $"{Guid.NewGuid()}.{mainImageExtension}";
 
                 var mainImageType = _fileService.GetFileType(updateDto.MainImage);
-                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(
-                    updateDto.MainImage.OpenReadStream(),
-                    mainImageType,
-                    mainImageKey
-                );
+                serviceprovider.MainImage = await _fileService.UploadPublicFileAsync(updateDto.MainImage.OpenReadStream(),mainImageType,mainImageKey);
             }
             if (updateDto.Office_consultation_price != serviceprovider.Office_consultation_price)
                 serviceprovider.Office_consultation_price = updateDto.Office_consultation_price;
-            if (
-                updateDto.Telephone_consultation_price
-                != serviceprovider.Telephone_consultation_price
-            )
-                serviceprovider.Telephone_consultation_price =
-                    updateDto.Telephone_consultation_price;
+            if (updateDto.Telephone_consultation_price!= serviceprovider.Telephone_consultation_price)
+
+                serviceprovider.Telephone_consultation_price = updateDto.Telephone_consultation_price;
             if (updateDto.YearsOfExperience != serviceprovider.YearsOfExperience)
                 serviceprovider.YearsOfExperience = updateDto.YearsOfExperience;
             if (updateDto.Description != serviceprovider.Description)
@@ -248,36 +238,31 @@ namespace ClientNexus.Application.Services
                 serviceprovider.Email = updateDto.Email;
                 serviceprovider.UserName = updateDto.Email;
             }
-            if (!string.IsNullOrWhiteSpace(updateDto.NewPassword))
-            {
-                // Check if the new password matches the current password
-                var passwordMatches = await _userManager.CheckPasswordAsync(
-                    serviceprovider,
-                    updateDto.NewPassword
-                );
-
-                if (!passwordMatches)
-                {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(serviceprovider);
-                    var passwordUpdateResult = await _userManager.ResetPasswordAsync(
-                        serviceprovider,
-                        token,
-                        updateDto.NewPassword
-                    );
-                    if (!passwordUpdateResult.Succeeded)
-                    {
-                        string errors = string.Join(
-                            ", ",
-                            passwordUpdateResult.Errors.Select(e => e.Description)
-                        );
-                        throw new InvalidOperationException($"Password update failed: {errors}");
-                    }
-                }
-            }
+            
             var updateResult = await _userManager.UpdateAsync(serviceprovider);
             if (!updateResult.Succeeded)
             {
                 throw new InvalidOperationException("ServiceProvider update failed.");
+            }
+        }
+        public async Task UpdateServiceProviderPasswordAsync(int ServiceProviderId, UpdatePasswordDTO dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto), "Invalid request data.");
+
+            var ServiceProvider = await _userManager.FindByIdAsync(ServiceProviderId.ToString()) as ServiceProvider;
+            if (ServiceProvider == null)
+                throw new KeyNotFoundException("ServiceProvider not found.");
+
+            var passwordValid = await _userManager.CheckPasswordAsync(ServiceProvider, dto.CurrentPassword);
+            if (!passwordValid)
+                throw new InvalidOperationException("Current password is incorrect.");
+
+            var result = await _userManager.ChangePasswordAsync(ServiceProvider, dto.CurrentPassword, dto.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Password update failed: {errors}");
             }
         }
 
@@ -328,6 +313,10 @@ namespace ClientNexus.Application.Services
                     )
                 )
                 .ToListAsync();
+            foreach (var sp in filteredServiceProviders)
+            {
+                CheckAndUpdateSubscriptionStatusAsync(sp);
+            }
 
             var result = filteredServiceProviders
                 .Select(sp => new ServiceProviderResponseDTO
@@ -344,8 +333,17 @@ namespace ClientNexus.Application.Services
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
-                    City = sp.Addresses?.FirstOrDefault()?.City?.Name,
-                    State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                    //City = sp.Addresses?.FirstOrDefault()?.City?.Name,
+                    //State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                    Addresses = sp.Addresses?.Select(a => new AddressDTO
+                    {
+                        DetailedAddress = a.DetailedAddress,
+                        CityId = a.CityId,
+                        StateId = a.City?.StateId ?? 0,
+                        CityName = a.City?.Name,
+                        StateName = a.City?.State?.Name
+                    }).ToList() ?? new List<AddressDTO>(),
+
                     main_Specialization = sp.MainSpecialization?.Name,
                     SpecializationName =
                         sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
@@ -370,31 +368,26 @@ namespace ClientNexus.Application.Services
                     // Rate filter (if provided)
                     (!minRate.HasValue || sp.Rate >= minRate.Value)
                     &&
-                    // State filter (if provided)
-                    (
-                        string.IsNullOrEmpty(city)
-                        || (
-                            !string.IsNullOrEmpty(sp.City)
-                            && NormalizeSearchQuery(sp.City)
-                                .Equals(
-                                    NormalizeSearchQuery(city),
-                                    StringComparison.OrdinalIgnoreCase
-                                )
+         
+            // Filter by state (if provided)
+            (string.IsNullOrEmpty(state) ||
+                (sp.Addresses?.Any(a =>
+                    !string.IsNullOrEmpty(a.StateName) &&
+                    NormalizeSearchQuery(a.StateName)
+                        .Equals(
+                            NormalizeSearchQuery(state),
+                            StringComparison.OrdinalIgnoreCase
                         )
-                    )
-                    &&
-                    // City filter (if provided)
-                    (
-                        string.IsNullOrEmpty(city)
-                        || (
-                            !string.IsNullOrEmpty(sp.City)
-                            && NormalizeSearchQuery(sp.City)
-                                .Equals(
-                                    NormalizeSearchQuery(city),
-                                    StringComparison.OrdinalIgnoreCase
-                                )
-                        )
-                    )
+                ) ?? false)
+            )
+            &&
+            // Filter by city (if provided)
+            (string.IsNullOrEmpty(city) ||
+                (sp.Addresses?.Any(a =>
+                    !string.IsNullOrEmpty(a.CityName) &&
+                    NormalizeSearchQuery(a.CityName) == NormalizeSearchQuery(city)
+                ) ?? false)
+            )
                     &&
                     // Specialization filter (if provided)
                     (
@@ -429,7 +422,11 @@ namespace ClientNexus.Application.Services
                 .Include(sp => sp.Specializations!)
                 .Where(sp => sp.IsApproved == IsApproved)
                 .ToListAsync();
-
+            foreach (var sp in serviceProviders)
+            {
+            CheckAndUpdateSubscriptionStatusAsync(sp);
+                
+            }
             var serviceProviderResponse = new List<ServiceProviderResponseDTO>();
             foreach (var sp in serviceProviders)
             {
@@ -451,8 +448,15 @@ namespace ClientNexus.Application.Services
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
-                    City = sp.Addresses?.FirstOrDefault()?.City?.Name,
-                    State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                    Addresses = sp.Addresses?.Select(a => new AddressDTO
+                    {
+                        DetailedAddress = a.DetailedAddress,
+                        CityId = a.CityId,
+                        StateId = a.City?.StateId ?? 0,
+                        CityName = a.City?.Name,
+                        StateName = a.City?.State?.Name
+                    }).ToList() ?? new List<AddressDTO>(),
+
                     main_Specialization = mainSpec?.Name,
                     SpecializationName =
                         sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
@@ -475,11 +479,13 @@ namespace ClientNexus.Application.Services
                 .Include(s => s.Specializations!)
                 .FirstOrDefaultAsync(s => s.Id == ServiceProviderId);
 
+
             if (sp == null)
             {
                 throw new KeyNotFoundException("ServiceProviderId not found.");
             }
 
+            CheckAndUpdateSubscriptionStatusAsync(sp);
             var mainSpecialization = await _unitOfWork.Specializations.FirstOrDefaultAsync(s =>
                 s.Id == sp.main_specializationID
             );
@@ -496,14 +502,43 @@ namespace ClientNexus.Application.Services
                 ImageNationalIDUrl = sp.ImageNationalIDUrl,
                 YearsOfExperience = sp.YearsOfExperience,
                 Gender = sp.Gender,
+                phonenumber=sp.PhoneNumber,
+                BirthDate = sp.BirthDate,
+                IsApproved=sp.IsApproved,
                 Office_consultation_price = sp.Office_consultation_price,
                 Telephone_consultation_price = sp.Telephone_consultation_price,
-                City = sp.Addresses?.FirstOrDefault()?.City?.Name,
-                State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
+                IsFeatured=sp.IsFeatured,
+                SubscriptionExpiryDate = sp.SubscriptionExpiryDate,
+                SubscriptionStatus = sp.SubscriptionStatus,
+                SubType = sp.SubType,
+                Addresses = sp.Addresses?.Select(a => new AddressDTO
+                {
+                    DetailedAddress = a.DetailedAddress,
+                    CityId = a.CityId,
+                    StateId = a.City?.StateId ?? 0,
+                    CityName = a.City?.Name,
+                    StateName = a.City?.State?.Name
+                }).ToList() ?? new List<AddressDTO>(),
+
                 main_Specialization = mainSpecialization?.Name,
                 SpecializationName =
                     sp.Specializations?.Select(s => s.Name).ToList() ?? new List<string>(),
+
             };
+        }
+        private async Task CheckAndUpdateSubscriptionStatusAsync(ServiceProvider provider)
+        {
+            if (provider.SubscriptionStatus == SubscriptionStatus.Active)
+            {
+                if (provider.SubscriptionExpiryDate.HasValue &&
+                    provider.SubscriptionExpiryDate.Value < DateTime.UtcNow)
+                {
+                    provider.SubscriptionStatus = SubscriptionStatus.Expired;
+                    provider.IsFeatured=false;
+                    _unitOfWork.ServiceProviders.Update(provider);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+            }
         }
     }
 }

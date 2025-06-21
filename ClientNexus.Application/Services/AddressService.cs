@@ -23,15 +23,15 @@ namespace ClientNexus.Application.Services
 
         public async Task AddAddressAsync(int serviceProviderId, AddressDTO addressDto)
         {
+            if (addressDto == null)
+                throw new ArgumentNullException(nameof(addressDto), "Address data cannot be null.");
+
             var serviceProviderExists = await _unitOfWork.ServiceProviders.FirstOrDefaultAsync(sp => sp.Id == serviceProviderId);
             if (serviceProviderExists==null)
             {
                 throw new ArgumentException("Service provider not found.");
             }
-            if (addressDto == null)
-            {
-                throw new ArgumentNullException(nameof(addressDto), "Address data cannot be null.");
-            }
+            
 
             
             var cityExists = await _unitOfWork.Cities.FirstOrDefaultAsync(c => c.Id == addressDto.CityId);
@@ -45,6 +45,8 @@ namespace ClientNexus.Application.Services
             {
                 throw new ArgumentException("State not found.");
             }
+            if (cityExists.StateId != addressDto.StateId)
+                throw new ArgumentException("The selected city does not belong to the specified state.");
 
             Address Address = new Address
             {
