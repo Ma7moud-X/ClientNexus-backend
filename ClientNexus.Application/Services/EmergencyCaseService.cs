@@ -241,6 +241,8 @@ public class EmergencyCaseService : IEmergencyCaseService
                     ServiceProviderId = ec.ServiceProviderId,
                     ClientId = ec.ClientId,
                     Price = ec.Price,
+                    ServiceProviderPhoneNumber = ec.ServiceProvider!.PhoneNumber!,
+                    ClientPhoneNumber = ec.Client!.PhoneNumber!,
                 },
                 limit: 1
             )

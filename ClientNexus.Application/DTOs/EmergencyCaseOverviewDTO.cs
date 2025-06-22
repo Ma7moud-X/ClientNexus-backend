@@ -12,6 +12,8 @@ namespace ClientNexus.Application.DTOs
         public required decimal? Price { get; init; }
         public required double MeetingLongitude { get; init; }
         public required double MeetingLatitude { get; init; }
+        public required string ServiceProviderPhoneNumber { get; init; }
+        public required string ClientPhoneNumber { get; init; }
 
         public required int ClientId { get; init; }
         public required int? ServiceProviderId { get; init; }
