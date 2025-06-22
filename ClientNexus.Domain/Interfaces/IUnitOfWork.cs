@@ -82,6 +82,7 @@ public interface IUnitOfWork : IDisposable
     IBaseRepo<OfficeImageUrl> OfficeImageUrls { get; }
     IBaseRepo<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks {get; }
     IBaseRepo<Notification> Notifications {get; }
+    IBaseRepo<Payout> Payouts { get; }
 
     // Functions
     Task<int> SaveChangesAsync();

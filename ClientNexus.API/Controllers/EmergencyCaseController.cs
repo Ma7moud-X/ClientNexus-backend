@@ -205,6 +205,8 @@ namespace ClientNexus.API.Controllers
                         MeetingLatitude = ec.MeetingLocation!.Y,
                         ClientId = ec.ClientId,
                         ServiceProviderId = ec.ServiceProviderId,
+                        ServiceProviderPhoneNumber = ec.ServiceProvider!.PhoneNumber!,
+                        ClientPhoneNumber = ec.Client!.PhoneNumber!
                     },
                     offset: offset,
                     limit: limit,
