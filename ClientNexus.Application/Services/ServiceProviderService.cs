@@ -2,6 +2,8 @@ using ClientNexus.Application.Constants;
 using ClientNexus.Application.DTOs;
 using ClientNexus.Application.Interfaces;
 using ClientNexus.Application.Models;
+using ClientNexus.Domain.Entities;
+using ClientNexus.Domain.Entities.Others;
 using ClientNexus.Domain.Entities.Users;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
@@ -238,7 +240,25 @@ namespace ClientNexus.Application.Services
                 serviceprovider.Email = updateDto.Email;
                 serviceprovider.UserName = updateDto.Email;
             }
-            
+            if (updateDto.Addresses != null && updateDto.Addresses.Count > 0)
+            {
+                serviceprovider.Addresses?.Clear();
+
+                foreach (var addressDto in updateDto.Addresses)
+                {
+                    var address = new Address
+                    {
+                        DetailedAddress = addressDto.DetailedAddress,
+                        CityId = addressDto.CityId,
+                        StateId= addressDto.StateId,
+                        BaseUserId=ServiceProviderId
+                    };
+
+                    serviceprovider.Addresses ??= new List<Address>();
+                    serviceprovider.Addresses.Add(address);
+                }
+            }
+
             var updateResult = await _userManager.UpdateAsync(serviceprovider);
             if (!updateResult.Succeeded)
             {

@@ -76,6 +76,36 @@ namespace ClientNexus.API.Controllers
             }
 
         }
+        [HttpPost("link-social")]
+        public async Task<IActionResult> LinkSocialAccount([FromBody] LinkSocialAccountDTO dto)
+        {
+            try
+            {
+                await _authService.LinkSocialAccountAsync(dto);
+
+                return Ok(ApiResponseDTO<object>.SuccessResponse(null, "Social account linked successfully."));
+            }
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest(ApiResponseDTO<object>.ErrorResponse("Missing request data: " + ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<object>.ErrorResponse(ex.Message));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponseDTO<object>.ErrorResponse(ex.Message));
+            }
+            catch (NotSupportedException ex)
+            {
+                return BadRequest(ApiResponseDTO<object>.ErrorResponse("Unsupported provider: " + ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<object>.ErrorResponse("An unexpected error occurred: " + ex.Message));
+            }
+        }
 
 
 

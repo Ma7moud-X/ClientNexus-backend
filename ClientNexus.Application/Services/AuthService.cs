@@ -80,11 +80,8 @@ public class AuthService : IAuthService
 
         if (dto.UserType == UserType.ServiceProvider || dto.UserType == UserType.Client)
         {
-            if (dto.MainImage == null && dto.UserType == UserType.ServiceProvider)
-            {
-                throw new ArgumentNullException(nameof(dto.MainImage), "MainImage is required for ServiceProvider.");
-            }
-            else if (dto.MainImage == null && dto.UserType == UserType.Client)
+           
+          if (dto.MainImage == null )
             {
                 mainImageUrl = null;
             }
@@ -144,7 +141,6 @@ public class AuthService : IAuthService
                 Description = dto.Description ?? throw new ArgumentNullException(nameof(dto.Description), "Description is required for ServiceProvider"),
                 ImageIDUrl = imageIDUrl,
                 ImageNationalIDUrl = imageNationalIDUrl,
-                MainImage = mainImageUrl,
                 TypeId = dto.TypeId ?? throw new ArgumentNullException(nameof(dto.TypeId), "TypeId is required for ServiceProvider"),
                 Rate = 0,
                 IsApproved = false,
@@ -168,6 +164,7 @@ public class AuthService : IAuthService
         user.UserName = payload.Email;
         user.Email = payload.Email;
         user.PhoneNumber = dto.PhoneNumber;
+        user.MainImage = mainImageUrl;
 
 
 
@@ -244,11 +241,11 @@ public class AuthService : IAuthService
 
         if (dto.UserType == UserType.ServiceProvider || dto.UserType == UserType.Client)
         {
-            if (dto.MainImage == null && dto.UserType == UserType.ServiceProvider)
-            {
-                throw new ArgumentNullException(nameof(dto.MainImage), "MainImage is required for ServiceProvider.");
-            }
-            else if (dto.MainImage == null && dto.UserType == UserType.Client)
+            //if (dto.MainImage == null && dto.UserType == UserType.ServiceProvider )
+            //{
+            //    throw new ArgumentNullException(nameof(dto.MainImage), "MainImage is required for ServiceProvider.");
+            //}
+            if (dto.MainImage == null )
             {
                 mainImageUrl = null;
             }
@@ -309,7 +306,6 @@ public class AuthService : IAuthService
                 Description = dto.Description ?? throw new ArgumentNullException(nameof(dto.Description), "Description is required for ServiceProvider"),
                 ImageIDUrl = imageIDUrl,
                 ImageNationalIDUrl = imageNationalIDUrl,
-                MainImage = mainImageUrl,
                 TypeId = dto.TypeId ?? throw new ArgumentNullException(nameof(dto.TypeId), "TypeId is required for ServiceProvider"),
                 Rate = 0,
                 IsApproved = false,
@@ -333,6 +329,7 @@ public class AuthService : IAuthService
         user.UserName = dto.Email;
         user.Email = dto.Email;
         user.PhoneNumber = dto.PhoneNumber;
+        user.MainImage = mainImageUrl;
 
 
         using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
@@ -426,7 +423,11 @@ public class AuthService : IAuthService
         payload = await GetSocialPayloadAsync(request.Provider, request.AccessToken);
         if (payload == null || string.IsNullOrEmpty(payload.Email))
             throw new UnauthorizedAccessException("Invalid social token or missing email.");
-        var user = await _userManager.FindByEmailAsync(payload.Email);
+
+        var loginInfo = new UserLoginInfo(request.Provider, payload.ProviderId, request.Provider);
+        var user = await _userManager.FindByLoginAsync(loginInfo.LoginProvider, loginInfo.ProviderKey);
+        if (user == null)
+            user = await _userManager.FindByEmailAsync(payload.Email);
         if (user == null)
             throw new InvalidOperationException("User not  exists in database");
 
@@ -443,6 +444,31 @@ public class AuthService : IAuthService
             UserType = user.UserType.ToString()
         };
     }
+    public async Task LinkSocialAccountAsync(LinkSocialAccountDTO dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+
+        var payload = await GetSocialPayloadAsync(dto.Provider, dto.AccessToken);
+
+        if (!string.Equals(payload.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException($"{dto.Provider} token does not match email.");
+
+        var logins = await _userManager.GetLoginsAsync(user);
+        if (logins.Any(l => l.LoginProvider.Equals(dto.Provider, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException($"{dto.Provider} account already linked.");
+
+        var loginInfo = new UserLoginInfo(dto.Provider, payload.ProviderId, dto.Provider);
+        var result = await _userManager.AddLoginAsync(user, loginInfo);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Failed to link {dto.Provider} account: {errors}");
+        }
+    }
+
     private string GenerateJwtToken(BaseUser user)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
@@ -505,6 +531,8 @@ public class AuthService : IAuthService
             Email = json.GetProperty("email").GetString() ?? "",
             FirstName = json.GetProperty("first_name").GetString() ?? "",
             LastName = json.GetProperty("last_name").GetString() ?? "",
+            ProviderId = json.GetProperty("id").GetString() ?? "" // ID unique from Facebook
+
         };
     }
     private async Task<SocialUserPayload> GetSocialPayloadAsync(string provider, string accessToken)
@@ -528,6 +556,8 @@ public class AuthService : IAuthService
             Email = googlePayload.Email,
             FirstName = googlePayload.GivenName,
             LastName = googlePayload.FamilyName,
+            ProviderId = googlePayload.Subject // ID unique from Google
+
         };
     }
 

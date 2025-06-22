@@ -14,6 +14,7 @@
         public Task<bool> SignOutAsync(string token); // UPDATED: Accepts token for revocation
         public Task<AuthResponseDTO?> SocialLogin(SocialLoginRequestDTO request);
         public Task<AuthResponseDTO> SocialRegisterAsync(SocialAuthDTO dto);
+        public Task LinkSocialAccountAsync(LinkSocialAccountDTO dto);
 
 
 

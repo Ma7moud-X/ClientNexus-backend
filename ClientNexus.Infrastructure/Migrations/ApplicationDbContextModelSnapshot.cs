@@ -114,7 +114,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(3507)");
 
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int");
@@ -311,7 +311,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -691,6 +691,9 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<TimeSpan>("SlotDuration")
+                        .HasColumnType("time");
 
                     b.Property<string>("SlotType")
                         .IsRequired()
