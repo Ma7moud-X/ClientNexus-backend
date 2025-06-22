@@ -16,13 +16,16 @@ namespace ClientNexus.Application.Services
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
         private readonly ILogger<AppointmentService> _logger;
+        private readonly IGoogleMeetService _googleMeetService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<AppointmentService> logger)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, 
+                                  ILogger<AppointmentService> logger, IGoogleMeetService googleMeetService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _notificationService = notificationService;
             _logger = logger;
+            _googleMeetService = googleMeetService;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -96,6 +99,13 @@ namespace ClientNexus.Application.Services
                 appoint.ClientId = clientId;
                 appoint.ServiceProviderId = slot.ServiceProviderId;
 
+                if (slot.SlotType == SlotType.Online)    //generate the zoom meeting url
+                {
+                    var meetingDetails = await _googleMeetService.CreateMeetingAsync(appoint, slot);
+                    appoint.MeetingLink = meetingDetails.MeetingLink;
+                    appoint.GoogleCalendarEventId = meetingDetails.GoogleCalendarEventId;
+
+                }
                 var createdAppoint = await _unitOfWork.Appointments.AddAsync(appoint);
 
                 await _unitOfWork.SaveChangesAsync();

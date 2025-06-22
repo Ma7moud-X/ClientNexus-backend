@@ -19,6 +19,8 @@ namespace ClientNexus.Application.DTO
         public DateTime? CancellationTime { get; set; }
         public bool ReminderSent { get; set; }  //for notifications
         public DateTime? ReminderSentTime { get; set; }
+        public string? MeetingLink { get; set; }
+        public string? GoogleCalendarEventId { get; set; }
     }
     public class AppointmentDTO2
     {
@@ -36,6 +38,8 @@ namespace ClientNexus.Application.DTO
         public DateTime? CancellationTime { get; set; }
         public bool ReminderSent { get; set; }  //for notifications
         public DateTime? ReminderSentTime { get; set; }
+        public string? MeetingLink { get; set; }
+        public string? GoogleCalendarEventId { get; set; }
 
         // Added provider info
         public string? ServiceProviderFirstName { get; set; }
