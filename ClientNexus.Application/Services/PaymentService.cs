@@ -4,9 +4,6 @@ using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.Enums;
-<<<<<<< HEAD
-using ClientNexus.Domain.Entities.Users;
-=======
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
@@ -15,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System; // NEW: Added for DateTime calculations
 using Microsoft.EntityFrameworkCore; // NEW: Added for Include in queries
->>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
+
 
 namespace ClientNexus.Application.Services
 {
@@ -253,10 +250,6 @@ namespace ClientNexus.Application.Services
                 return ServiceType.Appointment; // Default
             }
         }
-<<<<<<< HEAD
-      
-=======
-
         public async Task<GetPaymentStatusResponseDTO> GetPaymentStatus(string referenceNumber)
         {
             if (string.IsNullOrEmpty(referenceNumber))
@@ -377,6 +370,6 @@ namespace ClientNexus.Application.Services
                 PaymentStatus = paymentStatus.ToString()
             };
         }
->>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
+
     }
 }

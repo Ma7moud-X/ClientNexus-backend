@@ -114,7 +114,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(3507)");
 
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int");
@@ -311,7 +311,7 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -340,6 +340,44 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.HasKey("ServiceProviderId", "Id");
 
                     b.ToTable("OfficeImageUrls", "ClientNexusSchema");
+                });
+
+            modelBuilder.Entity("ClientNexus.Domain.Entities.Others.Payout", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PayoutGateway")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayoutId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payouts", "ClientNexusSchema");
                 });
 
             modelBuilder.Entity("ClientNexus.Domain.Entities.Others.State", b =>
@@ -691,6 +729,9 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("ServiceProviderId")
                         .HasColumnType("int");
+
+                    b.Property<TimeSpan>("SlotDuration")
+                        .HasColumnType("time");
 
                     b.Property<string>("SlotType")
                         .IsRequired()
