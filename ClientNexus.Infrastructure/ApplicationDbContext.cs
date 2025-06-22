@@ -162,5 +162,6 @@ namespace ClientNexus.Infrastructure
 
         public DbSet<ClientServiceProviderFeedback> ClientServiceProviderFeedbacks { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Payout> Payouts { get; set; }
     }
 }
