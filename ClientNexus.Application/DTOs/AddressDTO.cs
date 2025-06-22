@@ -16,6 +16,9 @@ namespace ClientNexus.Application.DTOs
         public int CityId { get; set; }
         [Required]
         public int StateId { get; set; }
+        // Optional 
+        public string? CityName { get; set; }
+        public string? StateName { get; set; }
 
     }
 }

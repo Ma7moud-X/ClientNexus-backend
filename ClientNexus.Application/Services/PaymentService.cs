@@ -4,12 +4,18 @@ using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Entities;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Domain.Enums;
+<<<<<<< HEAD
+using ClientNexus.Domain.Entities.Users;
+=======
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System; // NEW: Added for DateTime calculations
+using Microsoft.EntityFrameworkCore; // NEW: Added for Include in queries
+>>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
 
 namespace ClientNexus.Application.Services
 {
@@ -208,6 +214,7 @@ namespace ClientNexus.Application.Services
                 throw new Exception($"Failed to start service payment: {ex.Message}", ex);
             }
         }
+
         public async Task<VerifyPaymentResponseDTO> VerifyPayment(string intentionId)
         {
             var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.IntentionId == intentionId);
@@ -219,6 +226,7 @@ namespace ClientNexus.Application.Services
 
             return new VerifyPaymentResponseDTO { Status = payment.WebhookStatus };
         }
+
 
         private ServiceType DetermineServiceType(string serviceName)
         {
@@ -245,6 +253,9 @@ namespace ClientNexus.Application.Services
                 return ServiceType.Appointment; // Default
             }
         }
+<<<<<<< HEAD
+      
+=======
 
         public async Task<GetPaymentStatusResponseDTO> GetPaymentStatus(string referenceNumber)
         {
@@ -299,11 +310,64 @@ namespace ClientNexus.Application.Services
             var payment = await _unitOfWork.Payments.FirstOrDefaultAsync(p => p.ReferenceNumber == referenceNumber);
             if (payment != null)
             {
-                // Ensure the entity is tracked and marked as modified
-                _unitOfWork.Payments.Update(payment); // Explicitly mark as modified
-                payment.Status = paymentStatus;
-                payment.WebhookStatus = transactionStatus;
-                await _unitOfWork.SaveChangesAsync();
+                try
+                {
+                    await _unitOfWork.BeginTransactionAsync(); // NEW: Start transaction for atomic updates
+
+                    // Ensure the entity is tracked and marked as modified
+                    _unitOfWork.Payments.Update(payment); // Explicitly mark as modified
+                    payment.Status = paymentStatus;
+                    payment.WebhookStatus = transactionStatus;
+
+                    // NEW: Check if this is a subscription payment and update ServiceProvider
+                    if (payment.PaymentType == PaymentType.Subscription && paymentStatus == PaymentStatus.Completed)
+                    {
+                        var subscriptionPayment = await _unitOfWork.SubscriptionPayments.FirstOrDefaultAsync(
+                            sp => sp.ReferenceNumber == referenceNumber,
+                            q => q.Include(sp => sp.ServiceProvider) // NEW: Include ServiceProvider
+                        );
+                        if (subscriptionPayment != null)
+                        {
+                            var serviceProvider = subscriptionPayment.ServiceProvider;
+                            if (serviceProvider != null)
+                            {
+                                // NEW: Update SubscriptionStatus
+                                serviceProvider.SubscriptionStatus = SubscriptionStatus.Active;
+
+                                // NEW: Update SubscriptionExpiryDate
+                                serviceProvider.SubscriptionExpiryDate = subscriptionPayment.SubscriptionType switch
+                                {
+                                    'M' => DateTime.UtcNow.AddMonths(1),
+                                    'Q' => DateTime.UtcNow.AddMonths(3),
+                                    'Y' => DateTime.UtcNow.AddYears(1),
+                                    _ => DateTime.UtcNow.AddMonths(1) // Default to 1 month
+                                };
+
+                                // NEW: Update SubscriptionType
+                                serviceProvider.SubType = subscriptionPayment.SubscriptionTier switch
+                                {
+                                    "Normal" => SubscriptionType.Basic,
+                                    "Advanced" => SubscriptionType.Premium,
+                                    _ => serviceProvider.SubType // Retain existing if invalid
+                                };
+
+                                // NEW: Update IsFeatured based on SubscriptionTier
+                                serviceProvider.IsFeatured= subscriptionPayment.SubscriptionTier == "Advanced";
+
+                                // NEW: Mark ServiceProvider as modified
+                                _unitOfWork.ServiceProviders.Update(serviceProvider);
+                            }
+                        }
+                    }
+
+                    await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.CommitTransactionAsync(); // NEW: Commit transaction
+                }
+                catch (Exception ex)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(); // NEW: Rollback on error
+                    throw new Exception($"Failed to update payment and service provider status: {ex.Message}", ex);
+                }
             }
 
             return new GetPaymentStatusResponseDTO
@@ -313,5 +377,6 @@ namespace ClientNexus.Application.Services
                 PaymentStatus = paymentStatus.ToString()
             };
         }
+>>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
     }
 }

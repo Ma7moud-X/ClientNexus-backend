@@ -25,10 +25,6 @@ namespace ClientNexus.Application.DTOs
         [Required]
 
         public string PhoneNumber { get; set; }
-        [Required]
-
-        public string NewPassword { get; set; }
-       
 
         public IFormFile? MainImage { get; set; }
         [Required]

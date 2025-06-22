@@ -8,6 +8,7 @@ using ClientNexus.Application.Services;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Google.Apis.Services;
 
 namespace ClientNexus.API.Controllers
 {
@@ -49,6 +50,11 @@ namespace ClientNexus.API.Controllers
                 }
             }
 
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> bf3eecb66a67e01ac27b32f0cb577af344d2e8a5
         //[Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
@@ -130,6 +136,37 @@ namespace ClientNexus.API.Controllers
                     return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
                 }
             }
+        [HttpPut("update-password")]
+        [Authorize(Policy = "IsServiceProviderOrAdmin")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDTO dto)
+        {
+
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
+            try
+            {
+
+                await _serviceProviderIsService.UpdateServiceProviderPasswordAsync(userId.Value, dto);
+                return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetById(int? id)
