@@ -398,11 +398,11 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
-        public async Task SendAppointmentReminderAsync()
+        public async Task SendAppointmentReminderAsync(int targetHours = 24, int rangeMinutes = 25)
         {
-            var targetTime = DateTime.UtcNow.AddHours(24);
-            var startRange = targetTime.AddMinutes(-25);
-            var endRange = targetTime.AddMinutes(25);
+            var targetTime = DateTime.UtcNow.AddHours(targetHours);
+            var startRange = targetTime.AddMinutes(-rangeMinutes);
+            var endRange = targetTime.AddMinutes(rangeMinutes);
 
             var upcomingAppointments = await _unitOfWork.Appointments.GetByConditionAsync(
                 a => a.Slot.Date > startRange &&
@@ -427,7 +427,16 @@ namespace ClientNexus.Application.Services
                                                .Replace("AM", "صباحًا")
                                                .Replace("PM", "مساءً");
 
-                    string body = $"نذكرك بموعدك غدا {formattedDate} الساعة {formattedTime}";
+                    string body;
+                    if (appointment.Slot.SlotType == SlotType.Online && !string.IsNullOrEmpty(appointment.ZoomJoinUrl))
+                    {
+                        body = $"نذكرك بموعدك  {formattedDate} الساعة {formattedTime}\n\nرابط الاجتماع:\n{appointment.ZoomJoinUrl}";
+                    }
+                    else
+                    {
+                        body = $"نذكرك بموعدك  {formattedDate} الساعة {formattedTime}";
+                    }
+                    //string body = $"نذكرك بموعدك غدا {formattedDate} الساعة {formattedTime}";
                     bool isSent = await _notificationService.SendNotificationAsync(
                                                                 title: title,
                                                                 body: body,
