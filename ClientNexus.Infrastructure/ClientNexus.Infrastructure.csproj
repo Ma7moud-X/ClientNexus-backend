@@ -11,6 +11,8 @@
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.400" />
     <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.69.0.3746" />
+    <PackageReference Include="Google.Apis.Core" Version="1.70.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2" />
@@ -20,10 +22,12 @@
     <PackageReference Include="NRedisStack" Version="0.13.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0.2" />
+    <PackageReference Include="ZoomNet" Version="0.90.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../ClientNexus.Domain/ClientNexus.Domain.csproj" />
+    <ProjectReference Include="..\ClientNexus.Application\ClientNexus.Application.csproj" />
   </ItemGroup>
 
 </Project>

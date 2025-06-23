@@ -18,13 +18,15 @@ namespace ClientNexus.Application.Services
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
         private readonly ILogger<AppointmentService> _logger;
+        private readonly IZoomService _zoomService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<AppointmentService> logger)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<AppointmentService> logger, IZoomService zoomService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _notificationService = notificationService;
             _logger = logger;
+            _zoomService = zoomService;
         }
         public async Task<AppointmentDTO> GetByIdAsync(int id)
         {
@@ -104,7 +106,19 @@ namespace ClientNexus.Application.Services
                 appoint.Status = ServiceStatus.Pending;
                 appoint.ClientId = clientId;
                 appoint.ServiceProviderId = slot.ServiceProviderId;
-
+                
+                if(slot.SlotType == SlotType.Online)    //generate the zoom meeting url
+                {
+                    var meetingTopic = $"Appointment with {appoint.Client?.FirstName ?? "Client"} and {serviceProvider.FirstName ?? "Service Provider"}";
+                    var zoomDetails = await _zoomService.CreateMeetingAsync(
+                                                            meetingTopic,
+                                                            slot.Date,
+                                                            ((int)slot.SlotDuration.TotalMinutes));
+                    appoint.ZoomMeetingId = zoomDetails.MeetingId;
+                    appoint.ZoomJoinUrl = zoomDetails.JoinUrl;
+                    appoint.HostStartUrl = zoomDetails.HostStartUrl;
+                }
+                
                 var createdAppoint = await _unitOfWork.Appointments.AddAsync(appoint);
 
                 await _unitOfWork.SaveChangesAsync();
@@ -174,6 +188,13 @@ namespace ClientNexus.Application.Services
             await _unitOfWork.BeginTransactionAsync();
             try
             {
+                // Delete Zoom meeting if it exists 'Online Appointment'
+                if (!string.IsNullOrEmpty(appointment.ZoomMeetingId.ToString()))
+                {
+                    await _zoomService.DeleteMeetingAsync(appointment.ZoomMeetingId.Value);
+
+                }
+                
                 _unitOfWork.Appointments.Delete(appointment);
 
                 var slot = await _unitOfWork.Slots.GetByIdAsync(appointment.SlotId);
@@ -234,7 +255,19 @@ namespace ClientNexus.Application.Services
             appointment.CancellationReason = cancellationReason;
             appointment.CancellationTime = DateTime.UtcNow;
             appointment.UpdatedAt = DateTime.UtcNow;
+            
+            //delete the zoom meeting in case it is Online appointment
+            if (appointment.ZoomMeetingId != null)
+            {
+                await _zoomService.DeleteMeetingAsync(appointment.ZoomMeetingId.Value);
 
+                // Clear Zoom details from appointment
+                appointment.ZoomMeetingId = null;
+                appointment.ZoomJoinUrl = null;
+                appointment.HostStartUrl = null;
+
+                await _unitOfWork.SaveChangesAsync();
+            }
             // Handle slot and notifications based on who cancelled
             if (role == UserType.Client)
             {
