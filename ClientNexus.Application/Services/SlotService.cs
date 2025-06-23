@@ -178,8 +178,7 @@ namespace ClientNexus.Application.Services
                                 SlotDuration = availableDay.SlotDuration,
                                 Status = SlotStatus.Available,
                                 SlotType = availableDay.SlotType,
-                                AvailableDayId = availableDay.Id,
-                                SlotDuration = availableDay.SlotDuration
+                                AvailableDayId = availableDay.Id
                             });
 
                             currentTime = currentTime.Add(availableDay.SlotDuration);

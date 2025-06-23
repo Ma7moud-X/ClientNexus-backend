@@ -109,7 +109,7 @@ namespace ClientNexus.Application.Services
                 
                 if(slot.SlotType == SlotType.Online)    //generate the zoom meeting url
                 {
-                    var meetingTopic = $"Appointment with {appoint.Client?.FirstName ?? "Client"} and {serviceProvider.FirstName ?? "Service Provider"}";
+                    var meetingTopic = $"Appointment with {appoint.Client?.FirstName ?? "Client"} and {appoint.ServiceProvider?.FirstName ?? "Service Provider"}";
                     var zoomDetails = await _zoomService.CreateMeetingAsync(
                                                             meetingTopic,
                                                             slot.Date,

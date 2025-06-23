@@ -250,11 +250,7 @@ namespace ClientNexus.Application.Services
                 return ServiceType.Appointment; // Default
             }
         }
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 2316c94f471c4148ec77dd14a2d72f594f73136a
         public async Task<GetPaymentStatusResponseDTO> GetPaymentStatus(string referenceNumber)
         {
             if (string.IsNullOrEmpty(referenceNumber))
@@ -375,9 +371,6 @@ namespace ClientNexus.Application.Services
                 PaymentStatus = paymentStatus.ToString()
             };
         }
-<<<<<<< HEAD
-=======
 
->>>>>>> 2316c94f471c4148ec77dd14a2d72f594f73136a
     }
 }
