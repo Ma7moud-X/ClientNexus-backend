@@ -24,7 +24,7 @@ namespace ClientNexus.API.Controllers
                 this._serviceProviderIsService = serviceProviderIsService;
             }
 
-        [Authorize(Policy = "IsClientOrAdmin")]
+        //[Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("Search")]
         public async Task<IActionResult> SearchServiceProviders([FromQuery] string? searchQuery)
             {
@@ -49,7 +49,7 @@ namespace ClientNexus.API.Controllers
                 }
             }
 
-        [Authorize(Policy = "IsClientOrAdmin")]
+        //[Authorize(Policy = "IsClientOrAdmin")]
         [HttpGet("filter")]
             public async Task<IActionResult> FilterServiceProviders([FromQuery] string? searchQuery, [FromQuery] float? minRate, [FromQuery] string? state, [FromQuery] string? city, [FromQuery] string? specializationName)
             {
@@ -72,7 +72,7 @@ namespace ClientNexus.API.Controllers
 
 
             }
-        [Authorize(Policy = "IsAdmin")]
+        //[Authorize(Policy = "IsAdmin")]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll([FromQuery] bool? isApproved)
         {

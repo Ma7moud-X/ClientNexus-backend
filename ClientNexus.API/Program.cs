@@ -13,6 +13,7 @@ using ClientNexus.Domain.Exceptions.ServerErrorsExceptions;
 using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -55,6 +56,7 @@ builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(() =>
 ));
 builder.Services.AddScoped<IZoomService, ZoomService>();
 
+builder.Services.AddScoped<IGoogleMeetService, GoogleMeetService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));

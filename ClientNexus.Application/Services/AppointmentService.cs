@@ -14,15 +14,15 @@ namespace ClientNexus.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IPushNotification _pushNotification;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<AppointmentService> _logger;
         private readonly IZoomService _zoomService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, IPushNotification pushNotification, ILogger<AppointmentService> logger, IZoomService zoomService)
+        public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, ILogger<AppointmentService> logger, IZoomService zoomService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _pushNotification = pushNotification;
+            _notificationService = notificationService;
             _logger = logger;
             _zoomService = zoomService;
         }
@@ -178,14 +178,14 @@ namespace ClientNexus.Application.Services
 
             await _unitOfWork.BeginTransactionAsync();
             try
-            {/*
+            {
                 // Delete Zoom meeting if it exists 'Online Appointment'
                 if (!string.IsNullOrEmpty(appointment.ZoomMeetingId.ToString()))
                 {
                     await _zoomService.DeleteMeetingAsync(appointment.ZoomMeetingId.Value);
 
                 }
-                */
+                
                 _unitOfWork.Appointments.Delete(appointment);
 
                 var slot = await _unitOfWork.Slots.GetByIdAsync(appointment.SlotId);
@@ -246,7 +246,7 @@ namespace ClientNexus.Application.Services
             appointment.CancellationReason = cancellationReason;
             appointment.CancellationTime = DateTime.UtcNow;
             appointment.UpdatedAt = DateTime.UtcNow;
-            /*
+            
             //delete the zoom meeting in case it is Online appointment
             if (appointment.ZoomMeetingId != null)
             {
@@ -255,10 +255,10 @@ namespace ClientNexus.Application.Services
                 // Clear Zoom details from appointment
                 appointment.ZoomMeetingId = null;
                 appointment.ZoomJoinUrl = null;
-                appointment.ZoomHostStartUrl = null;
+                appointment.HostStartUrl = null;
 
                 await _unitOfWork.SaveChangesAsync();
-            }*/
+            }
             // Handle slot and notifications based on who cancelled
             if (role == UserType.Client)
             {
@@ -297,27 +297,19 @@ namespace ClientNexus.Application.Services
         {
             if (appointment == null) throw new ArgumentNullException(nameof(appointment));
             if (slot == null) throw new ArgumentNullException(nameof(slot));
-
             try
             {
-                var tokens = await _unitOfWork.ServiceProviders.GetByConditionAsync(
-                                 sp => sp.Id == appointment.ServiceProviderId,
-                                 sp => new NotificationToken { Token = sp.NotificationToken! }
-             );
-                var providerToken = tokens.FirstOrDefault();
-                if (providerToken is not null)
-                {
-
-                    await _pushNotification.SendNotificationAsync(
-                                                                title: "Appointment Cancelled",
-                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the client.",
-                                                                providerToken.Token);
-                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client");
-                }
+                string title = "إلغاء موعد";
+                string body = $"قام عميل بإلغاء موعدك بتاريخ {slot?.Date}";
+                bool isSent = await _notificationService.SendNotificationAsync(
+                                                            title: title,
+                                                            body: body,
+                                                            userId: appointment.ServiceProviderId!.Value);
+                _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the client.");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Failed to send reminder for appointment,  {ex.Message}");
+                _logger.LogInformation($"Failed to send notification for cancelled appointment,  {ex.Message}");
             }
         }
 
@@ -325,26 +317,19 @@ namespace ClientNexus.Application.Services
         {
             if (appointment == null) throw new ArgumentNullException(nameof(appointment));
             if (slot == null) throw new ArgumentNullException(nameof(slot));
-
             try
             {
-                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
-                    c => c.Id == appointment.ClientId,
-                    c => new NotificationToken { Token = c.NotificationToken! }
-                );
-                var clientToken = tokens.FirstOrDefault();
-                if (clientToken is not null)
-                {
-                    await _pushNotification.SendNotificationAsync(
-                                                                title: "Appointment Cancelled",
-                                                                body: $"Your appointment on {slot?.Date} has been cancelled by the service provider.",
-                                                               clientToken.Token);
-                    _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider");
-                }
+                string title = "إلغاء موعد";
+                string body = $"قام مزود الخدمة بإلغاء موعدك بتاريخ {slot?.Date}";
+                bool isSent = await _notificationService.SendNotificationAsync(
+                                                            title: title,
+                                                            body: body,
+                                                            userId: appointment.ClientId);
+                _logger.LogInformation($"Your appointment on {slot?.Date} has been cancelled by the service provider.");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Failed to send notification for appointment. {ex.Message}");
+                _logger.LogInformation($"Failed to send notification for cancelled appointment, {ex.Message}");
             }
         }
         private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate)
@@ -390,12 +375,12 @@ namespace ClientNexus.Application.Services
                     try
                     {
                         var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
-
-                        await _pushNotification.SendNotificationAsync(
-                            title: "Appointment Reminder",
-                            body: $"You have an appointment scheduled for tomorrow, {appointmentTimeString}.",
-                            clientToken.Token);
-
+                        string title = "تذكير بموعد";
+                        string body = $"نذكرك بموعدك غدا {appointmentTimeString}";
+                        bool isSent = await _notificationService.SendNotificationAsync(
+                                                                    title: title,
+                                                                    body: body,
+                                                                    userId: appointment.ClientId);
                         _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
 
                         // Mark reminder as sent
