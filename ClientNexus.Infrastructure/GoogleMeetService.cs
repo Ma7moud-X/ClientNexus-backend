@@ -200,7 +200,7 @@ namespace Infrastructure.Services
                 throw new Exception($"The service calendar has thrown an exception. {ex.Message}", ex);
             }
         }
-
+        /*
         public async Task<string> UpdateMeetingAsync(Appointment appointment, Slot slot)
         {
             try
@@ -248,7 +248,7 @@ namespace Infrastructure.Services
                 throw;
             }
         }
-
+        */
         public async Task<bool> DeleteMeetingAsync(string googleCalendarEventId)
         {
             try
