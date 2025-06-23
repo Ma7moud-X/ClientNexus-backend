@@ -53,6 +53,8 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddTransient(provider => new Lazy<IAppointmentService>(() =>
     provider.GetRequiredService<IAppointmentService>()
 ));
+builder.Services.AddScoped<IZoomService, ZoomService>();
+
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));

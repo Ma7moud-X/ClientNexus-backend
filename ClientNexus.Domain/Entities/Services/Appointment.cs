@@ -12,6 +12,9 @@ namespace ClientNexus.Domain.Entities.Services
         public DateTime? ReminderSentTime { get; set; }
         public int SlotId { get; set; }
         public required Slot Slot { get; set; }
+        public string? ZoomJoinUrl { get; set; }
+        public long? ZoomMeetingId { get; set; }
+        public string? HostStartUrl { get; set; }
         public Appointment()
         {
             ServiceType = ServiceType.Appointment;

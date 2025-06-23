@@ -19,6 +19,11 @@ namespace ClientNexus.Application.DTO
         public DateTime? CancellationTime { get; set; }
         public bool ReminderSent { get; set; }  //for notifications
         public DateTime? ReminderSentTime { get; set; }
+
+        public bool IsVideoAppointment { get; set; }
+        public string? ZoomJoinUrl { get; set; }
+        public string? ZoomMeetingId { get; set; }
+        //public string? HostStartUrl { get; set; }
     }
     public class AppointmentDTO2
     {
@@ -51,6 +56,9 @@ namespace ClientNexus.Application.DTO
         public SlotType SlotType { get; set; }
 
         public DateTime SlotDate { get; set; }
+        public string? ZoomJoinUrl { get; set; }
+        public long? ZoomMeetingId { get; set; }
+        //public string? HostStartUrl { get; set; }
 
     }
 }
