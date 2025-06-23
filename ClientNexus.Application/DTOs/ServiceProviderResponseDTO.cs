@@ -29,10 +29,12 @@ namespace ClientNexus.Application.DTOs
       
         public int YearsOfExperience { get; set; }
        
-        public string State { get; set; }
+        //public string State { get; set; }
        
-        public string City { get; set; }
-  
+        //public string City { get; set; }
+        public List<AddressDTO> Addresses { get; set; } = new();
+
+
         public List<string> SpecializationName { get; set; }
         
         public int Office_consultation_price { get; set; }
@@ -41,6 +43,14 @@ namespace ClientNexus.Application.DTOs
 
         public string main_Specialization { get; set; }
         public Gender Gender { get; set; }
+        public DateOnly BirthDate { get; set; }
+        public string phonenumber { get; set; }
+        public bool IsApproved { get; set; }
+        public bool IsFeatured { get; set; }
+        public SubscriptionStatus SubscriptionStatus { get; set; }
+        public SubscriptionType SubType { get; set; }
+        public DateTime? SubscriptionExpiryDate { get; set; }
+
 
     }
 }

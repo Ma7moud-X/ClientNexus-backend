@@ -94,6 +94,7 @@ public class UnitOfWork : IUnitOfWork
     public IBaseRepo<Notification> Notifications { get; private set; }
     public IBaseRepo<Payout> Payouts { get; private set; }
 
+
     public readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -197,9 +198,9 @@ public class UnitOfWork : IUnitOfWork
         Notifications = DbTryCatchDecorator<IBaseRepo<Notification>>.Create(
             new BaseRepo<Notification>(context)
         );
+
         Payouts = DbTryCatchDecorator<IBaseRepo<Payout>>.Create(new BaseRepo<Payout>(context));
     }
-
     public void Dispose()
     {
         _context.Dispose();

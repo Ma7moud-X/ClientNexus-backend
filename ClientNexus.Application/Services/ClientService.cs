@@ -59,24 +59,7 @@ namespace ClientNexus.Application.Services
                 client.Email = updateDto.Email;
                 client.UserName = updateDto.Email;
             }
-            if (!string.IsNullOrWhiteSpace(updateDto.NewPassword))
-            {
 
-                // Check if the new password matches the current password
-                var passwordMatches = await _userManager.CheckPasswordAsync(client, updateDto.NewPassword);
-                if (!passwordMatches)
-                {
-
-
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(client);
-                    var passwordUpdateResult = await _userManager.ResetPasswordAsync(client, token, updateDto.NewPassword);
-                    if (!passwordUpdateResult.Succeeded)
-                    {
-                        string errors = string.Join(", ", passwordUpdateResult.Errors.Select(e => e.Description));
-                        throw new InvalidOperationException($"Password update failed: {errors}");
-                    }
-                }
-            }
             var updateResult = await _userManager.UpdateAsync(client);
             if (!updateResult.Succeeded)
             {
@@ -86,8 +69,28 @@ namespace ClientNexus.Application.Services
 
 
         }
+        public async Task UpdateClientPasswordAsync(int clientId, UpdatePasswordDTO dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto), "Invalid request data.");
 
-      
+            var client = await _userManager.FindByIdAsync(clientId.ToString()) as Client;
+            if (client == null)
+                throw new KeyNotFoundException("Client not found.");
+
+            var passwordValid = await _userManager.CheckPasswordAsync(client, dto.CurrentPassword);
+            if (!passwordValid)
+                throw new InvalidOperationException("Current password is incorrect.");
+
+            var result = await _userManager.ChangePasswordAsync(client, dto.CurrentPassword, dto.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Password update failed: {errors}");
+            }
+        }
+
+
 
         public async Task<ClientResponseDTO> GetByIdAsync(int clientId)
         {

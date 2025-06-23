@@ -12,5 +12,6 @@ namespace ClientNexus.Application.DTOs
         public string IntentionId { get; set; }
         public string PublicKey { get; set; }
         public string Status { get; set; }
+        public string ReferenceNumber { get; set; } 
     }
 }

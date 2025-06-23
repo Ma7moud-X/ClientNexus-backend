@@ -7,15 +7,12 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class StartServicePaymentRequestDTO
+    public class UpdatePasswordDTO
     {
         [Required]
-        public int ServiceProviderId { get; set; }
+        public string CurrentPassword { get; set; }
 
         [Required]
-        public string ServiceName { get; set; }
-
-        [Required]
-        public decimal Amount { get; set; }
+        public string NewPassword { get; set; }
     }
 }

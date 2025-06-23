@@ -8,8 +8,10 @@ namespace ClientNexus.Domain.Entities.Others
 {
     public class SocialUserPayload
     {
-        public string Email { get; set; } = default!;
-        public string FirstName { get; set; } = default!;
-        public string LastName { get; set; } = default!;
+        public string Email { get; set; } 
+        public string FirstName { get; set; } 
+        public string LastName { get; set; } 
+        public string ProviderId { get; set; } 
+
     }
 }

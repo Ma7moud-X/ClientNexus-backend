@@ -11,6 +11,7 @@ namespace ClientNexus.Application.Interfaces
     {
         public Task UpdateClientAsync(int ClientId, UpdateClientDTO updateDto);
         public  Task<ClientResponseDTO> GetByIdAsync(int clientId);
+        public Task UpdateClientPasswordAsync(int clientId, UpdatePasswordDTO dto);
 
 
     }

@@ -25,10 +25,6 @@ namespace ClientNexus.Application.DTOs
         [Required]
 
         public string PhoneNumber { get; set; }
-        [Required]
-
-        public string NewPassword { get; set; }
-       
 
         public IFormFile? MainImage { get; set; }
         [Required]
@@ -42,9 +38,11 @@ namespace ClientNexus.Application.DTOs
         public int YearsOfExperience { get; set; }
         [Required]
 
-        public string Description { get; set; } 
+        public string Description { get; set; }
 
+        [Required]
 
+        public List<AddressDTO> Addresses { get; set; } = new();
 
     }
 }

@@ -14,6 +14,7 @@ using ClientNexus.Domain.Interfaces;
 using ClientNexus.Infrastructure;
 using ClientNexus.Infrastructure.Repositories;
 using Infrastructure.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp =>
 builder.Services.AddSingleton<IPushNotification, ExpoPushNotification>();
 builder.Services.AddRedisCache();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpService, HttpService>();
 builder.Services.AddMapService();
 builder.Services.AddScoped<IOfferService, OfferService>();
@@ -329,6 +331,8 @@ app.UseAuthorization();
 
 // Add Hangfire dashboard and configure jobs
 app.UseHangfireConfiguration();
+app.UseHangfireDashboard("/hangfire"); // no authorization
+
 
 app.MapControllers();
 

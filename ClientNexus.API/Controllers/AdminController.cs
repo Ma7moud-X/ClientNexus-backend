@@ -18,7 +18,7 @@ namespace ClientNexus.API.Controllers
             this._admainService = admainService;
         }
 
-        //[Authorize(Policy = "IsAdmin")]
+        [Authorize(Policy = "IsAdmin")]
         [HttpPut("approve/{serviceProviderId}")]
         public async Task<IActionResult> ApproveServiceProvider(int serviceProviderId)
         {

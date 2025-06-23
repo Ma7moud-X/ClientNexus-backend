@@ -15,6 +15,7 @@ namespace ClientNexus.Application.DTO
         public int ServiceProviderId { get; set; }
         [Required]
         public DateTime Date { get; set; }
+        public TimeSpan SlotDuration { get; set; }
         [Required]
         public TimeSpan SlotDuration { get; set; }
         [Required]

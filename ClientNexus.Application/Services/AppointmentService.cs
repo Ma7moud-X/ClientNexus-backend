@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using ClientNexus.Application.DTO;
 using ClientNexus.Application.Interfaces;
-using ClientNexus.Application.Models;
 using ClientNexus.Domain.Entities.Services;
 using ClientNexus.Domain.Enums;
 using ClientNexus.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Globalization;
+using TimeZoneConverter;
 
 namespace ClientNexus.Application.Services
 {
@@ -33,14 +35,23 @@ namespace ClientNexus.Application.Services
                 throw new KeyNotFoundException("Invalid Appointment ID");
             return _mapper.Map<AppointmentDTO>(appoint);
         }
-        public async Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit)
+        public async Task<IEnumerable<AppointmentDTO3>> GetByProviderIdAsync(int providerId, int offset, int limit)
         {
             // Check if the provider exists
             if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == providerId))
                 throw new KeyNotFoundException("Invalid Service Provider Id");
 
-            var appointments = await _unitOfWork.Appointments.GetByConditionAsync(a => a.Slot.ServiceProviderId == providerId, offset: offset, limit: limit); //, includes: new string[] { "Slot" }
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            return await _unitOfWork.Appointments.GetByConditionWithIncludesAsync<AppointmentDTO3>(
+                condExp: a => a.ServiceProviderId == providerId,
+                includeFunc: q => q
+                            .Include(a => a.Client)
+                            .Include(a => a.Slot),
+                mapperConfig: _mapper.ConfigurationProvider,
+                offset: offset,
+                limit: limit,
+                orderByExp: a => a.Slot.Date,
+                descendingOrdering: true
+                ); 
         }
         public async Task<IEnumerable<AppointmentDTO2>> GetByClientIdAsync(int clientId, int offset, int limit)
         {
@@ -61,7 +72,7 @@ namespace ClientNexus.Application.Services
                 offset: offset,
                 limit: limit,
                 orderByExp: a => a.Slot.Date,
-                descendingOrdering: false
+                descendingOrdering: true
             );
         }
         public async Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO)
@@ -69,26 +80,23 @@ namespace ClientNexus.Application.Services
             if (appointmentDTO == null)
                 throw new ArgumentNullException("Appointment data cannot be null");
 
+            var slot = await _unitOfWork.Slots.GetByIdWithLockAsync(appointmentDTO.SlotId);
+            if (slot == null)
+                throw new KeyNotFoundException("Invalid Slot Id");
+            if (slot.Status != SlotStatus.Available || slot.Date < DateTime.UtcNow)
+                throw new InvalidOperationException("Slot not avaliable!");
+            if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
+                throw new KeyNotFoundException("Invalid Client Id");
+            if (!await _unitOfWork.ServiceProviders.CheckAnyExistsAsync(p => p.Id == slot.ServiceProviderId))
+                throw new KeyNotFoundException("Invalid Service Provider Id");
+
+            if (await HasConflictAsync(clientId, slot.Date, slot.SlotDuration))
+                throw new InvalidOperationException("Client already has an appointment at this time.");
+
             //for concurrency control
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                //check if foreign key is valid
-
-                var slot = await _unitOfWork.Slots.GetByIdWithLockAsync(appointmentDTO.SlotId );
-                if (slot == null)
-                    throw new KeyNotFoundException("Invalid Slot Id");
-                if (slot.Status != SlotStatus.Available || slot.Date < DateTime.UtcNow)
-                    throw new InvalidOperationException("Slot not avaliable!");
-                if (!await _unitOfWork.Clients.CheckAnyExistsAsync(c => c.Id == clientId))
-                    throw new KeyNotFoundException("Invalid Client Id");
-                var serviceProvider = await _unitOfWork.ServiceProviders.GetByIdAsync(slot.ServiceProviderId);
-                if (serviceProvider == null)
-                    throw new KeyNotFoundException("Invalid Service Provider Id");
-
-                if (await HasConflictAsync(clientId, slot.Date))
-                    throw new InvalidOperationException("Client already has an appointment at this time.");
-
                 //update slot status to be booked
                 slot.Status = SlotStatus.Booked;
                 await _unitOfWork.SaveChangesAsync();
@@ -135,14 +143,15 @@ namespace ClientNexus.Application.Services
 
             if (!Enum.IsDefined(status))
                 throw new ArgumentOutOfRangeException($"Invalid Appointment Status value: {status}");
+            
+            var slot = await _unitOfWork.Slots.GetByIdAsync(existingAppointment.SlotId);
+            
+            if (slot == null)
+                throw new KeyNotFoundException($"Invalid slot ID");
 
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var slot = await _unitOfWork.Slots.GetByIdAsync(existingAppointment.SlotId);
-                if (slot == null)
-                    throw new KeyNotFoundException($"Invalid slot ID");
-
                 switch (status)
                 {
                     case ServiceStatus.InProgress:
@@ -300,7 +309,18 @@ namespace ClientNexus.Application.Services
             try
             {
                 string title = "إلغاء موعد";
-                string body = $"قام عميل بإلغاء موعدك بتاريخ {slot?.Date}";
+                // Convert UTC to Egypt time
+                DateTime utcTime = appointment.Slot.Date;
+                TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
+                string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                           .Replace("AM", "صباحًا")
+                                           .Replace("PM", "مساءً");
+
+                string body = $"قام عميل بالغاء موعدك يوم {formattedDate} الساعة {formattedTime}";
+
                 bool isSent = await _notificationService.SendNotificationAsync(
                                                             title: title,
                                                             body: body,
@@ -320,7 +340,19 @@ namespace ClientNexus.Application.Services
             try
             {
                 string title = "إلغاء موعد";
-                string body = $"قام مزود الخدمة بإلغاء موعدك بتاريخ {slot?.Date}";
+
+                // Convert UTC to Egypt time
+                DateTime utcTime = appointment.Slot.Date;
+                TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+
+                string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                           .Replace("AM", "صباحًا")
+                                           .Replace("PM", "مساءً");
+
+                string body = $"قام مزود الخدمة بالغاء موعدك يوم {formattedDate} الساعة {formattedTime}";
+
                 bool isSent = await _notificationService.SendNotificationAsync(
                                                             title: title,
                                                             body: body,
@@ -332,9 +364,25 @@ namespace ClientNexus.Application.Services
                 _logger.LogInformation($"Failed to send notification for cancelled appointment, {ex.Message}");
             }
         }
-        private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate)
+        private async Task<bool> HasConflictAsync(int clientId, DateTime appointmentDate, TimeSpan appointmentDuration)
         {
-            return await _unitOfWork.Appointments.CheckAnyExistsAsync(a => a.ClientId == clientId && a.Slot.Date == appointmentDate && a.Status != ServiceStatus.Cancelled);
+            var clientAppointments = await _unitOfWork.Appointments.GetByConditionAsync(a =>
+                                    a.ClientId == clientId &&
+                                    a.Status != ServiceStatus.Cancelled &&
+                                    a.Slot.Date.Date == appointmentDate.Date,
+                                    includes: new[] { "Slot" }
+                                    ); // Filter to the same day for efficiency
+            foreach (var existingAppointment in clientAppointments)
+            {
+                DateTime existingAppointmentStart = existingAppointment.Slot.Date;
+                DateTime existingAppointmentEnd = existingAppointment.Slot.Date + existingAppointment.Slot.SlotDuration;
+
+                if (appointmentDate < existingAppointmentEnd && (appointmentDate + appointmentDuration) > existingAppointmentStart)
+                {
+                    return true;    // Conflict found!
+                }
+            }
+            return false;
         }
 
         //for notifications
@@ -365,34 +413,37 @@ namespace ClientNexus.Application.Services
 
             foreach (var appointment in upcomingAppointments)
             {
-                var tokens = await _unitOfWork.Clients.GetByConditionAsync(
-                                    c => c.Id == appointment.ClientId,
-                                    c => new NotificationToken { Token = c.NotificationToken! }
-                                );
-                var clientToken = tokens.FirstOrDefault();
-                if (clientToken is not null)
+                try
                 {
-                    try
-                    {
-                        var appointmentTimeString = appointment.Slot.Date.ToString("MMM dd, yyyy at h:mm tt");   // user-friendly format time
-                        string title = "تذكير بموعد";
-                        string body = $"نذكرك بموعدك غدا {appointmentTimeString}";
-                        bool isSent = await _notificationService.SendNotificationAsync(
-                                                                    title: title,
-                                                                    body: body,
-                                                                    userId: appointment.ClientId);
-                        _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+                    string title = "تذكير بموعد";
 
-                        // Mark reminder as sent
-                        await MarkReminderSentAsync(appointment.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogInformation($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
-                    }
+                    // Convert UTC to Egypt time
+                    DateTime utcTime = appointment.Slot.Date;
+                    TimeZoneInfo egyptTimeZone = TZConvert.GetTimeZoneInfo("Egypt Standard Time");
+                    DateTime egyptTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, egyptTimeZone);
+  
+                    string formattedDate = egyptTime.ToString("dd/MM/yyyy", new CultureInfo("ar-EG"));
+                    string formattedTime = egyptTime.ToString("hh:mm tt", new CultureInfo("ar-EG"))
+                                               .Replace("AM", "صباحًا")
+                                               .Replace("PM", "مساءً");
+
+                    string body = $"نذكرك بموعدك غدا {formattedDate} الساعة {formattedTime}";
+                    bool isSent = await _notificationService.SendNotificationAsync(
+                                                                title: title,
+                                                                body: body,
+                                                                userId: appointment.ClientId);
+                    _logger.LogInformation($"Successfully sent reminder for appointment ID: {appointment.Id}");
+
+                    // Mark reminder as sent
+                    await MarkReminderSentAsync(appointment.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"Failed to send reminder for appointment {appointment.Id}: {ex.Message}");
                 }
             }
         }
-
     }
+
 }
+

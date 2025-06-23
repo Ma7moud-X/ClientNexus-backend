@@ -21,6 +21,7 @@ namespace ClientNexus.API.Controllers
         [Authorize(Policy = "IsClientOrAdmin")]
         public async Task<IActionResult> UpdateClient( [FromForm] UpdateClientDTO updateDto)
         {
+          
             var userId = User.GetId();
             if (userId is null)
                 return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
@@ -30,6 +31,40 @@ namespace ClientNexus.API.Controllers
             {
 
                 await _clientService.UpdateClientAsync(userId.Value, updateDto);
+                return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponseDTO<string>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDTO<string>.ErrorResponse($"An error occurred: {ex.Message}"));
+            }
+        }
+
+        [HttpPut("update-password")]
+        [Authorize(Policy = "IsClientOrAdmin")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDTO dto)
+        {
+           
+            var userId = User.GetId();
+            if (userId is null)
+                return Unauthorized(ApiResponseDTO<string>.ErrorResponse("user is not authorized."));
+
+
+            try
+            {
+
+                await _clientService.UpdateClientPasswordAsync(userId.Value, dto);
                 return Ok(ApiResponseDTO<string>.SuccessResponse("Client updated successfully."));
             }
             catch (ArgumentException ex)

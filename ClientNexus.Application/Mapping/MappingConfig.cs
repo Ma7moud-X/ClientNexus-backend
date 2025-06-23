@@ -38,6 +38,17 @@ namespace ClientNexus.Application.Mapping
             .ForMember(dest => dest.SlotType,
                        opt => opt.MapFrom(src => src.Slot.SlotType));
 
+            CreateMap<Appointment, AppointmentDTO3>()
+            .ForMember(dest => dest.ClientFirstName,
+                       opt => opt.MapFrom(src => src.Client != null ? src.Client.FirstName : null))
+            .ForMember(dest => dest.ClientLastName,
+                       opt => opt.MapFrom(src => src.Client != null ? src.Client.LastName : null))
+            .ForMember(dest => dest.ClientMainImage,
+                       opt => opt.MapFrom(src => src.Client != null ?src.Client.MainImage : null))
+            .ForMember(dest => dest.SlotDate,
+                       opt => opt.MapFrom(src => src.Slot.Date))
+            .ForMember(dest => dest.SlotType,
+                       opt => opt.MapFrom(src => src.Slot.SlotType));
 
             CreateMap<Question, QuestionCreateDTO>().ReverseMap();
             CreateMap<Question, QuestionResponseDTO>().ReverseMap();

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class StartServicePaymentRequestDTO
+    public class LinkSocialAccountDTO
     {
         [Required]
-        public int ServiceProviderId { get; set; }
+        public string Email { get; set; }
 
         [Required]
-        public string ServiceName { get; set; }
+        public string AccessToken { get; set; } 
 
         [Required]
-        public decimal Amount { get; set; }
+        public string Provider { get; set; } // "Google" or "Facebook"
     }
 }

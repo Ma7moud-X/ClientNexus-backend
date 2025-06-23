@@ -16,7 +16,6 @@ namespace ClientNexus.Application.DTOs
         [Required]
         public string Provider { get; set; }
 
-        [Required]
-        public UserType UserType { get; set; }
+       
     }
 }

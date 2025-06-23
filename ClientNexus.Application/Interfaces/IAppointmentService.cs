@@ -13,7 +13,7 @@ namespace ClientNexus.Application.Interfaces
     public interface IAppointmentService
     {
         Task<AppointmentDTO> GetByIdAsync(int id);
-        Task<IEnumerable<AppointmentDTO>> GetByProviderIdAsync(int providerId, int offset, int limit);
+        Task<IEnumerable<AppointmentDTO3>> GetByProviderIdAsync(int providerId, int offset, int limit);
         Task<IEnumerable<AppointmentDTO2>> GetByClientIdAsync(int clientId, int offset, int limit);
         Task<AppointmentDTO> CreateAsync(int clientId, AppointmentCreateDTO appointmentDTO);
         //Task<AppointmentDTO> UpdateAsync(int id, AppointmentDTO appointmentDTO);

@@ -7,15 +7,9 @@ using System.Threading.Tasks;
 
 namespace ClientNexus.Application.DTOs
 {
-    public class StartServicePaymentRequestDTO
+    public class GetPaymentStatusRequestDTO
     {
         [Required]
-        public int ServiceProviderId { get; set; }
-
-        [Required]
-        public string ServiceName { get; set; }
-
-        [Required]
-        public decimal Amount { get; set; }
+        public string ReferenceNumber { get; set; }
     }
 }

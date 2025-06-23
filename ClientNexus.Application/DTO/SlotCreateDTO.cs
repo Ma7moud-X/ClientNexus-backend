@@ -13,6 +13,7 @@ namespace ClientNexus.Application.DTO
 
         [Required]
         public DateTime Date { get; set; }
+        public TimeSpan SlotDuration { get; set; } = new TimeSpan(0, 30, 0);
         [Required]
         public SlotType SlotType { get; set; }
 
