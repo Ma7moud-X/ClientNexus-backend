@@ -38,6 +38,7 @@ namespace ClientNexus.Application.Services
 
             serviceProvider.IsApproved = true;
             serviceProvider.ApprovedById = adminId;
+            //unitOfWork.ServiceProviders.Update(serviceProvider);
             await unitOfWork.SaveChangesAsync();
         }
     }

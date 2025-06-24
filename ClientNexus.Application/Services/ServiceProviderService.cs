@@ -353,6 +353,11 @@ namespace ClientNexus.Application.Services
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
+                    IsApproved = sp.IsApproved,
+                    IsFeatured = sp.IsFeatured,
+                    SubscriptionExpiryDate = sp.SubscriptionExpiryDate,
+                    SubscriptionStatus = sp.SubscriptionStatus,
+                    SubType = sp.SubType,
                     //City = sp.Addresses?.FirstOrDefault()?.City?.Name,
                     //State = sp.Addresses?.FirstOrDefault()?.City?.State?.Name,
                     Addresses = sp.Addresses?.Select(a => new AddressDTO
@@ -468,6 +473,11 @@ namespace ClientNexus.Application.Services
                     YearsOfExperience = sp.YearsOfExperience,
                     Office_consultation_price = sp.Office_consultation_price,
                     Telephone_consultation_price = sp.Telephone_consultation_price,
+                    IsFeatured = sp.IsFeatured,
+                    SubscriptionExpiryDate = sp.SubscriptionExpiryDate,
+                    SubscriptionStatus = sp.SubscriptionStatus,
+                    SubType = sp.SubType,
+                    IsApproved = sp.IsApproved,
                     Addresses = sp.Addresses?.Select(a => new AddressDTO
                     {
                         DetailedAddress = a.DetailedAddress,
