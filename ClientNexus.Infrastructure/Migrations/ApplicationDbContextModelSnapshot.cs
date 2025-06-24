@@ -1132,6 +1132,9 @@ namespace ClientNexus.Infrastructure.Migrations
                     b.Property<DateTime?>("CompletionTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("HostStartUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("ReminderSent")
                         .HasColumnType("bit");
 
@@ -1140,6 +1143,12 @@ namespace ClientNexus.Infrastructure.Migrations
 
                     b.Property<int>("SlotId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ZoomJoinUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("ZoomMeetingId")
+                        .HasColumnType("bigint");
 
                     b.HasIndex("SlotId");
 
